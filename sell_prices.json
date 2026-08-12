@@ -1,0 +1,1172 @@
+{
+  "UZ": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.4
+  },
+  "BD": {
+    "best_usd": 0.18,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.18,
+    "bot2_usd": 0.15
+  },
+  "SA": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0.4
+  },
+  "RU": {
+    "best_usd": 1.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.2,
+    "bot2_usd": 0
+  },
+  "IT": {
+    "best_usd": 0.85,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.85
+  },
+  "MX": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "KZ": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0
+  },
+  "UA": {
+    "best_usd": 1.6,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1.5,
+    "bot2_usd": 1.6
+  },
+  "YE": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.4
+  },
+  "LV": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 1
+  },
+  "PT": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.55
+  },
+  "KG": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0.7
+  },
+  "TJ": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "EG": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.35,
+    "bot2_usd": 0
+  },
+  "IQ": {
+    "best_usd": 1.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.2,
+    "bot2_usd": 0
+  },
+  "TR": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.5
+  },
+  "CO": {
+    "best_usd": 0.15,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0
+  },
+  "ZW": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.2
+  },
+  "AR": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.45,
+    "bot2_usd": 0
+  },
+  "NL": {
+    "best_usd": 0.85,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0.85
+  },
+  "GB": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "HK": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "TH": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "WS": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.35
+  },
+  "ES": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0
+  },
+  "TN": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.5
+  },
+  "SN": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.5
+  },
+  "MA": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0.25
+  },
+  "IN": {
+    "best_usd": 0.15,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0
+  },
+  "LB": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "MZ": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0.5
+  },
+  "VN": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.35,
+    "bot2_usd": 0
+  },
+  "GH": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.1,
+    "bot2_usd": 0.35
+  },
+  "IR": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "AE": {
+    "best_usd": 1.65,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1.6,
+    "bot2_usd": 1.65
+  },
+  "ML": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.1,
+    "bot2_usd": 0.35
+  },
+  "PG": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "NE": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.1,
+    "bot2_usd": 0.35
+  },
+  "PK": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "PE": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "AF": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "TZ": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "GT": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.45
+  },
+  "LK": {
+    "best_usd": 0.55,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.55
+  },
+  "JO": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.5
+  },
+  "SY": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0
+  },
+  "PS": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.55
+  },
+  "ID": {
+    "best_usd": 0.15,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0
+  },
+  "KH": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "SD": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0.45
+  },
+  "PR": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.45,
+    "bot2_usd": 0
+  },
+  "SZ": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "TL": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "TW": {
+    "best_usd": 1.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.4
+  },
+  "KR": {
+    "best_usd": 2.1,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1.4,
+    "bot2_usd": 2.1
+  },
+  "SE": {
+    "best_usd": 0.75,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.75,
+    "bot2_usd": 0.7
+  },
+  "EE": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "FI": {
+    "best_usd": 0.75,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.75
+  },
+  "LA": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.7
+  },
+  "NG": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0.2
+  },
+  "IL": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "CN": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "MY": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.4
+  },
+  "IE": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "AT": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.8
+  },
+  "RS": {
+    "best_usd": 0.9,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0.9
+  },
+  "RO": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "SI": {
+    "best_usd": 1.3,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.85,
+    "bot2_usd": 1.3
+  },
+  "ET": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "NI": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.45
+  },
+  "PY": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0.45
+  },
+  "HU": {
+    "best_usd": 0.65,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.65
+  },
+  "NP": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.35
+  },
+  "UG": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "MN": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0
+  },
+  "BY": {
+    "best_usd": 1.6,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.6
+  },
+  "CA": {
+    "best_usd": 0.22,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.22,
+    "bot2_usd": 0
+  },
+  "ZM": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.4
+  },
+  "SO": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "HR": {
+    "best_usd": 1,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.9,
+    "bot2_usd": 1
+  },
+  "PL": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.45,
+    "bot2_usd": 0.4
+  },
+  "KE": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.25
+  },
+  "SV": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.6
+  },
+  "MM": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0.15
+  },
+  "LY": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.45,
+    "bot2_usd": 0
+  },
+  "BO": {
+    "best_usd": 1.15,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.15
+  },
+  "FJ": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.6
+  },
+  "NU": {
+    "best_usd": 3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 3,
+    "bot2_usd": 0.35
+  },
+  "TO": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.4
+  },
+  "CR": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.5
+  },
+  "HN": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "JP": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0
+  },
+  "NO": {
+    "best_usd": 1.1,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.8,
+    "bot2_usd": 1.1
+  },
+  "AU": {
+    "best_usd": 1.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1.1,
+    "bot2_usd": 1.4
+  },
+  "CH": {
+    "best_usd": 1.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.8,
+    "bot2_usd": 1.5
+  },
+  "DK": {
+    "best_usd": 1.3,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.3
+  },
+  "CL": {
+    "best_usd": 0.15,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0
+  },
+  "BJ": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.13
+  },
+  "BI": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.35
+  },
+  "CU": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "PA": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.8
+  },
+  "QA": {
+    "best_usd": 1.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.8,
+    "bot2_usd": 1.3
+  },
+  "OM": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0.9
+  },
+  "KW": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0
+  },
+  "TG": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0.25
+  },
+  "AO": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.15
+  },
+  "TD": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "DZ": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.4
+  },
+  "SG": {
+    "best_usd": 1.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.5,
+    "bot2_usd": 1.25
+  },
+  "MT": {
+    "best_usd": 1.15,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.15
+  },
+  "TM": {
+    "best_usd": 0.55,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0.55
+  },
+  "BM": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "BH": {
+    "best_usd": 1.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.5,
+    "bot2_usd": 1.5
+  },
+  "DE": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0.95
+  },
+  "BR": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "MV": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.5
+  },
+  "CZ": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0
+  },
+  "MD": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 1
+  },
+  "BE": {
+    "best_usd": 1.15,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.15
+  },
+  "NZ": {
+    "best_usd": 1.2,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.8,
+    "bot2_usd": 1.2
+  },
+  "KI": {
+    "best_usd": 0.85,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.85,
+    "bot2_usd": 0.4
+  },
+  "MO": {
+    "best_usd": 1.1,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.1
+  },
+  "SB": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.35
+  },
+  "AW": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0
+  },
+  "DJ": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.4
+  },
+  "AL": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "MC": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 1
+  },
+  "KM": {
+    "best_usd": 0.65,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.65
+  },
+  "IS": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0.7
+  },
+  "BA": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0
+  },
+  "DO": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0
+  },
+  "EC": {
+    "best_usd": 0.55,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.15,
+    "bot2_usd": 0.55
+  },
+  "TT": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "JM": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "HT": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0.5
+  },
+  "AZ": {
+    "best_usd": 1.15,
+    "best_bot": "Bot 2",
+    "bot1_usd": 1,
+    "bot2_usd": 1.15
+  },
+  "BG": {
+    "best_usd": 0.85,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.85
+  },
+  "LU": {
+    "best_usd": 0.85,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.85,
+    "bot2_usd": 0.85
+  },
+  "CV": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0.3
+  },
+  "SC": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "UY": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0.6
+  },
+  "GD": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0
+  },
+  "CI": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.7
+  },
+  "AI": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0
+  },
+  "KY": {
+    "best_usd": 0.8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.8,
+    "bot2_usd": 0
+  },
+  "VC": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "LC": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "ST": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.4
+  },
+  "GP": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "MU": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "SR": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0
+  },
+  "LS": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.3
+  },
+  "GY": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "DM": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0
+  },
+  "NA": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.4
+  },
+  "BB": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "BZ": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0.35
+  },
+  "GA": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.35
+  },
+  "ZA": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.3,
+    "bot2_usd": 0.15
+  },
+  "BT": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0
+  },
+  "CG": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0
+  },
+  "CF": {
+    "best_usd": 0.25,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.25,
+    "bot2_usd": 0
+  },
+  "PW": {
+    "best_usd": 1.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1.2,
+    "bot2_usd": 0.35
+  },
+  "LT": {
+    "best_usd": 1,
+    "best_bot": "Bot 1",
+    "bot1_usd": 1,
+    "bot2_usd": 0.9
+  },
+  "GR": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.7,
+    "bot2_usd": 0
+  },
+  "GL": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.5,
+    "bot2_usd": 0.45
+  },
+  "MR": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "GU": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.4,
+    "bot2_usd": 0
+  },
+  "CK": {
+    "best_usd": 3,
+    "best_bot": "Bot 1",
+    "bot1_usd": 3,
+    "bot2_usd": 0.35
+  },
+  "FK": {
+    "best_usd": 8,
+    "best_bot": "Bot 1",
+    "bot1_usd": 8,
+    "bot2_usd": 0.5
+  },
+  "SS": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.2,
+    "bot2_usd": 0
+  },
+  "MG": {
+    "best_usd": 0.05,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.05,
+    "bot2_usd": 0
+  },
+  "BS": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 1",
+    "bot1_usd": 0.6,
+    "bot2_usd": 0
+  },
+  "US": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.5
+  },
+  "BN": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "BF": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "ER": {
+    "best_usd": 0.55,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.55
+  },
+  "FR": {
+    "best_usd": 0.75,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.75
+  },
+  "GM": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "KP": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.2
+  },
+  "XK": {
+    "best_usd": 0.6,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.6
+  },
+  "MW": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "MQ": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.5
+  },
+  "NR": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "NC": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "NF": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "MK": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.7
+  },
+  "RW": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.3
+  },
+  "SM": {
+    "best_usd": 0.9,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.9
+  },
+  "SL": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.2
+  },
+  "SK": {
+    "best_usd": 1.1,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 1.1
+  },
+  "TK": {
+    "best_usd": 0.2,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.2
+  },
+  "TV": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  },
+  "VU": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.4
+  },
+  "WF": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 2",
+    "bot1_usd": 0,
+    "bot2_usd": 0.35
+  }
+}
