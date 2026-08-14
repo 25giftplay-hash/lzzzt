@@ -56,10 +56,9 @@ def mark_item_banned(item_id):
     conn.commit()
     conn.close()
 
-def get_stats_summary(min_profit_usd=0.70):
+def get_stats_summary(min_profit_usd=0.50):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    
     c.execute("SELECT status, cost_usd, profit_usd FROM ledger")
     rows = c.fetchall()
     conn.close()
@@ -68,7 +67,6 @@ def get_stats_summary(min_profit_usd=0.70):
     sold_count = 0
     banned_count = 0
     pending_count = 0
-    
     total_profit_usd = 0.0
     total_loss_usd = 0.0
     
@@ -84,7 +82,6 @@ def get_stats_summary(min_profit_usd=0.70):
             
     net_balance_usd = total_profit_usd - total_loss_usd
     
-    # Calculate how many new sales at min_profit_usd needed to recover current losses
     recovery_accounts_needed = 0
     if total_loss_usd > 0 and min_profit_usd > 0:
         import math
@@ -234,9 +231,9 @@ def parse_spamblock(spam_block_val, max_wait_hours):
     return False, "محظور (غير معروف)"
 
 # -------------------------------------------------------------------
-# Send Alert with Interactive Inline Keyboard
+# Send Alert Function (Handles Aged vs Fresh Streams)
 # -------------------------------------------------------------------
-def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_usd, profit_usd):
+def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_usd, profit_usd, stream_type="aged"):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
     item_id = item.get("item_id")
@@ -253,19 +250,26 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     sell_rub = sell_usd * rub_per_usd
     profit_rub = profit_usd * rub_per_usd
     
+    if stream_type == "fresh":
+        header = f"<b>⚡ [صيد خاطف ⚡] حساب جديد بسعر {price_rub} ₽ (خالٍ من السبام)</b>"
+        note = "<b>⚡ نوع الصفقة:</b> حساب طازج/جديد بسعر رخيص وخالٍ تماماً من حظر السبام (0% Spam)."
+    else:
+        header = f"<b>🔔 [حساب معتق 24H+] صفقة مربحة (+${profit_usd:.2f} USD)</b>"
+        note = "<b>⏳ عمر الجلسة:</b> متصل منذ 24H+ (سهل طرد الجلسات من الموقع مباشرة)."
+
     text = (
-        f"<b>🔔 صفقة جديدة مربحة! (+${profit_usd:.2f} USD)</b>\n\n"
+        f"{header}\n\n"
         f"<b>📝 العنوان:</b> {title}\n"
-        f"<b>💵 سعر الشراء من الموقع:</b> {price_rub} ₽ (≈ ${buy_usd:.2f} USD)\n"
+        f"<b>💵 سعر الشراء:</b> {price_rub} ₽ (≈ ${buy_usd:.2f} USD)\n"
         f"<b>🌍 الدولة:</b> {country_display}\n"
         f"<b>💰 أعلى سعر بيع لبوتاتك:</b> ${sell_usd:.2f} USD (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
         f"<b>💚 الربح الصافي المتوقع:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"<b>🚫 حالة السبام:</b> {spam_status}\n"
-        f"<b>✨ مميزات إضافية (Premium):</b> {premium_str}\n\n"
+        f"<b>✨ مميزات إضافية (Premium):</b> {premium_str}\n"
+        f"{note}\n\n"
         f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء مباشرة من الموقع</a>"
     )
     
-    # Inline Keyboard Buttons
     reply_markup = {
         "inline_keyboard": [
             [
@@ -287,7 +291,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     try:
         r = requests.post(url, json=payload, timeout=10)
         if r.status_code == 200:
-            print(f"[Telegram] Alert sent for item {item_id}.")
+            print(f"[Telegram] Alert sent for item {item_id} ({stream_type}).")
             return True
         else:
             print(f"[Telegram] Failed to send alert: {r.status_code} - {r.text}")
@@ -297,9 +301,9 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         return False
 
 # -------------------------------------------------------------------
-# Background Telegram Bot Polling Thread (Interactive Callbacks & Commands)
+# Background Telegram Listener (Callbacks & Commands)
 # -------------------------------------------------------------------
-def telegram_bot_listener(bot_token, min_profit_usd=0.70):
+def telegram_bot_listener(bot_token, min_profit_usd=0.50):
     print("[Telegram Listener] Background bot listener started...")
     offset = 0
     base_url = f"https://api.telegram.org/bot{bot_token}/"
@@ -318,7 +322,6 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.70):
             for update in results:
                 offset = update["update_id"] + 1
                 
-                # Handle Inline Button Clicks (Callback Queries)
                 if "callback_query" in update:
                     cb = update["callback_query"]
                     cb_id = cb["id"]
@@ -337,10 +340,8 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.70):
                         best_bot = parts[4] if len(parts) > 4 else "Bot"
                         country = parts[5] if len(parts) > 5 else "Unknown"
                         
-                        # Log as bought in SQLite
                         log_bought_item(item_id, cost_usd, profit_usd, best_bot, country)
                         
-                        # Edit message to show status options
                         edit_text = (
                             msg.get("text", "") + "\n\n"
                             f"<b>🛒 تم تأكيد شراء هذا الحساب! (تكلفة الشراء: ${cost_usd:.2f} USD)</b>\n"
@@ -405,7 +406,6 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.70):
                         })
                         requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم التجاهل."})
 
-                # Handle Text Commands (/stats, /reset_stats)
                 if "message" in update:
                     m = update["message"]
                     chat_id = m.get("chat", {}).get("id")
@@ -428,7 +428,7 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.70):
                         if stats['recovery_needed'] > 0:
                             report += f"🎯 <b>حاسبة التعويض:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتعويض كافة الخسائر الحالية!"
                         else:
-                            report += f"✨ <b>وضعك المالي ممتازة: لا توجد خسائر تحتاج لتعويض حالياً! 🎉</b>"
+                            report += f"✨ <b>وضعك المالي ممتاز: لا توجد خسائر تحتاج لتعويض حالياً! 🎉</b>"
                             
                         requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": report, "parse_mode": "HTML"})
                         
@@ -440,7 +440,72 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.70):
             time.sleep(3)
 
 # -------------------------------------------------------------------
-# Main LZT Monitoring Loop
+# Helper to Process Listings for Both Streams
+# -------------------------------------------------------------------
+def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id):
+    for item in items:
+        item_id = str(item.get("item_id"))
+        if not item_id or item_id in sent_alerts:
+            continue
+
+        buy_rub = float(item.get("price", 0))
+        if max_price_rub and buy_rub > max_price_rub:
+            sent_alerts.add(item_id)
+            continue
+
+        country_raw = item.get("telegram_country", "")
+        ccode = get_country_code(country_raw)
+        
+        sell_info = sell_prices.get(ccode, {})
+        if isinstance(sell_info, dict):
+            sell_usd = sell_info.get("best_usd", 0.0)
+            best_bot = sell_info.get("best_bot", "Bot")
+        else:
+            sell_usd = float(sell_info) if sell_info else 0.0
+            best_bot = "Bot"
+            
+        if not sell_usd or sell_usd <= 0:
+            sent_alerts.add(item_id)
+            continue
+
+        buy_usd = buy_rub / rub_per_usd
+        expected_profit_usd = sell_usd - buy_usd
+
+        # Profit Filter
+        if expected_profit_usd < min_profit_usd:
+            sent_alerts.add(item_id)
+            continue
+
+        # Check Spam Block
+        spam_block_val = item.get("telegram_spam_block")
+        
+        if stream_type == "fresh":
+            if spam_block_val:
+                low = str(spam_block_val).lower().strip()
+                if low not in ('no', 'false', 'none', '0', ''):
+                    sent_alerts.add(item_id)
+                    continue
+            spam_status = "خالٍ تماماً من السبام (0% Spam)"
+        else:
+            is_accepted, spam_status = parse_spamblock(spam_block_val, max_wait_hours)
+            if not is_accepted:
+                sent_alerts.add(item_id)
+                continue
+
+        # Send Telegram Alert for Matched Item
+        print(f"[{stream_type.upper()} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
+        
+        success = send_telegram_alert(
+            tg_token, tg_chat_id, item, spam_status, 
+            sell_usd, best_bot, buy_usd, expected_profit_usd, stream_type=stream_type
+        )
+        
+        if success:
+            sent_alerts.add(item_id)
+            save_sent_alerts(sent_alerts)
+
+# -------------------------------------------------------------------
+# Main Multi-Page Dual-Stream LZT Monitoring Loop
 # -------------------------------------------------------------------
 def monitor_lzt():
     init_db()
@@ -452,24 +517,24 @@ def monitor_lzt():
     interval = config.get("check_interval_seconds", 10)
     filters = config.get("filters", {})
     
-    min_profit_usd = filters.get("min_profit_usd", 0.70)
-    rub_per_usd = 90.0 # Standard RUB per USD rate
+    min_profit_usd = filters.get("min_profit_usd", 0.50)
+    fresh_max_price_rub = filters.get("fresh_max_price_rub", 20)
+    max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
+    rub_per_usd = 90.0
     
     if not lzt_token or not tg_token or not tg_chat_id:
         print("Error: Missing credentials in config.json or environment variables.")
         sys.exit(1)
 
-    # Start background listener thread for Telegram buttons & /stats command
     threading.Thread(target=telegram_bot_listener, args=(tg_token, min_profit_usd), daemon=True).start()
 
-    # Send a startup notification to Telegram
-    print("[Telegram] Sending startup notification...")
     startup_url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
     startup_text = (
-        "🤖 <b>تم بدء تشغيل رادار الأرباح المتقدم لـ Lolzteam بنجاح!</b>\n"
-        "البوت متصل بالمنصة ومزود بنظام الأزرار التفاعلية وحاسبة التعويض.\n\n"
-        f"🎯 <b>الحد الأدنى للربح الصافي:</b> +${min_profit_usd:.2f} USD لكل صفقة\n"
-        f"📊 أرسل الأمر <b>/stats</b> للبوت في أي وقت لمشاهدة التقرير المالي الصافي."
+        "🤖 <b>تم بدء تشغيل رادار الصيد المزدوج فائق الذكاء (Multi-Page Dual-Stream Radar)!</b>\n\n"
+        "<b>1️⃣ المسار الأول:</b> الحسابات المعتقة (24H+) بربح لا يقل عن +$0.50 USD.\n"
+        "<b>2️⃣ المسار الثاني ⚡:</b> الصيد الخاطف للحسابات الخالية من السبام بسعر ≤ 20 ₽.\n"
+        "<b>🔍 التغطية:</b> يفحص حتى 50 حساباً في الصفحة لمنع ضياع أي صفقة إطلاقاً!\n\n"
+        "📊 أرسل الأمر <b>/stats</b> للبوت لمشاهدة التقرير المالي الصافي وحاسبة التعويض."
     )
     try:
         requests.post(startup_url, json={"chat_id": tg_chat_id, "text": startup_text, "parse_mode": "HTML"}, timeout=10)
@@ -480,9 +545,9 @@ def monitor_lzt():
     is_first_run = True
     
     print("--------------------------------------------------")
-    print(f"Starting Lolzteam Telegram Profit Radar...")
-    print(f"Checking every {interval} seconds...")
-    print(f"Min Expected Profit Filter: +${min_profit_usd:.2f} USD")
+    print(f"Starting Multi-Page Dual-Stream Telegram Monitor...")
+    print(f"Stream 1 (Aged 24H+): Min Profit +${min_profit_usd:.2f} USD")
+    print(f"Stream 2 (Fresh Cheap ⚡): Max Price {fresh_max_price_rub} RUB, 0% Spam")
     print("--------------------------------------------------")
     
     session = requests.Session()
@@ -494,109 +559,78 @@ def monitor_lzt():
     
     url = "https://api.lzt.market/telegram"
     fallback_url = "https://prod-api.lzt.market/telegram"
-    
-    api_params = {
-        "pmin": filters.get("pmin", 2),
-        "pmax": filters.get("pmax", 500), # Allow broad scanning, we filter by profit locally!
-        "currency": filters.get("currency", "rub"),
-        "2fa": filters.get("2fa", "no"),
-        "nsb": 1 if filters.get("nsb", True) else 0,
-        "nsb_by_me": 1 if filters.get("nsb_by_me", True) else 0,
-        "allow_geo_spamblock": 1 if filters.get("allow_geo_spamblock", False) else 0,
-        "spam": "nomatter",
-        "order_by": "pdate_to_down"
-    }
-    
-    if filters.get("daybreak"):
-        api_params["daybreak"] = filters.get("daybreak")
-        
     consecutive_errors = 0
     
     while True:
         try:
             current_url = fallback_url if consecutive_errors >= 3 else url
-            if consecutive_errors >= 3:
-                print(f"[System] Attempting fallback endpoint {fallback_url}...")
+            sell_prices = load_sell_prices()
 
-            response = session.get(current_url, headers=headers, params=api_params, timeout=15)
+            # ---------------------------------------------------------------
+            # Query 1: Stream 1 (Aged 24H+ Accounts - Multi-Page Scan, limit=50)
+            # ---------------------------------------------------------------
+            params_aged = {
+                "pmin": filters.get("pmin", 2),
+                "pmax": filters.get("pmax", 500),
+                "currency": filters.get("currency", "rub"),
+                "2fa": filters.get("2fa", "no"),
+                "nsb": 1 if filters.get("nsb", True) else 0,
+                "nsb_by_me": 1 if filters.get("nsb_by_me", True) else 0,
+                "allow_geo_spamblock": 1 if filters.get("allow_geo_spamblock", False) else 0,
+                "spam": "nomatter",
+                "daybreak": 1,
+                "order_by": "pdate_to_down"
+            }
             
-            if response.status_code != 200:
-                print(f"[Error] LZT API returned code {response.status_code}: {response.text}")
-                consecutive_errors += 1
-                time.sleep(min(60, interval * 2))
-                continue
+            resp_aged = session.get(current_url, headers=headers, params=params_aged, timeout=15)
+            if resp_aged.status_code == 200:
+                consecutive_errors = 0
+                items_aged = resp_aged.json().get("items") or resp_aged.json().get("accounts") or []
+                
+                if is_first_run:
+                    for item in items_aged:
+                        item_id = str(item.get("item_id"))
+                        if item_id:
+                            sent_alerts.add(item_id)
+                else:
+                    process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
 
-            consecutive_errors = 0
-            data = response.json()
-            items = data.get("items") or data.get("accounts") or data.get("listings") or []
+            # ---------------------------------------------------------------
+            # Query 2: Stream 2 (Fresh Cheap <= 20 RUB Accounts, No Spam)
+            # ---------------------------------------------------------------
+            params_fresh = {
+                "pmin": filters.get("pmin", 2),
+                "pmax": fresh_max_price_rub,
+                "currency": filters.get("currency", "rub"),
+                "2fa": filters.get("2fa", "no"),
+                "nsb": 1 if filters.get("nsb", True) else 0,
+                "nsb_by_me": 1 if filters.get("nsb_by_me", True) else 0,
+                "allow_geo_spamblock": 1 if filters.get("allow_geo_spamblock", False) else 0,
+                "spam": "no",
+                "order_by": "pdate_to_down"
+            }
             
+            resp_fresh = session.get(current_url, headers=headers, params=params_fresh, timeout=15)
+            if resp_fresh.status_code == 200:
+                consecutive_errors = 0
+                items_fresh = resp_fresh.json().get("items") or resp_fresh.json().get("accounts") or []
+                
+                if is_first_run:
+                    for item in items_fresh:
+                        item_id = str(item.get("item_id"))
+                        if item_id:
+                            sent_alerts.add(item_id)
+                else:
+                    process_stream_items(items_fresh, "fresh", 0.30, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
+
             if is_first_run:
-                print(f"[System] First run detected. Pre-populating {len(items)} existing items...")
-                for item in items:
-                    item_id = str(item.get("item_id"))
-                    if item_id:
-                        sent_alerts.add(item_id)
                 save_sent_alerts(sent_alerts)
                 is_first_run = False
-                print(f"[System] Pre-populated {len(items)} items. Now monitoring for high-profit listings.")
-                time.sleep(interval)
-                continue
+                print(f"[System] Pre-populated existing items for both streams. Now active!")
 
-            sell_prices = load_sell_prices()
-            max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
-            
-            for item in items:
-                item_id = str(item.get("item_id"))
-                if not item_id or item_id in sent_alerts:
-                    continue
-
-                country_raw = item.get("telegram_country", "")
-                ccode = get_country_code(country_raw)
-                
-                # Check sell prices for this country
-                sell_info = sell_prices.get(ccode, {})
-                if isinstance(sell_info, dict):
-                    sell_usd = sell_info.get("best_usd", 0.0)
-                    best_bot = sell_info.get("best_bot", "Bot")
-                else:
-                    sell_usd = float(sell_info) if sell_info else 0.0
-                    best_bot = "Bot"
-                    
-                if not sell_usd or sell_usd <= 0:
-                    sent_alerts.add(item_id)
-                    continue
-
-                buy_rub = float(item.get("price", 0))
-                buy_usd = buy_rub / rub_per_usd
-                expected_profit_usd = sell_usd - buy_usd
-
-                # Filter by Minimum Net Profit Requirement (>= $0.70 USD)
-                if expected_profit_usd < min_profit_usd:
-                    sent_alerts.add(item_id)
-                    continue
-
-                # Check Spam Block Status
-                spam_block_val = item.get("telegram_spam_block")
-                is_accepted, spam_status = parse_spamblock(spam_block_val, max_wait_hours)
-                
-                if not is_accepted:
-                    sent_alerts.add(item_id)
-                    continue
-
-                # High Profit Match Found! Send Interactive Alert
-                print(f"[Profit Match Found] Item {item_id} | Country: {ccode} | Buy: ${buy_usd:.2f} | Sell: ${sell_usd:.2f} | Net Profit: +${expected_profit_usd:.2f} USD")
-                
-                success = send_telegram_alert(
-                    tg_token, tg_chat_id, item, spam_status, 
-                    sell_usd, best_bot, buy_usd, expected_profit_usd
-                )
-                
-                if success:
-                    sent_alerts.add(item_id)
-                    save_sent_alerts(sent_alerts)
-                    
         except requests.exceptions.RequestException as req_err:
-            print(f"[Connection Error] Connection failed: {req_err}")
+            print(f"[Connection Error] {req_err}")
+            consecutive_errors += 1
             time.sleep(15)
         except Exception as e:
             print(f"[Unexpected Error] {e}")

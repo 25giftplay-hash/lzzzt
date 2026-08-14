@@ -4,9 +4,10 @@
   "telegram_chat_id": "YOUR_TELEGRAM_CHAT_ID_HERE",
   "check_interval_seconds": 10,
   "filters": {
-    "min_profit_usd": 0.70,
+    "min_profit_usd": 0.50,
     "pmin": 2,
     "pmax": 500,
+    "fresh_max_price_rub": 20,
     "currency": "rub",
     "2fa": "no",
     "allow_geo_spamblock": false,
