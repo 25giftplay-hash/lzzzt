@@ -56,7 +56,7 @@ def mark_item_banned(item_id):
     conn.commit()
     conn.close()
 
-def get_stats_summary(min_profit_usd=0.50):
+def get_stats_summary(min_profit_usd=0.40):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT status, cost_usd, profit_usd FROM ledger")
@@ -251,7 +251,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     profit_rub = profit_usd * rub_per_usd
     
     if stream_type == "fresh":
-        header = f"<b>⚡ [صيد خاطف ⚡] حساب جديد بسعر {price_rub} ₽ (خالٍ من السبام)</b>"
+        header = f"<b>⚡ [صيد خاطف ⚡] حساب جديد بسعر {price_rub} ₽ (≤ 40 ₽ | خالٍ من السبام)</b>"
         note = "<b>⚡ نوع الصفقة:</b> حساب طازج/جديد بسعر رخيص وخالٍ تماماً من حظر السبام (0% Spam)."
     else:
         header = f"<b>🔔 [حساب معتق 24H+] صفقة مربحة (+${profit_usd:.2f} USD)</b>"
@@ -303,7 +303,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
 # -------------------------------------------------------------------
 # Background Telegram Listener (Callbacks & Commands)
 # -------------------------------------------------------------------
-def telegram_bot_listener(bot_token, min_profit_usd=0.50):
+def telegram_bot_listener(bot_token, min_profit_usd=0.40):
     print("[Telegram Listener] Background bot listener started...")
     offset = 0
     base_url = f"https://api.telegram.org/bot{bot_token}/"
@@ -313,7 +313,7 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.50):
             url = f"{base_url}getUpdates?offset={offset}&timeout=20"
             r = requests.get(url, timeout=25)
             if r.status_code != 200:
-                time.sleep(5)
+                time.sleep(3)
                 continue
                 
             data = r.json()
@@ -437,7 +437,7 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.50):
                         requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": "♻️ تم تصفير جميع الإحصائيات والسجل المالي بنجاح."})
 
         except Exception as e:
-            time.sleep(3)
+            time.sleep(2)
 
 # -------------------------------------------------------------------
 # Helper to Process Listings for Both Streams
@@ -505,7 +505,7 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
             save_sent_alerts(sent_alerts)
 
 # -------------------------------------------------------------------
-# Main Multi-Page Dual-Stream LZT Monitoring Loop
+# Main Intensive Dual-Stream LZT Monitoring Loop (3s Interval)
 # -------------------------------------------------------------------
 def monitor_lzt():
     init_db()
@@ -514,11 +514,11 @@ def monitor_lzt():
     lzt_token = config.get("lzt_api_token")
     tg_token = config.get("telegram_bot_token")
     tg_chat_id = config.get("telegram_chat_id")
-    interval = config.get("check_interval_seconds", 10)
+    interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
     
-    min_profit_usd = filters.get("min_profit_usd", 0.50)
-    fresh_max_price_rub = filters.get("fresh_max_price_rub", 20)
+    min_profit_usd = filters.get("min_profit_usd", 0.40)
+    fresh_max_price_rub = filters.get("fresh_max_price_rub", 40)
     max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
     rub_per_usd = 90.0
     
@@ -530,11 +530,11 @@ def monitor_lzt():
 
     startup_url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
     startup_text = (
-        "🤖 <b>تم بدء تشغيل رادار الصيد المزدوج فائق الذكاء (Multi-Page Dual-Stream Radar)!</b>\n\n"
-        "<b>1️⃣ المسار الأول:</b> الحسابات المعتقة (24H+) بربح لا يقل عن +$0.50 USD.\n"
-        "<b>2️⃣ المسار الثاني ⚡:</b> الصيد الخاطف للحسابات الخالية من السبام بسعر ≤ 20 ₽.\n"
-        "<b>🔍 التغطية:</b> يفحص حتى 50 حساباً في الصفحة لمنع ضياع أي صفقة إطلاقاً!\n\n"
-        "📊 أرسل الأمر <b>/stats</b> للبوت لمشاهدة التقرير المالي الصافي وحاسبة التعويض."
+        "⚡ <b>تم بدء تشغيل رادار الصيد المكثف فائق السرعة (Fast 3s Dual Radar)!</b>\n\n"
+        "<b>1️⃣ المسار الأول:</b> الحسابات المعتقة (24H+) بربح +$0.40 USD.\n"
+        "<b>2️⃣ المسار الثاني ⚡:</b> الصيد الخاطف المكثف حتى 40 ₽ (خالٍ من السبام 0%).\n"
+        "⚡ <b>السرعة:</b> فحص خاطف مكثف كل 3 ثوانٍ لالتقاط أسرع الصفقات!\n\n"
+        "📊 أرسل <b>/stats</b> في أي وقت لمشاهدة التقرير المالي الصافي."
     )
     try:
         requests.post(startup_url, json={"chat_id": tg_chat_id, "text": startup_text, "parse_mode": "HTML"}, timeout=10)
@@ -545,7 +545,7 @@ def monitor_lzt():
     is_first_run = True
     
     print("--------------------------------------------------")
-    print(f"Starting Multi-Page Dual-Stream Telegram Monitor...")
+    print(f"Starting Intensive Fast Telegram Monitor (3s loop)...")
     print(f"Stream 1 (Aged 24H+): Min Profit +${min_profit_usd:.2f} USD")
     print(f"Stream 2 (Fresh Cheap ⚡): Max Price {fresh_max_price_rub} RUB, 0% Spam")
     print("--------------------------------------------------")
@@ -566,27 +566,24 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
 
-            # ---------------------------------------------------------------
-            # Query 1: Stream 1 (Aged 24H+ Accounts - Multi-Page Scan, limit=50)
-            # ---------------------------------------------------------------
+            # Query 1: Stream 1 (Aged 24H+ Accounts)
             params_aged = {
                 "pmin": filters.get("pmin", 2),
                 "pmax": filters.get("pmax", 500),
                 "currency": filters.get("currency", "rub"),
-                "2fa": filters.get("2fa", "no"),
-                "nsb": 1 if filters.get("nsb", True) else 0,
-                "nsb_by_me": 1 if filters.get("nsb_by_me", True) else 0,
-                "allow_geo_spamblock": 1 if filters.get("allow_geo_spamblock", False) else 0,
+                "2fa": "no",
+                "nsb": 1,
+                "nsb_by_me": 1,
+                "allow_geo_spamblock": 0,
                 "spam": "nomatter",
                 "daybreak": 1,
                 "order_by": "pdate_to_down"
             }
             
-            resp_aged = session.get(current_url, headers=headers, params=params_aged, timeout=15)
+            resp_aged = session.get(current_url, headers=headers, params=params_aged, timeout=10)
             if resp_aged.status_code == 200:
                 consecutive_errors = 0
                 items_aged = resp_aged.json().get("items") or resp_aged.json().get("accounts") or []
-                
                 if is_first_run:
                     for item in items_aged:
                         item_id = str(item.get("item_id"))
@@ -595,43 +592,40 @@ def monitor_lzt():
                 else:
                     process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
 
-            # ---------------------------------------------------------------
-            # Query 2: Stream 2 (Fresh Cheap <= 20 RUB Accounts, No Spam)
-            # ---------------------------------------------------------------
+            # Query 2: Stream 2 (Fresh Cheap <= 40 RUB Accounts, No Spam)
             params_fresh = {
                 "pmin": filters.get("pmin", 2),
                 "pmax": fresh_max_price_rub,
                 "currency": filters.get("currency", "rub"),
-                "2fa": filters.get("2fa", "no"),
-                "nsb": 1 if filters.get("nsb", True) else 0,
-                "nsb_by_me": 1 if filters.get("nsb_by_me", True) else 0,
-                "allow_geo_spamblock": 1 if filters.get("allow_geo_spamblock", False) else 0,
+                "2fa": "no",
+                "nsb": 1,
+                "nsb_by_me": 1,
+                "allow_geo_spamblock": 0,
                 "spam": "no",
                 "order_by": "pdate_to_down"
             }
             
-            resp_fresh = session.get(current_url, headers=headers, params=params_fresh, timeout=15)
+            resp_fresh = session.get(current_url, headers=headers, params=params_fresh, timeout=10)
             if resp_fresh.status_code == 200:
                 consecutive_errors = 0
                 items_fresh = resp_fresh.json().get("items") or resp_fresh.json().get("accounts") or []
-                
                 if is_first_run:
                     for item in items_fresh:
                         item_id = str(item.get("item_id"))
                         if item_id:
                             sent_alerts.add(item_id)
                 else:
-                    process_stream_items(items_fresh, "fresh", 0.30, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
+                    process_stream_items(items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
 
             if is_first_run:
                 save_sent_alerts(sent_alerts)
                 is_first_run = False
-                print(f"[System] Pre-populated existing items for both streams. Now active!")
+                print(f"[System] Pre-populated existing items for both streams. Intensive mode active!")
 
         except requests.exceptions.RequestException as req_err:
             print(f"[Connection Error] {req_err}")
             consecutive_errors += 1
-            time.sleep(15)
+            time.sleep(5)
         except Exception as e:
             print(f"[Unexpected Error] {e}")
             time.sleep(interval)
