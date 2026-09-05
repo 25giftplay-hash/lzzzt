@@ -570,47 +570,58 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
 def parse_and_update_prices_from_text(text):
     sell_prices = load_sell_prices()
     updated_count = 0
+    updated_sample = []
     
-    # Matches patterns like "+971: 1.65$", "AE: 1.65$", "Algeria (+213): 0.4$"
     lines = text.split('\n')
     for line in lines:
-        # Pattern 1: (+code) ... 1.5$
-        m_phone = re.search(r'\(\+(\d+)\).*?:\s*([0-9.]+)[\$]?', line)
-        if m_phone:
-            phone_code = m_phone.group(1)
-            price = float(m_phone.group(2))
-            ccode = PHONE_PREFIX_TO_CODE.get(phone_code)
-            if ccode:
-                if ccode not in sell_prices:
-                    sell_prices[ccode] = {"best_usd": price, "best_bot": "Updated Bot"}
-                else:
-                    if price > sell_prices[ccode].get("best_usd", 0):
-                        sell_prices[ccode]["best_usd"] = price
-                        sell_prices[ccode]["best_bot"] = "Updated Bot"
-                updated_count += 1
-                continue
-                
-        # Pattern 2: [country]-CC: 1.5$
-        m_code = re.search(r'[–-]([A-Za-z]{2}):\s*([0-9.]+)[\$]?', line)
-        if m_code:
-            ccode = m_code.group(1).upper()
-            price = float(m_code.group(2))
+        line_clean = line.strip()
+        if not line_clean or len(line_clean) < 3:
+            continue
+            
+        # Extract any price float from line (e.g. 1.65, $1.65, 1.65$, 1,65$)
+        m_price = re.search(r'[\$]?\s*([0-9]+[.,][0-9]{1,3})\s*(?:[\$]|USD|usd|р|руб)?', line_clean)
+        if not m_price:
+            continue
+            
+        try:
+            price = float(m_price.group(1).replace(',', '.'))
+        except ValueError:
+            continue
+            
+        # Ignore unreasonable price values (e.g. 0, or year 2024, or huge numbers)
+        if price <= 0.01 or price > 20.0:
+            continue
+
+        # Try to extract country code from line
+        ccode = resolve_country_code(line_clean, line_clean)
+        if not ccode:
+            # Try searching for any 2-letter uppercase word
+            words = re.findall(r'\b([A-Za-z]{2})\b', line_clean)
+            for w in words:
+                w_up = w.upper()
+                if w_up in DEFAULT_SELL_PRICES:
+                    ccode = w_up
+                    break
+                    
+        if ccode:
             if ccode not in sell_prices:
-                sell_prices[ccode] = {"best_usd": price, "best_bot": "Updated Bot"}
+                sell_prices[ccode] = {"best_usd": price, "best_bot": "Forwarded Bot"}
             else:
                 if price > sell_prices[ccode].get("best_usd", 0):
                     sell_prices[ccode]["best_usd"] = price
-                    sell_prices[ccode]["best_bot"] = "Updated Bot"
+                    sell_prices[ccode]["best_bot"] = "Forwarded Bot"
             updated_count += 1
+            if len(updated_sample) < 5:
+                updated_sample.append(f"{ccode}: ${price:.2f}")
             
     if updated_count > 0:
         try:
             with open(SELL_PRICES_FILE, "w", encoding="utf-8") as f:
                 json.dump(sell_prices, f, indent=2)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error saving updated prices: {e}")
             
-    return updated_count, len(sell_prices)
+    return updated_count, len(sell_prices), updated_sample
 
 # -------------------------------------------------------------------
 # Background Telegram Listener (Callbacks, Fast-Buy & Commands)
@@ -794,13 +805,15 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                         requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": "♻️ تم تصفير جميع الإحصائيات والسجل المالي بنجاح."})
                         
                     # Check if user sent/forwarded a price list
-                    elif any(ch in text for ch in ("$", "Free:", "–", ":")) and len(text) > 40:
-                        updated_cnt, total_cnt = parse_and_update_prices_from_text(text)
+                    elif any(ch in text for ch in ("$", "Free:", "–", ":", "USD", "usd")) and len(text) > 20:
+                        updated_cnt, total_cnt, sample = parse_and_update_prices_from_text(text)
                         if updated_cnt > 0:
+                            sample_text = ", ".join(sample)
                             reply_msg = (
-                                f"✅ <b>تم تحديث أسعار البيع بنجاح!</b>\n"
-                                f"🔄 تم تحديث أسعار <b>{updated_cnt} دولة</b> ومقارنتها بأفضل الأسعار.\n"
-                                f"🌍 إجمالي الدول المسجلة في قاعدة البوت الآن: <b>{total_cnt} دولة</b>."
+                                f"✅ <b>تم تحديث أسعار البيع بنجاح!</b>\n\n"
+                                f"🔄 تم تحديث ومقارنة أسعار <b>{updated_cnt} دولة</b> (أمثلة: <code>{sample_text}</code>).\n"
+                                f"🌍 إجمالي الدول المسجلة في قاعدة البوت الآن: <b>{total_cnt} دولة</b>.\n\n"
+                                f"🚀 يتم الآن حساب أرباح كافة الصفقات والقنص الآلي بناءً على هذه الأسعار الجديدة فوراً!"
                             )
                             requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": reply_msg, "parse_mode": "HTML"})
 
