@@ -22,8 +22,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "XK": {
-    "best_usd": 1,
-    "best_bot": "Bot 1"
+    "best_usd": 1.2,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "SN": {
     "best_usd": 0.45,
@@ -34,8 +34,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "NR": {
-    "best_usd": 1.2,
-    "best_bot": "Bot 1"
+    "best_usd": 1.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BE": {
     "best_usd": 1.15,
@@ -78,16 +78,16 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "SR": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 1"
+    "best_usd": 0.95,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "QA": {
-    "best_usd": 1.35,
-    "best_bot": "Bot 2"
+    "best_usd": 1.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "LT": {
-    "best_usd": 1,
-    "best_bot": "Bot 1"
+    "best_usd": 1.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "KM": {
     "best_usd": 0.65,
@@ -178,8 +178,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "SE": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 2"
+    "best_usd": 1.1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "SH": {
     "best_usd": 4,
@@ -218,12 +218,12 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1 & 2"
   },
   "MT": {
-    "best_usd": 1.15,
-    "best_bot": "Bot 2"
+    "best_usd": 1.2,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BA": {
-    "best_usd": 0.5,
-    "best_bot": "Bot 1"
+    "best_usd": 1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BB": {
     "best_usd": 0.5,
@@ -238,20 +238,20 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "VE": {
-    "best_usd": 0.8,
-    "best_bot": "Bot 1"
+    "best_usd": 0.95,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BH": {
-    "best_usd": 1.5,
-    "best_bot": "Bot 1"
+    "best_usd": 1.7,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BZ": {
-    "best_usd": 0.75,
-    "best_bot": "Bot 1"
+    "best_usd": 1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "AZ": {
-    "best_usd": 1.2,
-    "best_bot": "Bot 1"
+    "best_usd": 1.3,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "SV": {
     "best_usd": 0.7,
@@ -262,28 +262,28 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "PE": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 1"
+    "best_usd": 0.45,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "LA": {
-    "best_usd": 0.75,
-    "best_bot": "Bot 2"
+    "best_usd": 0.8,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "DO": {
     "best_usd": 0.6,
     "best_bot": "Bot 2"
   },
   "MO": {
-    "best_usd": 1.5,
-    "best_bot": "Bot 1"
+    "best_usd": 1.7,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "LV": {
-    "best_usd": 1,
-    "best_bot": "Bot 1 & 2"
+    "best_usd": 1.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CR": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 2"
+    "best_usd": 0.55,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CY": {
     "best_usd": 1,
@@ -298,8 +298,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "NO": {
-    "best_usd": 1.3,
-    "best_bot": "Bot 1"
+    "best_usd": 1.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "SK": {
     "best_usd": 1.1,
@@ -314,28 +314,28 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 2"
   },
   "MD": {
-    "best_usd": 0.8,
-    "best_bot": "Bot 1"
+    "best_usd": 1.35,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CZ": {
     "best_usd": 0.75,
     "best_bot": "Bot 1"
   },
   "SI": {
-    "best_usd": 0.5,
-    "best_bot": "Bot 1"
+    "best_usd": 1.3,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "LK": {
     "best_usd": 0.4,
     "best_bot": "Bot 1 & 2"
   },
   "NZ": {
-    "best_usd": 0.85,
-    "best_bot": "Bot 1"
+    "best_usd": 1.2,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "GF": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 1"
+    "best_usd": 0.7,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "NE": {
     "best_usd": 0.35,
@@ -346,56 +346,56 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "TG": {
-    "best_usd": 0.25,
-    "best_bot": "Bot 2"
+    "best_usd": 0.3,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "UY": {
-    "best_usd": 0.6,
-    "best_bot": "Bot 1 & 2"
+    "best_usd": 0.72,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "MU": {
     "best_usd": 0.3,
     "best_bot": "Bot 1"
   },
   "CF": {
-    "best_usd": 0.35,
-    "best_bot": "Bot 1"
+    "best_usd": 0.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "FI": {
-    "best_usd": 0.75,
-    "best_bot": "Bot 2"
+    "best_usd": 0.8,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "KR": {
     "best_usd": 2.5,
     "best_bot": "Bot 1"
   },
   "BO": {
-    "best_usd": 1.2,
-    "best_bot": "Bot 1"
+    "best_usd": 1.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BJ": {
-    "best_usd": 0.15,
-    "best_bot": "Bot 1"
+    "best_usd": 0.3,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BG": {
-    "best_usd": 0.85,
-    "best_bot": "Bot 2"
+    "best_usd": 1.1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BI": {
     "best_usd": 0.35,
     "best_bot": "Bot 2"
   },
   "BY": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 1"
+    "best_usd": 1.8,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "GN": {
     "best_usd": 0.4,
     "best_bot": "Bot 1"
   },
   "ML": {
-    "best_usd": 0.35,
-    "best_bot": "Bot 1 & 2"
+    "best_usd": 0.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "NU": {
     "best_usd": 1,
@@ -406,8 +406,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 2"
   },
   "RO": {
-    "best_usd": 0.95,
-    "best_bot": "Bot 2"
+    "best_usd": 1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "ZM": {
     "best_usd": 0.4,
@@ -422,12 +422,12 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "NP": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 1"
+    "best_usd": 0.45,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "PL": {
-    "best_usd": 0.2,
-    "best_bot": "Bot 1"
+    "best_usd": 0.6,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "GY": {
     "best_usd": 0.55,
@@ -442,8 +442,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "TM": {
-    "best_usd": 0.65,
-    "best_bot": "Bot 1"
+    "best_usd": 0.7,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BM": {
     "best_usd": 0.4,
@@ -462,8 +462,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "GH": {
-    "best_usd": 0.25,
-    "best_bot": "Bot 1"
+    "best_usd": 0.35,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "GS": {
     "best_usd": 1,
@@ -494,28 +494,28 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "PG": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 2"
+    "best_usd": 0.45,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "TZ": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 1"
+    "best_usd": 0.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "OM": {
-    "best_usd": 0.8,
-    "best_bot": "Bot 1"
+    "best_usd": 1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "UA": {
-    "best_usd": 1,
-    "best_bot": "Bot 1"
+    "best_usd": 1.65,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "RS": {
     "best_usd": 0.8,
     "best_bot": "Bot 1"
   },
   "AE": {
-    "best_usd": 1.55,
-    "best_bot": "Bot 2"
+    "best_usd": 1.6,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "VG": {
     "best_usd": 0.6,
@@ -550,12 +550,12 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "GA": {
-    "best_usd": 0.55,
-    "best_bot": "Bot 1"
+    "best_usd": 0.68,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "HU": {
-    "best_usd": 0.65,
-    "best_bot": "Bot 2"
+    "best_usd": 1.1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "MG": {
     "best_usd": 0.15,
@@ -590,8 +590,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "NG": {
-    "best_usd": 0.2,
-    "best_bot": "Bot 1 & 2"
+    "best_usd": 0.24,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "TF": {
     "best_usd": 0.75,
@@ -626,16 +626,16 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "LS": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 2"
+    "best_usd": 0.45,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "TC": {
     "best_usd": 0.35,
     "best_bot": "Bot 1"
   },
   "IQ": {
-    "best_usd": 1.85,
-    "best_bot": "Bot 1"
+    "best_usd": 2.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CO": {
     "best_usd": 0.2,
@@ -646,72 +646,72 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1 & 2"
   },
   "AU": {
-    "best_usd": 1.3,
-    "best_bot": "Bot 1"
+    "best_usd": 1.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "TW": {
-    "best_usd": 1.55,
-    "best_bot": "Bot 1"
+    "best_usd": 1.6,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "HK": {
     "best_usd": 0.65,
     "best_bot": "Bot 1"
   },
   "UG": {
-    "best_usd": 0.35,
-    "best_bot": "Bot 1"
+    "best_usd": 0.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CV": {
     "best_usd": 0.6,
     "best_bot": "Bot 1"
   },
   "TJ": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 2"
+    "best_usd": 0.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "PK": {
     "best_usd": 0.35,
     "best_bot": "Bot 1"
   },
   "MR": {
-    "best_usd": 0.5,
-    "best_bot": "Bot 1"
+    "best_usd": 0.55,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "SZ": {
     "best_usd": 0.5,
     "best_bot": "Bot 2"
   },
   "FR": {
-    "best_usd": 0.8,
-    "best_bot": "Bot 1"
+    "best_usd": 0.9,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CI": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 1"
+    "best_usd": 0.75,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "IE": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 1"
+    "best_usd": 0.6,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "JO": {
     "best_usd": 0.85,
     "best_bot": "Bot 1"
   },
   "DE": {
-    "best_usd": 1,
-    "best_bot": "Bot 1"
+    "best_usd": 1.2,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "IR": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 1"
+    "best_usd": 0.35,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "KH": {
-    "best_usd": 0.55,
-    "best_bot": "Bot 1"
+    "best_usd": 0.8,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "AT": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 1"
+    "best_usd": 0.8,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "EE": {
     "best_usd": 0.7,
@@ -722,8 +722,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "AR": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 1"
+    "best_usd": 0.55,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "SB": {
     "best_usd": 0.6,
@@ -738,16 +738,16 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "YE": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 2"
+    "best_usd": 0.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "ES": {
-    "best_usd": 0.75,
-    "best_bot": "Bot 1"
+    "best_usd": 1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "GP": {
-    "best_usd": 0.8,
-    "best_bot": "Bot 2"
+    "best_usd": 0.85,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "TO": {
     "best_usd": 0.6,
@@ -770,36 +770,36 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 2"
   },
   "MX": {
-    "best_usd": 0.48,
-    "best_bot": "Bot 2"
+    "best_usd": 0.52,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "MN": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 1"
+    "best_usd": 1.1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "AO": {
-    "best_usd": 0.25,
-    "best_bot": "Bot 1"
+    "best_usd": 0.3,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "NL": {
-    "best_usd": 0.9,
-    "best_bot": "Bot 2"
+    "best_usd": 1.14,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "IL": {
     "best_usd": 0.2,
     "best_bot": "Bot 1"
   },
   "BR": {
-    "best_usd": 0.35,
-    "best_bot": "Bot 1"
+    "best_usd": 0.4,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "MV": {
-    "best_usd": 0.75,
-    "best_bot": "Bot 1"
+    "best_usd": 1,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "CU": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 1"
+    "best_usd": 0.45,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "PY": {
     "best_usd": 0.5,
@@ -822,8 +822,8 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1 & 2"
   },
   "HN": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 1"
+    "best_usd": 0.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "MY": {
     "best_usd": 0.35,
@@ -858,12 +858,12 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 1"
   },
   "TD": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 1"
+    "best_usd": 0.5,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "LB": {
-    "best_usd": 0.55,
-    "best_bot": "Bot 1"
+    "best_usd": 0.6,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "ME": {
     "best_usd": 0.55,
@@ -886,16 +886,16 @@ DEFAULT_SELL_PRICES = {
     "best_bot": "Bot 2"
   },
   "IN": {
-    "best_usd": 0.2,
-    "best_bot": "Bot 1"
+    "best_usd": 0.25,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "BF": {
     "best_usd": 0.35,
     "best_bot": "Bot 2"
   },
   "IT": {
-    "best_usd": 0.65,
-    "best_bot": "Bot 2"
+    "best_usd": 0.75,
+    "best_bot": "Bot 3 (New Bot)"
   },
   "KI": {
     "best_usd": 0.4,
@@ -920,6 +920,38 @@ DEFAULT_SELL_PRICES = {
   "VU": {
     "best_usd": 0.4,
     "best_bot": "Bot 2"
+  },
+  "AF": {
+    "best_usd": 0.4,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "MA": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "SO": {
+    "best_usd": 0.35,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "DZ": {
+    "best_usd": 0.5,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "HT": {
+    "best_usd": 0.3,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "AL": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "TN": {
+    "best_usd": 0.45,
+    "best_bot": "Bot 3 (New Bot)"
+  },
+  "TL": {
+    "best_usd": 0.7,
+    "best_bot": "Bot 3 (New Bot)"
   }
 }
 
