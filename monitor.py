@@ -810,7 +810,7 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
 # -------------------------------------------------------------------
 # Helper to Process Listings for Both Streams
 # -------------------------------------------------------------------
-def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id):
+def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd):
     for item in items:
         item_id = str(item.get("item_id"))
         if not item_id or item_id in sent_alerts:
@@ -870,7 +870,41 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
                 sent_alerts.add(item_id)
                 continue
 
-        # Send Telegram Alert for Matched Item
+        # Check for Auto-Snipe (Automatic Fast-Buy for High Profit Deals)
+        if auto_buy_enabled and expected_profit_usd >= auto_buy_min_profit_usd:
+            print(f"[AUTO-SNIPE TRIGGERED] Buying Item {item_id} automatically via API! (Expected Profit: +${expected_profit_usd:.2f})")
+            buy_ok, buy_resp = execute_lzt_fast_buy(lzt_token, item_id)
+            if buy_ok:
+                log_bought_item(item_id, buy_usd, expected_profit_usd, best_bot, ccode)
+                sent_alerts.add(item_id)
+                save_sent_alerts(sent_alerts)
+                
+                # Send Auto-Snipe Success Notification
+                auto_text = (
+                    f"🎯 <b>[تم القنص الآلي والشراء بنجاح! ⚡]</b>\n\n"
+                    f"<b>📝 العنوان:</b> {item.get('title', 'بدون عنوان')}\n"
+                    f"<b>💵 سعر الشراء:</b> {buy_rub} ₽ (≈ ${buy_usd:.2f} USD)\n"
+                    f"<b>🌍 الدولة:</b> {country_raw} ({ccode})\n"
+                    f"<b>💰 أعلى سعر بيع لبوتاتك:</b> ${sell_usd:.2f} USD <i>[{best_bot}]</i>\n"
+                    f"<b>💚 الربح الصافي المتوقع:</b> <b>+${expected_profit_usd:.2f} USD</b>\n"
+                    f"<b>⚡ السرعة:</b> تم حجز وشراء الحساب آلياً عبر API في 0.2 ثانية!\n\n"
+                    f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا لفتح وتحميل بيانات الحساب</a>\n\n"
+                    f"<i>اختر حالة البيع لتسجيل الأرباح في السجل المالي /stats:</i>"
+                )
+                auto_markup = {
+                    "inline_keyboard": [
+                        [
+                            {"text": "✅ تم البيع بنجاح للبوت", "callback_data": f"sold:{item_id}"},
+                            {"text": "💔 تم حظره / سحبه (خسارة)", "callback_data": f"banned:{item_id}"}
+                        ]
+                    ]
+                }
+                requests.post(f"https://api.telegram.org/bot{tg_token}/sendMessage", json={
+                    "chat_id": tg_chat_id, "text": auto_text, "parse_mode": "HTML", "reply_markup": auto_markup
+                })
+                continue
+
+        # Send Standard Telegram Alert for Matched Item
         print(f"[{stream_type.upper()} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
         
         success = send_telegram_alert(
@@ -896,6 +930,8 @@ def monitor_lzt():
     filters = config.get("filters", {})
     
     min_profit_usd = filters.get("min_profit_usd", 0.30)
+    auto_buy_enabled = filters.get("auto_buy_enabled", True)
+    auto_buy_min_profit_usd = filters.get("auto_buy_min_profit_usd", 0.80)
     fresh_max_price_rub = filters.get("fresh_max_price_rub", 40)
     max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
     rub_per_usd = 90.0
@@ -909,6 +945,7 @@ def monitor_lzt():
     startup_url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
     startup_text = (
         "⚡ <b>تم بدء تشغيل رادار الصيد الشامل المطور (Ultra-Smart Fast-Buy Radar)!</b>\n\n"
+        f"<b>🎯 القنص الآلي (Auto-Snipe):</b> مفعّل للصفقات بربح ≥ +${auto_buy_min_profit_usd:.2f} USD!\n"
         "<b>1️⃣ ميزة الشراء الفوري ⚡:</b> شراء وحجز الحساب بضغطة زر واحدة من رصيدك في 0.3 ثانية!\n"
         "<b>2️⃣ مترجم الدول الذكي 🌍:</b> دعم شامل للأسماء بالروسية، الإنجليزية، العربية، وأكواد الهواتف (+971، +380).\n"
         "<b>3️⃣ تحديث الأسعار الفوري 🔄:</b> قم بإعادة توجيه (Forward) أي رسالة أسعار للبوت ليحدثها في ثانية واحدة.\n"
@@ -925,6 +962,7 @@ def monitor_lzt():
     
     print("--------------------------------------------------")
     print(f"Starting Ultra-Smart Dual-Stream Telegram Monitor (3s loop)...")
+    print(f"Auto-Snipe: Enabled for deals with profit >= +${auto_buy_min_profit_usd:.2f} USD")
     print(f"Stream 1 (Aged 24H+): Min Profit +${min_profit_usd:.2f} USD")
     print(f"Stream 2 (Fresh Cheap ⚡): Max Price {fresh_max_price_rub} RUB, 0% Spam")
     print("--------------------------------------------------")
@@ -969,7 +1007,7 @@ def monitor_lzt():
                         if item_id:
                             sent_alerts.add(item_id)
                 else:
-                    process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
+                    process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
 
             # Query 2: Stream 2 (Fresh Cheap <= 40 RUB Accounts, No Spam)
             params_fresh = {
@@ -994,7 +1032,7 @@ def monitor_lzt():
                         if item_id:
                             sent_alerts.add(item_id)
                 else:
-                    process_stream_items(items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id)
+                    process_stream_items(items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
 
             if is_first_run:
                 save_sent_alerts(sent_alerts)
