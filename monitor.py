@@ -942,23 +942,7 @@ def monitor_lzt():
 
     threading.Thread(target=telegram_bot_listener, args=(tg_token, lzt_token, min_profit_usd), daemon=True).start()
 
-    startup_url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
-    startup_text = (
-        "⚡ <b>تم بدء تشغيل رادار الصيد الشامل المطور (Ultra-Smart Fast-Buy Radar)!</b>\n\n"
-        f"<b>🎯 القنص الآلي (Auto-Snipe):</b> مفعّل للصفقات بربح ≥ +${auto_buy_min_profit_usd:.2f} USD!\n"
-        "<b>1️⃣ ميزة الشراء الفوري ⚡:</b> شراء وحجز الحساب بضغطة زر واحدة من رصيدك في 0.3 ثانية!\n"
-        "<b>2️⃣ مترجم الدول الذكي 🌍:</b> دعم شامل للأسماء بالروسية، الإنجليزية، العربية، وأكواد الهواتف (+971، +380).\n"
-        "<b>3️⃣ تحديث الأسعار الفوري 🔄:</b> قم بإعادة توجيه (Forward) أي رسالة أسعار للبوت ليحدثها في ثانية واحدة.\n"
-        "<b>4️⃣ المسارين النشطين:</b> المعتق (24H+) والصيد الخاطف (≤ 40 ₽ | 0% Spam).\n\n"
-        "📊 أرسل <b>/stats</b> في أي وقت لمشاهدة التقرير المالي الصافي وحاسبة التعويض."
-    )
-    try:
-        requests.post(startup_url, json={"chat_id": tg_chat_id, "text": startup_text, "parse_mode": "HTML"}, timeout=10)
-    except Exception as e:
-        print(f"[Telegram] Error sending startup notification: {e}")
-
     sent_alerts = load_sent_alerts()
-    is_first_run = True
     
     print("--------------------------------------------------")
     print(f"Starting Ultra-Smart Dual-Stream Telegram Monitor (3s loop)...")
@@ -977,6 +961,21 @@ def monitor_lzt():
     url = "https://api.lzt.market/telegram"
     fallback_url = "https://prod-api.lzt.market/telegram"
     consecutive_errors = 0
+
+    # Clean initial pre-population of all existing market items so no old accounts are alerted
+    try:
+        print("[System] Pre-populating existing market items to avoid duplicate old alerts...")
+        r_init = session.get(url, headers=headers, params={"pmin": 2, "pmax": 500, "currency": "rub", "order_by": "pdate_to_down"}, timeout=10)
+        if r_init.status_code == 200:
+            init_items = r_init.json().get("items") or r_init.json().get("accounts") or []
+            for item in init_items:
+                item_id = str(item.get("item_id"))
+                if item_id:
+                    sent_alerts.add(item_id)
+            save_sent_alerts(sent_alerts)
+            print(f"[System] Successfully pre-populated {len(init_items)} existing items. Monitoring active!")
+    except Exception as e:
+        print(f"[Warning] Initial pre-population error: {e}")
     
     while True:
         try:
@@ -1001,13 +1000,7 @@ def monitor_lzt():
             if resp_aged.status_code == 200:
                 consecutive_errors = 0
                 items_aged = resp_aged.json().get("items") or resp_aged.json().get("accounts") or []
-                if is_first_run:
-                    for item in items_aged:
-                        item_id = str(item.get("item_id"))
-                        if item_id:
-                            sent_alerts.add(item_id)
-                else:
-                    process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
+                process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
 
             # Query 2: Stream 2 (Fresh Cheap <= 40 RUB Accounts, No Spam)
             params_fresh = {
@@ -1026,18 +1019,7 @@ def monitor_lzt():
             if resp_fresh.status_code == 200:
                 consecutive_errors = 0
                 items_fresh = resp_fresh.json().get("items") or resp_fresh.json().get("accounts") or []
-                if is_first_run:
-                    for item in items_fresh:
-                        item_id = str(item.get("item_id"))
-                        if item_id:
-                            sent_alerts.add(item_id)
-                else:
-                    process_stream_items(items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
-
-            if is_first_run:
-                save_sent_alerts(sent_alerts)
-                is_first_run = False
-                print(f"[System] Pre-populated existing items for both streams. Ultra-Smart mode active!")
+                process_stream_items(items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
 
         except requests.exceptions.RequestException as req_err:
             print(f"[Connection Error] {req_err}")
