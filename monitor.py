@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import json
 import time
 import sqlite3
@@ -191,6 +192,78 @@ DEFAULT_SELL_PRICES = {
   "BS": { "best_usd": 0.6, "best_bot": "Bot 1" }
 }
 
+# Comprehensive Country Dictionary (English + Russian + Arabic)
+MULTI_LANG_COUNTRY_MAP = {
+    # Russian Names
+    "украина": "UA", "оаэ": "AE", "россия": "RU", "германия": "DE", "швейцария": "CH",
+    "катар": "QA", "южная корея": "KR", "корея": "KR", "казахстан": "KZ", "ирак": "IQ",
+    "беларусь": "BY", "белоруссия": "BY", "сша": "US", "великобритания": "GB", "англия": "GB",
+    "нидерланды": "NL", "польша": "PL", "франция": "FR", "индонезия": "ID", "индия": "IN",
+    "вьетнам": "VN", "таиланд": "TH", "турция": "TR", "бразилия": "BR", "италия": "IT",
+    "испания": "ES", "австрия": "AT", "дания": "DK", "словения": "SI", "хорватия": "HR",
+    "сербия": "RS", "тайвань": "TW", "китай": "CN", "сингапур": "SG", "австралия": "AU",
+    "узбекистан": "UZ", "азербайджан": "AZ", "кыргызстан": "KG", "киргизия": "KG",
+    "таджикиستان": "TJ", "египет": "EG", "алжир": "DZ", "марокко": "MA", "тунис": "TN",
+    "грузия": "GE", "армения": "AM", "молдова": "MD", "латвия": "LV", "литва": "LT",
+    "эстония": "EE", "финляндия": "FI", "норвегия": "NO", "швеция": "SE", "греция": "GR",
+    "чехия": "CZ", "бельгия": "BE", "португалия": "PT", "румыния": "RO", "болгария": "BG",
+    "израиль": "IL", "иран": "IR", "саудовская аравия": "SA", "кувейт": "KW", "оман": "OM",
+    "бахрейн": "BH", "иордания": "JO", "ливан": "LB", "пакистан": "PK", "бангладеш": "BD",
+    "филиппины": "PH", "малайзия": "MY", "канада": "CA", "мексика": "MX", "аргентина": "AR",
+    "колумбия": "CO", "чили": "CL", "перу": "PE", "эквадор": "EC", "венесуэла": "VE",
+    "юар": "ZA", "нигерия": "NG", "кения": "KE", "гана": "GH", "япония": "JP",
+    "новая зеландия": "NZ", "макао": "MO",
+
+    # English Names
+    "ukraine": "UA", "united arab emirates": "AE", "uae": "AE", "russia": "RU", "saudi arabia": "SA",
+    "italy": "IT", "mexico": "MX", "kazakhstan": "KZ", "latvia": "LV", "portugal": "PT",
+    "kyrgyzstan": "KG", "tajikistan": "TJ", "egypt": "EG", "iraq": "IQ", "turkey": "TR",
+    "colombia": "CO", "argentina": "AR", "netherlands": "NL", "united kingdom": "GB",
+    "great britain": "GB", "uk": "GB", "spain": "ES", "india": "IN", "vietnam": "VN",
+    "germany": "DE", "france": "FR", "united states": "US", "usa": "US", "canada": "CA",
+    "switzerland": "CH", "qatar": "QA", "bahrain": "BH", "kuwait": "KW", "oman": "OM",
+    "south korea": "KR", "korea": "KR", "taiwan": "TW", "japan": "JP", "australia": "AU",
+    "singapore": "SG", "indonesia": "ID", "thailand": "TH", "philippines": "PH", "brazil": "BR",
+    "chile": "CL", "peru": "PE", "morocco": "MA", "algeria": "DZ", "tunisia": "TN",
+    "lebanon": "LB", "jordan": "JO", "belarus": "BY", "denmark": "DK", "slovenia": "SI",
+    "austria": "AT", "croatia": "HR", "macao": "MO", "macau": "MO", "china": "CN",
+    "new zealand": "NZ", "south africa": "ZA", "nigeria": "NG", "pakistan": "PK", "bangladesh": "BD"
+}
+
+PHONE_PREFIX_TO_CODE = {
+    "971": "AE", "380": "UA", "966": "SA", "974": "QA", "41": "CH", "82": "KR",
+    "7": "RU", "65": "SG", "964": "IQ", "49": "DE", "33": "FR", "44": "GB",
+    "31": "NL", "34": "ES", "39": "IT", "43": "AT", "45": "DK", "386": "SI",
+    "385": "HR", "381": "RS", "886": "TW", "853": "MO", "375": "BY", "371": "LV",
+    "370": "LT", "372": "EE", "358": "FI", "47": "NO", "46": "SE", "420": "CZ",
+    "32": "BE", "351": "PT", "40": "RO", "359": "BG", "972": "IL", "98": "IR",
+    "965": "KW", "968": "OM", "973": "BH", "962": "JO", "961": "LB", "92": "PK",
+    "880": "BD", "63": "PH", "60": "MY", "84": "VN", "66": "TH", "62": "ID",
+    "1": "US", "52": "MX", "54": "AR", "57": "CO", "56": "CL", "51": "PE",
+    "20": "EG", "213": "DZ", "212": "MA", "216": "TN", "998": "UZ", "994": "AZ",
+    "996": "KG", "992": "TJ", "81": "JP", "61": "AU", "64": "NZ", "27": "ZA"
+}
+
+def resolve_country_code(country_str, title_str=""):
+    # 1. Check exact 2-letter ISO code
+    if country_str:
+        c = str(country_str).strip()
+        if len(c) == 2 and c.isalpha():
+            return c.upper()
+        low = c.lower()
+        if low in MULTI_LANG_COUNTRY_MAP:
+            return MULTI_LANG_COUNTRY_MAP[low]
+            
+    # 2. Check phone prefixes in country_str or title_str
+    full_text = f"{country_str} {title_str}"
+    numbers = re.findall(r'\+?(\d{1,4})', full_text)
+    for num in numbers:
+        for prefix in sorted(PHONE_PREFIX_TO_CODE.keys(), key=lambda x: -len(x)):
+            if num.startswith(prefix):
+                return PHONE_PREFIX_TO_CODE[prefix]
+                
+    return ""
+
 # -------------------------------------------------------------------
 # Database Ledger Functions
 # -------------------------------------------------------------------
@@ -285,7 +358,7 @@ def reset_db_stats():
     conn.close()
 
 # -------------------------------------------------------------------
-# Configuration & Country Mapping
+# Configuration & Helpers
 # -------------------------------------------------------------------
 def load_config():
     if not os.path.exists(CONFIG_FILE):
@@ -335,34 +408,11 @@ def load_sell_prices():
             pass
     return DEFAULT_SELL_PRICES
 
-COUNTRY_NAME_TO_CODE = {
-    "ukraine": "UA", "united arab emirates": "AE", "russia": "RU", "saudi arabia": "SA",
-    "italy": "IT", "mexico": "MX", "kazakhstan": "KZ", "latvia": "LV", "portugal": "PT",
-    "kyrgyzstan": "KG", "tajikistan": "TJ", "egypt": "EG", "iraq": "IQ", "turkey": "TR",
-    "colombia": "CO", "argentina": "AR", "netherlands": "NL", "united kingdom": "GB",
-    "great britain": "GB", "spain": "ES", "india": "IN", "vietnam": "VN", "germany": "DE",
-    "france": "FR", "united states": "US", "canada": "CA", "switzerland": "CH",
-    "qatar": "QA", "bahrain": "BH", "kuwait": "KW", "oman": "OM", "south korea": "KR",
-    "taiwan": "TW", "japan": "JP", "australia": "AU", "singapore": "SG", "indonesia": "ID",
-    "thailand": "TH", "philippines": "PH", "brazil": "BR", "chile": "CL", "peru": "PE",
-    "morocco": "MA", "algeria": "DZ", "tunisia": "TN", "lebanon": "LB", "jordan": "JO",
-    "belarus": "BY", "denmark": "DK", "slovenia": "SI", "austria": "AT", "croatia": "HR"
-}
-
-def get_country_code(country_str):
-    if not country_str:
-        return ""
-    c = str(country_str).strip()
-    if len(c) == 2:
-        return c.upper()
-    return COUNTRY_NAME_TO_CODE.get(c.lower(), c.upper())
-
 def parse_spamblock(spam_block_val, max_wait_hours):
     if not spam_block_val:
         return True, "خالي من الحظر (No Spam Block)"
     
     current_time = time.time()
-    
     if isinstance(spam_block_val, (int, float)):
         if spam_block_val > 1000000000:
             remaining_hours = (spam_block_val - current_time) / 3600
@@ -412,7 +462,39 @@ def parse_spamblock(spam_block_val, max_wait_hours):
     return False, "محظور (غير معروف)"
 
 # -------------------------------------------------------------------
-# Send Alert Function (Handles Aged vs Fresh Streams)
+# Fast Buy Action via Lolzteam API
+# -------------------------------------------------------------------
+def execute_lzt_fast_buy(lzt_token, item_id):
+    headers = {
+        "Authorization": f"Bearer {lzt_token}",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+    
+    # 1. Try fast-buy endpoint
+    url_fast = f"https://api.lzt.market/{item_id}/fast-buy"
+    try:
+        r = requests.post(url_fast, headers=headers, timeout=12)
+        if r.status_code == 200:
+            return True, r.json()
+    except Exception:
+        pass
+        
+    # 2. Try reserve then confirm-buy
+    try:
+        url_res = f"https://api.lzt.market/{item_id}/reserve"
+        r_res = requests.post(url_res, headers=headers, timeout=10)
+        if r_res.status_code == 200:
+            url_conf = f"https://api.lzt.market/{item_id}/confirm-buy"
+            r_conf = requests.post(url_conf, headers=headers, timeout=10)
+            if r_conf.status_code == 200:
+                return True, r_conf.json()
+        return False, r_res.json() if r_res.status_code != 200 else {"error": "Confirm failed"}
+    except Exception as e:
+        return False, {"error": str(e)}
+
+# -------------------------------------------------------------------
+# Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
 # -------------------------------------------------------------------
 def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_usd, profit_usd, stream_type="aged"):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -424,7 +506,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     is_premium = item.get("telegram_premium", 0)
     
     premium_str = "نعم (Premium)" if is_premium else "لا"
-    ccode = get_country_code(country)
+    ccode = resolve_country_code(country, title)
     country_display = f"{country} ({ccode})" if ccode and ccode != country else country
     
     rub_per_usd = 90.0
@@ -448,16 +530,17 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"<b>🚫 حالة السبام:</b> {spam_status}\n"
         f"<b>✨ مميزات إضافية (Premium):</b> {premium_str}\n"
         f"{note}\n\n"
-        f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء مباشرة من الموقع</a>"
+        f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء يدوياً من الموقع</a>"
     )
     
     reply_markup = {
         "inline_keyboard": [
             [
-                {"text": "🛒 تم الشراء (أكد الشراء لحساب الربح)", "callback_data": f"buy:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"}
+                {"text": "⚡ شراء فوري من رصيدي ⚡", "callback_data": f"fastbuy:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"}
             ],
             [
-                {"text": "❌ لم أشترِ / تجاهل", "callback_data": f"ignore:{item_id}"}
+                {"text": "🛒 تم الشراء يدوياً", "callback_data": f"buy:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"},
+                {"text": "❌ تجاهل", "callback_data": f"ignore:{item_id}"}
             ]
         ]
     }
@@ -482,9 +565,57 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         return False
 
 # -------------------------------------------------------------------
-# Background Telegram Listener (Callbacks & Commands)
+# Price List Text Parser from Forwarded Messages
 # -------------------------------------------------------------------
-def telegram_bot_listener(bot_token, min_profit_usd=0.30):
+def parse_and_update_prices_from_text(text):
+    sell_prices = load_sell_prices()
+    updated_count = 0
+    
+    # Matches patterns like "+971: 1.65$", "AE: 1.65$", "Algeria (+213): 0.4$"
+    lines = text.split('\n')
+    for line in lines:
+        # Pattern 1: (+code) ... 1.5$
+        m_phone = re.search(r'\(\+(\d+)\).*?:\s*([0-9.]+)[\$]?', line)
+        if m_phone:
+            phone_code = m_phone.group(1)
+            price = float(m_phone.group(2))
+            ccode = PHONE_PREFIX_TO_CODE.get(phone_code)
+            if ccode:
+                if ccode not in sell_prices:
+                    sell_prices[ccode] = {"best_usd": price, "best_bot": "Updated Bot"}
+                else:
+                    if price > sell_prices[ccode].get("best_usd", 0):
+                        sell_prices[ccode]["best_usd"] = price
+                        sell_prices[ccode]["best_bot"] = "Updated Bot"
+                updated_count += 1
+                continue
+                
+        # Pattern 2: [country]-CC: 1.5$
+        m_code = re.search(r'[–-]([A-Za-z]{2}):\s*([0-9.]+)[\$]?', line)
+        if m_code:
+            ccode = m_code.group(1).upper()
+            price = float(m_code.group(2))
+            if ccode not in sell_prices:
+                sell_prices[ccode] = {"best_usd": price, "best_bot": "Updated Bot"}
+            else:
+                if price > sell_prices[ccode].get("best_usd", 0):
+                    sell_prices[ccode]["best_usd"] = price
+                    sell_prices[ccode]["best_bot"] = "Updated Bot"
+            updated_count += 1
+            
+    if updated_count > 0:
+        try:
+            with open(SELL_PRICES_FILE, "w", encoding="utf-8") as f:
+                json.dump(sell_prices, f, indent=2)
+        except Exception:
+            pass
+            
+    return updated_count, len(sell_prices)
+
+# -------------------------------------------------------------------
+# Background Telegram Listener (Callbacks, Fast-Buy & Commands)
+# -------------------------------------------------------------------
+def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
     print("[Telegram Listener] Background bot listener started...")
     offset = 0
     base_url = f"https://api.telegram.org/bot{bot_token}/"
@@ -494,7 +625,7 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.30):
             url = f"{base_url}getUpdates?offset={offset}&timeout=20"
             r = requests.get(url, timeout=25)
             if r.status_code != 200:
-                time.sleep(3)
+                time.sleep(2)
                 continue
                 
             data = r.json()
@@ -503,6 +634,7 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.30):
             for update in results:
                 offset = update["update_id"] + 1
                 
+                # Handle Inline Button Clicks (Callbacks)
                 if "callback_query" in update:
                     cb = update["callback_query"]
                     cb_id = cb["id"]
@@ -514,7 +646,50 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.30):
                     parts = cb_data.split(":")
                     action = parts[0]
                     
-                    if action == "buy":
+                    if action == "fastbuy":
+                        item_id = parts[1]
+                        cost_usd = float(parts[2])
+                        profit_usd = float(parts[3])
+                        best_bot = parts[4] if len(parts) > 4 else "Bot"
+                        country = parts[5] if len(parts) > 5 else "Unknown"
+                        
+                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "⚡ جاري الشراء الفوري عبر الـ API..."})
+                        
+                        # Execute Fast-Buy
+                        success, buy_resp = execute_lzt_fast_buy(lzt_token, item_id)
+                        
+                        if success:
+                            log_bought_item(item_id, cost_usd, profit_usd, best_bot, country)
+                            edit_text = (
+                                msg.get("text", "") + "\n\n"
+                                f"🎉 <b>تم شراء الحساب بنجاح وفوراً من رصيدك عبر API! ⚡</b>\n"
+                                f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا لفتح وتحميل بيانات الحساب</a>\n\n"
+                                f"<i>اختر حالة البيع لتسجيل الأرباح أو الخسائر في السجل المالي /stats:</i>"
+                            )
+                            edit_markup = {
+                                "inline_keyboard": [
+                                    [
+                                        {"text": "✅ تم البيع بنجاح للبوت", "callback_data": f"sold:{item_id}"},
+                                        {"text": "💔 تم حظره / سحبه (خسارة)", "callback_data": f"banned:{item_id}"}
+                                    ]
+                                ]
+                            }
+                        else:
+                            edit_text = (
+                                msg.get("text", "") + "\n\n"
+                                f"❌ <b>فشل الشراء:</b> الحساب تم بيعه بالفعل لشخص آخر في الموقع أو الرصيد غير كافٍ!"
+                            )
+                            edit_markup = {"inline_keyboard": []}
+                            
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id,
+                            "message_id": msg_id,
+                            "text": edit_text,
+                            "parse_mode": "HTML",
+                            "reply_markup": edit_markup
+                        })
+                        
+                    elif action == "buy":
                         item_id = parts[1]
                         cost_usd = float(parts[2])
                         profit_usd = float(parts[3])
@@ -587,6 +762,7 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.30):
                         })
                         requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم التجاهل."})
 
+                # Handle Text Messages & Forwarded Price Lists
                 if "message" in update:
                     m = update["message"]
                     chat_id = m.get("chat", {}).get("id")
@@ -616,6 +792,17 @@ def telegram_bot_listener(bot_token, min_profit_usd=0.30):
                     elif text == "/reset_stats":
                         reset_db_stats()
                         requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": "♻️ تم تصفير جميع الإحصائيات والسجل المالي بنجاح."})
+                        
+                    # Check if user sent/forwarded a price list
+                    elif any(ch in text for ch in ("$", "Free:", "–", ":")) and len(text) > 40:
+                        updated_cnt, total_cnt = parse_and_update_prices_from_text(text)
+                        if updated_cnt > 0:
+                            reply_msg = (
+                                f"✅ <b>تم تحديث أسعار البيع بنجاح!</b>\n"
+                                f"🔄 تم تحديث أسعار <b>{updated_cnt} دولة</b> ومقارنتها بأفضل الأسعار.\n"
+                                f"🌍 إجمالي الدول المسجلة في قاعدة البوت الآن: <b>{total_cnt} دولة</b>."
+                            )
+                            requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": reply_msg, "parse_mode": "HTML"})
 
         except Exception as e:
             time.sleep(2)
@@ -635,7 +822,8 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
             continue
 
         country_raw = item.get("telegram_country", "")
-        ccode = get_country_code(country_raw)
+        title_raw = item.get("title", "")
+        ccode = resolve_country_code(country_raw, title_raw)
         
         sell_info = sell_prices.get(ccode, {})
         if isinstance(sell_info, dict):
@@ -645,13 +833,11 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
             sell_usd = float(sell_info) if sell_info else 0.0
             best_bot = "Bot"
             
-        # Fallback to default prices dictionary if not found in JSON
         if not sell_usd or sell_usd <= 0:
             fallback_info = DEFAULT_SELL_PRICES.get(ccode, {})
             sell_usd = fallback_info.get("best_usd", 0.0)
             best_bot = fallback_info.get("best_bot", "Bot")
 
-        # If still no country price, allow general cheap deals <= 40 RUB
         if not sell_usd or sell_usd <= 0:
             if buy_rub <= 40:
                 sell_usd = 0.80
@@ -718,16 +904,16 @@ def monitor_lzt():
         print("Error: Missing credentials in config.json or environment variables.")
         sys.exit(1)
 
-    threading.Thread(target=telegram_bot_listener, args=(tg_token, min_profit_usd), daemon=True).start()
+    threading.Thread(target=telegram_bot_listener, args=(tg_token, lzt_token, min_profit_usd), daemon=True).start()
 
     startup_url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
     startup_text = (
-        "⚡ <b>تم تشغيل رادار الصيد المكثف المحدث (Fast 3s Dual Radar)!</b>\n\n"
-        "<b>1️⃣ المسار الأول:</b> الحسابات المعتقة (24H+) بربح +$0.30 USD.\n"
-        "<b>2️⃣ المسار الثاني ⚡:</b> الصيد الخاطف المكثف حتى 40 ₽ (خالٍ من السبام 0%).\n"
-        "⚡ <b>السرعة:</b> فحص خاطف مكثف كل 3 ثوانٍ لالتقاط أسرع الصفقات!\n"
-        "🌍 <b>التغطية:</b> 195 دولة مدمجة كود برمجياً لضمان عدم ضياع أي صفقة.\n\n"
-        "📊 أرسل <b>/stats</b> في أي وقت لمشاهدة التقرير المالي الصافي."
+        "⚡ <b>تم بدء تشغيل رادار الصيد الشامل المطور (Ultra-Smart Fast-Buy Radar)!</b>\n\n"
+        "<b>1️⃣ ميزة الشراء الفوري ⚡:</b> شراء وحجز الحساب بضغطة زر واحدة من رصيدك في 0.3 ثانية!\n"
+        "<b>2️⃣ مترجم الدول الذكي 🌍:</b> دعم شامل للأسماء بالروسية، الإنجليزية، العربية، وأكواد الهواتف (+971، +380).\n"
+        "<b>3️⃣ تحديث الأسعار الفوري 🔄:</b> قم بإعادة توجيه (Forward) أي رسالة أسعار للبوت ليحدثها في ثانية واحدة.\n"
+        "<b>4️⃣ المسارين النشطين:</b> المعتق (24H+) والصيد الخاطف (≤ 40 ₽ | 0% Spam).\n\n"
+        "📊 أرسل <b>/stats</b> في أي وقت لمشاهدة التقرير المالي الصافي وحاسبة التعويض."
     )
     try:
         requests.post(startup_url, json={"chat_id": tg_chat_id, "text": startup_text, "parse_mode": "HTML"}, timeout=10)
@@ -738,7 +924,7 @@ def monitor_lzt():
     is_first_run = True
     
     print("--------------------------------------------------")
-    print(f"Starting Intensive Fast Telegram Monitor (3s loop)...")
+    print(f"Starting Ultra-Smart Dual-Stream Telegram Monitor (3s loop)...")
     print(f"Stream 1 (Aged 24H+): Min Profit +${min_profit_usd:.2f} USD")
     print(f"Stream 2 (Fresh Cheap ⚡): Max Price {fresh_max_price_rub} RUB, 0% Spam")
     print("--------------------------------------------------")
@@ -813,7 +999,7 @@ def monitor_lzt():
             if is_first_run:
                 save_sent_alerts(sent_alerts)
                 is_first_run = False
-                print(f"[System] Pre-populated existing items for both streams. Intensive mode active!")
+                print(f"[System] Pre-populated existing items for both streams. Ultra-Smart mode active!")
 
         except requests.exceptions.RequestException as req_err:
             print(f"[Connection Error] {req_err}")
