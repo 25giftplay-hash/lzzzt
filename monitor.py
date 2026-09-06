@@ -1592,7 +1592,15 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
         if not item_id or item_id in sent_alerts:
             continue
 
-        buy_rub = float(item.get("price", 0))
+        price_val = float(item.get("price", 0))
+        price_currency = str(item.get("price_currency") or item.get("currency") or "rub").lower()
+        if price_currency in ("usd", "$"):
+            buy_usd = price_val
+            buy_rub = buy_usd * rub_per_usd
+        else:
+            buy_rub = price_val
+            buy_usd = buy_rub / rub_per_usd
+
         if max_price_rub and buy_rub > max_price_rub:
             sent_alerts.add(item_id)
             continue
@@ -1622,7 +1630,6 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
                 sent_alerts.add(item_id)
                 continue
 
-        buy_usd = buy_rub / rub_per_usd
         expected_profit_usd = sell_usd - buy_usd
 
         # Profit Filter
@@ -1706,7 +1713,7 @@ def monitor_lzt():
     filters = config.get("filters", {})
     
     min_profit_usd = filters.get("min_profit_usd", 0.30)
-    auto_buy_enabled = filters.get("auto_buy_enabled", True)
+    auto_buy_enabled = filters.get("auto_buy_enabled", False)
     auto_buy_min_profit_usd = filters.get("auto_buy_min_profit_usd", 0.80)
     fresh_max_price_rub = filters.get("fresh_max_price_rub", 40)
     max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
