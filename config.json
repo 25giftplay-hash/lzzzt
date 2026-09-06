@@ -4,7 +4,7 @@
   "telegram_chat_id": "YOUR_TELEGRAM_CHAT_ID_HERE",
   "check_interval_seconds": 3,
   "filters": {
-    "auto_buy_enabled": true,
+    "auto_buy_enabled": false,
     "auto_buy_min_profit_usd": 0.80,
     "min_profit_usd": 0.30,
     "pmin": 2,
