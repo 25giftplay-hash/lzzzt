@@ -17,6 +17,7 @@
     "nsb": true,
     "nsb_by_me": true,
     "spam_block_max_wait_hours": 0,
-    "daybreak": 1
+    "daybreak": 1,
+    "session_age": 1
   }
 }
