@@ -1171,58 +1171,13 @@ def load_sell_prices():
             pass
     return DEFAULT_SELL_PRICES
 
-def parse_spamblock(spam_block_val, max_wait_hours):
+def parse_spamblock(spam_block_val, max_wait_hours=0):
     if not spam_block_val:
-        return True, "خالي من الحظر (No Spam Block)"
-    
-    current_time = time.time()
-    if isinstance(spam_block_val, (int, float)):
-        if spam_block_val > 1000000000:
-            remaining_hours = (spam_block_val - current_time) / 3600
-            if remaining_hours <= 0:
-                return True, "خالي من الحظر (انتهت مدة الحظر)"
-            elif remaining_hours <= max_wait_hours:
-                return True, f"محظور مؤقتاً (ينفك بعد {remaining_hours:.1f} ساعة)"
-            else:
-                return False, f"محظور مؤقتاً لمدة طويلة ({remaining_hours:.1f} ساعة)"
-        else:
-            return False, "محظور (حظر دائم أو غير محدد)"
-            
-    if isinstance(spam_block_val, str):
-        if spam_block_val.isdigit():
-            val = int(spam_block_val)
-            if val > 1000000000:
-                remaining_hours = (val - current_time) / 3600
-                if remaining_hours <= 0:
-                    return True, "خالي من الحظر (انتهت مدة الحظر)"
-                elif remaining_hours <= max_wait_hours:
-                    return True, f"محظور مؤقتاً (ينفك بعد {remaining_hours:.1f} ساعة)"
-                else:
-                    return False, f"محظور مؤقتاً لمدة طويلة ({remaining_hours:.1f} ساعة)"
-            return False, "محظور (حظر دائم)"
-            
-        for fmt in ('%d.%m.%Y %H:%M', '%Y-%m-%dT%H:%M:%S%z', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
-            try:
-                dt = datetime.strptime(spam_block_val.strip(), fmt)
-                remaining_hours = (dt.timestamp() - current_time) / 3600
-                if remaining_hours <= 0:
-                    return True, "خالي من الحظر (انتهت مدة الحظر)"
-                elif remaining_hours <= max_wait_hours:
-                    return True, f"محظور مؤقتاً (ينفك بعد {remaining_hours:.1f} ساعة)"
-                else:
-                    return False, f"محظور مؤقتاً لمدة طويلة ({remaining_hours:.1f} ساعة)"
-            except Exception:
-                continue
-                
-        low = spam_block_val.lower().strip()
-        if low in ('no', 'false', 'none', '0'):
-            return True, "خالي من الحظر (No Spam Block)"
-        if any(w in low for w in ['permanent', 'вечн', 'eternal', 'never', 'yes', 'true']):
-            return False, "محظور (حظر دائم)"
-            
-        return False, f"محظور (حالة غير معروفة: {spam_block_val})"
-        
-    return False, "محظور (غير معروف)"
+        return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+    low = str(spam_block_val).strip().lower()
+    if low in ('no', 'false', 'none', '0', ''):
+        return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+    return False, f"محظور سبام ({spam_block_val})"
 
 # -------------------------------------------------------------------
 # Fast Buy Action via Lolzteam API
@@ -1589,7 +1544,11 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
 def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd):
     for item in items:
         item_id = str(item.get("item_id"))
-        if not item_id or item_id in sent_alerts:
+        if not item_id:
+            continue
+
+        alert_key = f"{item_id}:{stream_type}"
+        if alert_key in sent_alerts:
             continue
 
         price_val = float(item.get("price", 0))
@@ -1602,7 +1561,6 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
             buy_usd = buy_rub / rub_per_usd
 
         if max_price_rub and buy_rub > max_price_rub:
-            sent_alerts.add(item_id)
             continue
 
         country_raw = item.get("telegram_country", "")
@@ -1627,31 +1585,19 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
                 sell_usd = 0.80
                 best_bot = "Market"
             else:
-                sent_alerts.add(item_id)
                 continue
 
         expected_profit_usd = sell_usd - buy_usd
 
         # Profit Filter
         if expected_profit_usd < min_profit_usd:
-            sent_alerts.add(item_id)
             continue
 
-        # Check Spam Block
+        # Check Spam Block (Strict 0% Spam Clean)
         spam_block_val = item.get("telegram_spam_block")
-        
-        if stream_type == "fresh":
-            if spam_block_val:
-                low = str(spam_block_val).lower().strip()
-                if low not in ('no', 'false', 'none', '0', ''):
-                    sent_alerts.add(item_id)
-                    continue
-            spam_status = "خالٍ تماماً من السبام (0% Spam)"
-        else:
-            is_accepted, spam_status = parse_spamblock(spam_block_val, max_wait_hours)
-            if not is_accepted:
-                sent_alerts.add(item_id)
-                continue
+        is_accepted, spam_status = parse_spamblock(spam_block_val)
+        if not is_accepted:
+            continue
 
         # Check for Auto-Snipe (Automatic Fast-Buy for High Profit Deals)
         if auto_buy_enabled and expected_profit_usd >= auto_buy_min_profit_usd:
@@ -1659,7 +1605,7 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
             buy_ok, buy_resp = execute_lzt_fast_buy(lzt_token, item_id)
             if buy_ok:
                 log_bought_item(item_id, buy_usd, expected_profit_usd, best_bot, ccode)
-                sent_alerts.add(item_id)
+                sent_alerts.add(alert_key)
                 save_sent_alerts(sent_alerts)
                 
                 # Send Auto-Snipe Success Notification
@@ -1696,7 +1642,7 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
         )
         
         if success:
-            sent_alerts.add(item_id)
+            sent_alerts.add(alert_key)
             save_sent_alerts(sent_alerts)
 
 # -------------------------------------------------------------------
@@ -1754,7 +1700,11 @@ def monitor_lzt():
             for item in init_items:
                 item_id = str(item.get("item_id"))
                 if item_id:
-                    sent_alerts.add(item_id)
+                    if item.get("daybreak") or item.get("telegram_daybreak"):
+                        sent_alerts.add(f"{item_id}:aged")
+                        sent_alerts.add(f"{item_id}:fresh")
+                    else:
+                        sent_alerts.add(f"{item_id}:fresh")
             save_sent_alerts(sent_alerts)
             print(f"[System] Successfully pre-populated {len(init_items)} existing items. Monitoring active!")
     except Exception as e:
@@ -1774,7 +1724,7 @@ def monitor_lzt():
                 "nsb": 1,
                 "nsb_by_me": 1,
                 "allow_geo_spamblock": 0,
-                "spam": "nomatter",
+                "spam": "no",
                 "daybreak": 1,
                 "order_by": "pdate_to_down"
             }
