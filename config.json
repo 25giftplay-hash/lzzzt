@@ -12,10 +12,11 @@
     "fresh_max_price_rub": 40,
     "currency": "rub",
     "2fa": "no",
+    "spam": "no",
     "allow_geo_spamblock": false,
     "nsb": true,
     "nsb_by_me": true,
-    "spam_block_max_wait_hours": 72,
+    "spam_block_max_wait_hours": 0,
     "daybreak": 1
   }
 }
