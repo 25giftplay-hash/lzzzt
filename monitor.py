@@ -1223,7 +1223,6 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     country = item.get("telegram_country", "غير معروف")
     is_premium = item.get("telegram_premium", 0)
     
-    premium_str = "نعم (Premium)" if is_premium else "لا"
     ccode = resolve_country_code(country, title)
     country_display = f"{country} ({ccode})" if ccode and ccode != country else country
     
@@ -1231,12 +1230,39 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     sell_rub = sell_usd * rub_per_usd
     profit_rub = profit_usd * rub_per_usd
     
-    if stream_type == "fresh":
-        header = f"<b>⚡ [صيد خاطف ⚡] حساب جديد بسعر {price_rub} ₽ (≤ 40 ₽ | خالٍ من السبام)</b>"
-        note = "<b>⚡ نوع الصفقة:</b> حساب طازج/جديد بسعر رخيص وخالٍ تماماً من حظر السبام (0% Spam)."
+    # Calculate exact session age
+    session_created_at = item.get("telegram_session_created_at") or 0
+    now_ts = time.time()
+    if session_created_at > 0:
+        session_age_hours = (now_ts - session_created_at) / 3600
+        if session_age_hours >= 24.0:
+            session_age_str = f"✅ {session_age_hours:.1f} ساعة (جاهزة لطرد الجلسات فوراً)"
+        else:
+            remaining_hours = max(0.0, 24.0 - session_age_hours)
+            session_age_str = f"⏳ {session_age_hours:.1f} ساعة (متبقي {remaining_hours:.1f} س لتصبح 24H جاهزة)"
     else:
-        header = f"<b>🔔 [حساب معتق 24H+] صفقة مربحة (+${profit_usd:.2f} USD)</b>"
-        note = "<b>⏳ عمر الجلسة:</b> متصل منذ 24H+ (سهل طرد الجلسات من الموقع مباشرة)."
+        session_age_str = "غير محدد"
+
+    # Additional features / assets
+    extras = []
+    if is_premium:
+        extras.append("💎 بريميوم نشط (Premium)")
+    stars_count = item.get("telegram_stars_count", 0)
+    if stars_count and int(stars_count) > 0:
+        extras.append(f"🌟 {stars_count} نجوم")
+    gifts_count = item.get("telegram_gifts_count", 0)
+    if gifts_count and int(gifts_count) > 0:
+        extras.append(f"🎁 {gifts_count} هدايا")
+    
+    extras_str = " | ".join(extras) if extras else "لا يوجد"
+    tier_badge = " [🏆 صيد ذهبي]" if sell_usd >= 1.50 else ""
+
+    if stream_type == "fresh":
+        header = f"<b>⚡ [صيد خاطف ⚡{tier_badge}] حساب جديد بسعر {price_rub} ₽ (≤ 40 ₽ | خالٍ من السبام)</b>"
+        note = "<b>⚡ نوع الصفقة:</b> حساب طازج بسعر رخيص وخالٍ تماماً من حظر السبام (0% Spam)."
+    else:
+        header = f"<b>🔔 [حساب معتق 24H+{tier_badge}] صفقة مربحة (+${profit_usd:.2f} USD)</b>"
+        note = "<b>⏳ حالة الجلسة:</b> جلسة مسجلة منذ 24H+ (جاهزة لطرد الجلسات من الموقع أو تليجرام فوراً)."
 
     text = (
         f"{header}\n\n"
@@ -1245,8 +1271,9 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"<b>🌍 الدولة:</b> {country_display}\n"
         f"<b>💰 أعلى سعر بيع لبوتاتك:</b> ${sell_usd:.2f} USD (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
         f"<b>💚 الربح الصافي المتوقع:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
+        f"<b>⏳ عمر الجلسة (Session Age):</b> {session_age_str}\n"
         f"<b>🚫 حالة السبام:</b> {spam_status}\n"
-        f"<b>✨ مميزات إضافية (Premium):</b> {premium_str}\n"
+        f"<b>✨ مميزات الحساب:</b> {extras_str}\n"
         f"{note}\n\n"
         f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء يدوياً من الموقع</a>"
     )
@@ -1599,6 +1626,14 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
         if not is_accepted:
             continue
 
+        # Strict Session Age Check for Aged Stream (>= 24 Hours)
+        if stream_type == "aged":
+            session_created_at = item.get("telegram_session_created_at") or 0
+            if session_created_at > 0:
+                age_hours = (time.time() - session_created_at) / 3600
+                if age_hours < 24.0:
+                    continue
+
         # Check for Auto-Snipe (Automatic Fast-Buy for High Profit Deals)
         if auto_buy_enabled and expected_profit_usd >= auto_buy_min_profit_usd:
             print(f"[AUTO-SNIPE TRIGGERED] Buying Item {item_id} automatically via API! (Expected Profit: +${expected_profit_usd:.2f})")
@@ -1700,7 +1735,8 @@ def monitor_lzt():
             for item in init_items:
                 item_id = str(item.get("item_id"))
                 if item_id:
-                    if item.get("daybreak") or item.get("telegram_daybreak"):
+                    session_created = item.get("telegram_session_created_at") or 0
+                    if session_created > 0 and (time.time() - session_created) >= 86400:
                         sent_alerts.add(f"{item_id}:aged")
                         sent_alerts.add(f"{item_id}:fresh")
                     else:
@@ -1725,7 +1761,7 @@ def monitor_lzt():
                 "nsb_by_me": 1,
                 "allow_geo_spamblock": 0,
                 "spam": "no",
-                "daybreak": 1,
+                "session_age": filters.get("session_age", 1),
                 "order_by": "pdate_to_down"
             }
             
