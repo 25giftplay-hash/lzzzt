@@ -13,6 +13,10 @@ SENT_ALERTS_FILE = "sent_alerts.json"
 SELL_PRICES_FILE = "sell_prices.json"
 DB_FILE = "stats.db"
 
+# Auto-Buy Rate Limit Tracking (Safeguard)
+AUTO_BUY_TIMESTAMPS = []
+AUTO_BUY_LOCK = threading.Lock()
+
 # -------------------------------------------------------------------
 # Embedded 195-Country Sell Price Database (Fallback)
 # -------------------------------------------------------------------
@@ -1031,8 +1035,9 @@ def resolve_country_code(country_str, title_str=""):
 # Database Ledger Functions
 # -------------------------------------------------------------------
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
+    c.execute("PRAGMA journal_mode=WAL;")
     c.execute('''
         CREATE TABLE IF NOT EXISTS ledger (
             item_id TEXT PRIMARY KEY,
@@ -1048,7 +1053,7 @@ def init_db():
     conn.close()
 
 def log_bought_item(item_id, cost_usd, expected_profit_usd, best_bot, country):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
     c.execute('''
         INSERT OR REPLACE INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
@@ -1058,21 +1063,21 @@ def log_bought_item(item_id, cost_usd, expected_profit_usd, best_bot, country):
     conn.close()
 
 def mark_item_sold(item_id):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
     c.execute("UPDATE ledger SET status = 'sold' WHERE item_id = ?", (str(item_id),))
     conn.commit()
     conn.close()
 
 def mark_item_banned(item_id):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
     c.execute("UPDATE ledger SET status = 'banned' WHERE item_id = ?", (str(item_id),))
     conn.commit()
     conn.close()
 
 def get_stats_summary(min_profit_usd=0.30):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
     c.execute("SELECT status, cost_usd, profit_usd FROM ledger")
     rows = c.fetchall()
@@ -1114,7 +1119,7 @@ def get_stats_summary(min_profit_usd=0.30):
     }
 
 def reset_db_stats():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
     c.execute("DELETE FROM ledger")
     conn.commit()
@@ -1246,7 +1251,9 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     # Additional features / assets
     extras = []
     if is_premium:
-        extras.append("💎 بريميوم نشط (Premium)")
+        prem_exp = item.get("telegram_premium_expires") or 0
+        rem_days = max(0, int((prem_exp - time.time()) / 86400)) if prem_exp > time.time() else 0
+        extras.append(f"💎 بريميوم نشط ({rem_days} يوم متبقٍ)")
     stars_count = item.get("telegram_stars_count", 0)
     if stars_count and int(stars_count) > 0:
         extras.append(f"🌟 {stars_count} نجوم")
@@ -1257,7 +1264,12 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     extras_str = " | ".join(extras) if extras else "لا يوجد"
     tier_badge = " [🏆 صيد ذهبي]" if sell_usd >= 1.50 else ""
 
-    if stream_type == "fresh":
+    if stream_type == "premium":
+        prem_exp = item.get("telegram_premium_expires") or 0
+        rem_days = max(0, int((prem_exp - time.time()) / 86400)) if prem_exp > time.time() else 0
+        header = f"<b>💎 [كنز تيليجرام بريميوم 💎{tier_badge}] حساب بريميوم بسعر {price_rub} ₽!</b>"
+        note = f"<b>💎 تفاصيل البريميوم:</b> اشتراك بريميوم نشط (متبقي {rem_days} يوماً) - ربح مرتفع جداً."
+    elif stream_type == "fresh":
         header = f"<b>⚡ [صيد خاطف ⚡{tier_badge}] حساب جديد بسعر {price_rub} ₽ (≤ 40 ₽ | خالٍ من السبام)</b>"
         note = "<b>⚡ نوع الصفقة:</b> حساب طازج بسعر رخيص وخالٍ تماماً من حظر السبام (0% Spam)."
     else:
@@ -1566,9 +1578,17 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
             time.sleep(2)
 
 # -------------------------------------------------------------------
-# Helper to Process Listings for Both Streams
+# Helper to Process Listings for All Streams
 # -------------------------------------------------------------------
-def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd):
+def process_stream_items(
+    items, stream_type, min_profit_usd, max_price_rub, max_wait_hours, rub_per_usd,
+    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+    auto_buy_enabled, auto_buy_min_profit_usd,
+    conditional_auto_buy_enabled=True,
+    cond_min_profit_usd=1.80,
+    cond_max_price_rub=60
+):
+    global AUTO_BUY_TIMESTAMPS
     for item in items:
         item_id = str(item.get("item_id"))
         if not item_id:
@@ -1614,6 +1634,41 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
             else:
                 continue
 
+        # -------------------------------------------------------------
+        # Asset Valuation: Telegram Premium, Stars & Gifts Boosters
+        # -------------------------------------------------------------
+        is_premium = item.get("telegram_premium", 0)
+        if is_premium:
+            prem_exp = item.get("telegram_premium_expires") or 0
+            now_ts = time.time()
+            rem_days = max(0, int((prem_exp - now_ts) / 86400)) if prem_exp > now_ts else 0
+            if rem_days >= 20:
+                sell_usd = max(sell_usd, 4.50)
+                best_bot = "Telegram Premium OTC ($4.50+)"
+            else:
+                sell_usd = max(sell_usd, 3.50)
+                best_bot = "Telegram Premium OTC ($3.50+)"
+
+        stars_count = 0
+        try:
+            stars_count = int(item.get("telegram_stars_count") or 0)
+        except (ValueError, TypeError):
+            stars_count = 0
+            
+        if stars_count >= 50:
+            stars_usd = round((stars_count / 100.0) * 1.30, 2)
+            sell_usd += stars_usd
+
+        gifts_count = 0
+        try:
+            gifts_count = int(item.get("telegram_gifts_count") or 0)
+        except (ValueError, TypeError):
+            gifts_count = 0
+            
+        if gifts_count >= 1:
+            gifts_usd = round(1.00 * min(gifts_count, 3), 2)
+            sell_usd += gifts_usd
+
         expected_profit_usd = sell_usd - buy_usd
 
         # Profit Filter
@@ -1634,18 +1689,63 @@ def process_stream_items(items, stream_type, min_profit_usd, max_price_rub, max_
                 if age_hours < 24.0:
                     continue
 
-        # Check for Auto-Snipe (Automatic Fast-Buy for High Profit Deals)
+        # -------------------------------------------------------------
+        # Smart Conditional Auto-Snipe with Safety Guardrails
+        # -------------------------------------------------------------
+        should_auto_buy = False
+        trigger_reason_ar = ""
+        trigger_reason_en = ""
+        
         if auto_buy_enabled and expected_profit_usd >= auto_buy_min_profit_usd:
-            print(f"[AUTO-SNIPE TRIGGERED] Buying Item {item_id} automatically via API! (Expected Profit: +${expected_profit_usd:.2f})")
+            should_auto_buy = True
+            trigger_reason_ar = f"ربح عام مرتفع (+${expected_profit_usd:.2f} USD)"
+            trigger_reason_en = f"High Profit (+${expected_profit_usd:.2f} USD)"
+        elif conditional_auto_buy_enabled:
+            # Condition 1: Insane Profit Deal (>= min_profit and price <= max_price)
+            if expected_profit_usd >= cond_min_profit_usd and buy_rub <= cond_max_price_rub:
+                should_auto_buy = True
+                trigger_reason_ar = f"صفقة أرباح خارقة (+${expected_profit_usd:.2f} USD)"
+                trigger_reason_en = f"Insane Profit Deal (+${expected_profit_usd:.2f} USD)"
+            # Condition 2: Telegram Premium Bargain (<= 50 RUB, Premium Active)
+            elif is_premium and buy_rub <= 50:
+                should_auto_buy = True
+                trigger_reason_ar = f"تيليجرام بريميوم بسعر لقطة ({buy_rub} ₽)"
+                trigger_reason_en = f"Telegram Premium Bargain ({buy_rub} RUB)"
+            # Condition 3: Stars / Gifts Goldmine (<= 45 RUB)
+            elif (stars_count >= 100 or gifts_count >= 1) and buy_rub <= 45:
+                should_auto_buy = True
+                trigger_reason_ar = f"أصول رقمية قيمة ({stars_count} نجمة / {gifts_count} هدايا)"
+                trigger_reason_en = f"Digital Assets Goldmine ({stars_count} Stars / {gifts_count} Gifts)"
+
+        if should_auto_buy:
+            # Safeguard 1: Hard Price Ceiling Check
+            if buy_rub > cond_max_price_rub:
+                print(f"[SAFEGUARD] Auto-buy skipped for item {item_id}: price {buy_rub} RUB > max limit {cond_max_price_rub} RUB.")
+                should_auto_buy = False
+
+        if should_auto_buy:
+            # Safeguard 2: Anti-Drain Rate Limit (Max 2 auto-buys per 60s)
+            now_t = time.time()
+            with AUTO_BUY_LOCK:
+                while AUTO_BUY_TIMESTAMPS and (now_t - AUTO_BUY_TIMESTAMPS[0]) > 60:
+                    AUTO_BUY_TIMESTAMPS.pop(0)
+                if len(AUTO_BUY_TIMESTAMPS) >= 2:
+                    print(f"[SAFEGUARD] Auto-buy rate limit reached (2 purchases in last 60s). Falling back to manual alert.")
+                    should_auto_buy = False
+                else:
+                    AUTO_BUY_TIMESTAMPS.append(now_t)
+
+        if should_auto_buy:
+            print(f"[AUTO-SNIPE TRIGGERED: {trigger_reason_en}] Buying Item {item_id} automatically via API! (Price: {buy_rub} RUB | Profit: +${expected_profit_usd:.2f})")
             buy_ok, buy_resp = execute_lzt_fast_buy(lzt_token, item_id)
             if buy_ok:
                 log_bought_item(item_id, buy_usd, expected_profit_usd, best_bot, ccode)
                 sent_alerts.add(alert_key)
                 save_sent_alerts(sent_alerts)
                 
-                # Send Auto-Snipe Success Notification
                 auto_text = (
-                    f"🎯 <b>[تم القنص الآلي والشراء بنجاح! ⚡]</b>\n\n"
+                    f"🎯 <b>[تم القنص الآلي والشراء بنجاح! ⚡]</b>\n"
+                    f"<b>سبب القنص الفوري:</b> {trigger_reason_ar}\n\n"
                     f"<b>📝 العنوان:</b> {item.get('title', 'بدون عنوان')}\n"
                     f"<b>💵 سعر الشراء:</b> {buy_rub} ₽ (≈ ${buy_usd:.2f} USD)\n"
                     f"<b>🌍 الدولة:</b> {country_raw} ({ccode})\n"
@@ -1696,7 +1796,13 @@ def monitor_lzt():
     min_profit_usd = filters.get("min_profit_usd", 0.30)
     auto_buy_enabled = filters.get("auto_buy_enabled", False)
     auto_buy_min_profit_usd = filters.get("auto_buy_min_profit_usd", 0.80)
+    conditional_auto_buy_enabled = filters.get("conditional_auto_buy_enabled", True)
+    conditional_auto_buy_min_profit_usd = filters.get("conditional_auto_buy_min_profit_usd", 1.80)
+    conditional_auto_buy_max_price_rub = filters.get("conditional_auto_buy_max_price_rub", 60)
     fresh_max_price_rub = filters.get("fresh_max_price_rub", 40)
+    premium_stream_enabled = filters.get("premium_stream_enabled", True)
+    premium_max_price_rub = filters.get("premium_max_price_rub", 60)
+    scan_dual_pages = filters.get("scan_dual_pages", True)
     max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
     rub_per_usd = 90.0
     
@@ -1709,10 +1815,13 @@ def monitor_lzt():
     sent_alerts = load_sent_alerts()
     
     print("--------------------------------------------------")
-    print(f"Starting Ultra-Smart Dual-Stream Telegram Monitor (3s loop)...")
-    print(f"Auto-Snipe: Enabled for deals with profit >= +${auto_buy_min_profit_usd:.2f} USD")
+    print(f"Starting Ultra-Smart Multi-Stream Telegram Monitor (3s loop)...")
+    print(f"Smart Conditional Auto-Snipe: {'Enabled' if conditional_auto_buy_enabled else 'Disabled'} (>= +${conditional_auto_buy_min_profit_usd:.2f} USD or Premium/Assets <= {conditional_auto_buy_max_price_rub} RUB)")
     print(f"Stream 1 (Aged 24H+): Min Profit +${min_profit_usd:.2f} USD")
     print(f"Stream 2 (Fresh Cheap ⚡): Max Price {fresh_max_price_rub} RUB, 0% Spam")
+    if premium_stream_enabled:
+        print(f"Stream 3 (Premium 💎): Max Price {premium_max_price_rub} RUB, 0% Spam")
+    print(f"Dual-Page Scan: {'Enabled (Alternating Page 1 & 2)' if scan_dual_pages else 'Single Page'}")
     print("--------------------------------------------------")
     
     session = requests.Session()
@@ -1725,6 +1834,7 @@ def monitor_lzt():
     url = "https://api.lzt.market/telegram"
     fallback_url = "https://prod-api.lzt.market/telegram"
     consecutive_errors = 0
+    cycle_count = 0
 
     # Clean initial pre-population of all existing market items so no old accounts are alerted
     try:
@@ -1750,6 +1860,10 @@ def monitor_lzt():
         try:
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
+            
+            # Determine scanning page (Dual-Page Scanning: Page 1 <-> Page 2)
+            current_page = 1 if (not scan_dual_pages or cycle_count % 2 == 0) else 2
+            cycle_count += 1
 
             # Query 1: Stream 1 (Aged 24H+ Accounts)
             params_aged = {
@@ -1762,6 +1876,7 @@ def monitor_lzt():
                 "allow_geo_spamblock": 0,
                 "spam": "no",
                 "session_age": filters.get("session_age", 1),
+                "page": current_page,
                 "order_by": "pdate_to_down"
             }
             
@@ -1769,7 +1884,12 @@ def monitor_lzt():
             if resp_aged.status_code == 200:
                 consecutive_errors = 0
                 items_aged = resp_aged.json().get("items") or resp_aged.json().get("accounts") or []
-                process_stream_items(items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
+                process_stream_items(
+                    items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd,
+                    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+                    auto_buy_enabled, auto_buy_min_profit_usd,
+                    conditional_auto_buy_enabled, conditional_auto_buy_min_profit_usd, conditional_auto_buy_max_price_rub
+                )
 
             # Query 2: Stream 2 (Fresh Cheap <= 40 RUB Accounts, No Spam)
             params_fresh = {
@@ -1781,6 +1901,7 @@ def monitor_lzt():
                 "nsb_by_me": 1,
                 "allow_geo_spamblock": 0,
                 "spam": "no",
+                "page": current_page,
                 "order_by": "pdate_to_down"
             }
             
@@ -1788,7 +1909,38 @@ def monitor_lzt():
             if resp_fresh.status_code == 200:
                 consecutive_errors = 0
                 items_fresh = resp_fresh.json().get("items") or resp_fresh.json().get("accounts") or []
-                process_stream_items(items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token, auto_buy_enabled, auto_buy_min_profit_usd)
+                process_stream_items(
+                    items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd,
+                    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+                    auto_buy_enabled, auto_buy_min_profit_usd,
+                    conditional_auto_buy_enabled, conditional_auto_buy_min_profit_usd, conditional_auto_buy_max_price_rub
+                )
+
+            # Query 3: Stream 3 (Telegram Premium Sniping - if enabled)
+            if premium_stream_enabled:
+                params_premium = {
+                    "pmin": filters.get("pmin", 2),
+                    "pmax": premium_max_price_rub,
+                    "currency": filters.get("currency", "rub"),
+                    "premium": "yes",
+                    "2fa": "no",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "allow_geo_spamblock": 0,
+                    "spam": "no",
+                    "page": current_page,
+                    "order_by": "pdate_to_down"
+                }
+                resp_prem = session.get(current_url, headers=headers, params=params_premium, timeout=10)
+                if resp_prem.status_code == 200:
+                    consecutive_errors = 0
+                    items_prem = resp_prem.json().get("items") or resp_prem.json().get("accounts") or []
+                    process_stream_items(
+                        items_prem, "premium", 0.50, premium_max_price_rub, max_wait_hours,
+                        rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+                        auto_buy_enabled, auto_buy_min_profit_usd,
+                        conditional_auto_buy_enabled, conditional_auto_buy_min_profit_usd, conditional_auto_buy_max_price_rub
+                    )
 
         except requests.exceptions.RequestException as req_err:
             print(f"[Connection Error] {req_err}")
