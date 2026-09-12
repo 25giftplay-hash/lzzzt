@@ -1177,11 +1177,22 @@ def load_sell_prices():
     return DEFAULT_SELL_PRICES
 
 def parse_spamblock(spam_block_val, max_wait_hours=0):
-    if not spam_block_val:
+    if spam_block_val is None or spam_block_val is False or spam_block_val == "":
         return True, "خالٍ تماماً من السبام (0% Spam Clean)"
     low = str(spam_block_val).strip().lower()
-    if low in ('no', 'false', 'none', '0', ''):
+    if low in ('no', 'false', 'none', '0', '', '-1'):
         return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+    try:
+        val_int = int(low)
+        if val_int == -1 or val_int == 0:
+            return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+        elif val_int > 0:
+            expire_dt = datetime.fromtimestamp(val_int).strftime('%Y-%m-%d %H:%M')
+            return False, f"محظور سبام حتى {expire_dt}"
+        else:
+            return False, f"محظور سبام (كود {val_int})"
+    except (ValueError, TypeError):
+        pass
     return False, f"محظور سبام ({spam_block_val})"
 
 # -------------------------------------------------------------------
@@ -1793,15 +1804,15 @@ def monitor_lzt():
     interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
     
-    min_profit_usd = filters.get("min_profit_usd", 0.30)
+    min_profit_usd = filters.get("min_profit_usd", 0.20)
     auto_buy_enabled = filters.get("auto_buy_enabled", False)
     auto_buy_min_profit_usd = filters.get("auto_buy_min_profit_usd", 0.80)
     conditional_auto_buy_enabled = filters.get("conditional_auto_buy_enabled", True)
-    conditional_auto_buy_min_profit_usd = filters.get("conditional_auto_buy_min_profit_usd", 1.80)
-    conditional_auto_buy_max_price_rub = filters.get("conditional_auto_buy_max_price_rub", 60)
-    fresh_max_price_rub = filters.get("fresh_max_price_rub", 40)
+    conditional_auto_buy_min_profit_usd = filters.get("conditional_auto_buy_min_profit_usd", 1.50)
+    conditional_auto_buy_max_price_rub = filters.get("conditional_auto_buy_max_price_rub", 80)
+    fresh_max_price_rub = filters.get("fresh_max_price_rub", 75)
     premium_stream_enabled = filters.get("premium_stream_enabled", True)
-    premium_max_price_rub = filters.get("premium_max_price_rub", 60)
+    premium_max_price_rub = filters.get("premium_max_price_rub", 120)
     scan_dual_pages = filters.get("scan_dual_pages", True)
     max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
     rub_per_usd = 90.0
