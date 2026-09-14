@@ -1231,11 +1231,39 @@ def execute_lzt_fast_buy(lzt_token, item_id):
 # -------------------------------------------------------------------
 # Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
 # -------------------------------------------------------------------
-def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_usd, profit_usd, stream_type="aged"):
+def extract_item_prices(item, rub_per_usd=90.0):
+    """
+    Accurately extracts buy_rub and buy_usd from LZT API item object.
+    LZT API returns 'rub_price' (e.g. 50, 60, 80) and 'price' (e.g. 0.59 if USD or 50 if RUB).
+    """
+    rub_price_raw = item.get("rub_price")
+    price_raw = item.get("price")
+    curr_raw = str(item.get("price_currency") or "rub").lower()
+
+    if rub_price_raw is not None and float(rub_price_raw) > 0:
+        buy_rub = float(rub_price_raw)
+        if curr_raw in ("usd", "$") and price_raw is not None:
+            buy_usd = float(price_raw)
+        else:
+            buy_usd = round(buy_rub / rub_per_usd, 2)
+    else:
+        raw_val = float(price_raw or 0.0)
+        if curr_raw in ("usd", "$"):
+            buy_usd = raw_val
+            buy_rub = round(buy_usd * rub_per_usd, 2)
+        else:
+            buy_rub = raw_val
+            buy_usd = round(buy_rub / rub_per_usd, 2)
+
+    return buy_rub, buy_usd
+
+# -------------------------------------------------------------------
+# Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
+# -------------------------------------------------------------------
+def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
     item_id = item.get("item_id")
-    price_rub = item.get("price")
     title = item.get("title", "بدون عنوان")
     country = item.get("telegram_country", "غير معروف")
     is_premium = item.get("telegram_premium", 0)
@@ -1244,21 +1272,15 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     country_display = f"{country} ({ccode})" if ccode and ccode != country else country
     
     rub_per_usd = 90.0
-    sell_rub = sell_usd * rub_per_usd
-    profit_rub = profit_usd * rub_per_usd
+    sell_rub = round(sell_usd * rub_per_usd, 0)
+    profit_rub = round(profit_usd * rub_per_usd, 0)
     
     # Calculate exact session age
-    session_created_at = item.get("telegram_session_created_at") or 0
-    now_ts = time.time()
-    if session_created_at > 0:
-        session_age_hours = (now_ts - session_created_at) / 3600
-        if session_age_hours >= 24.0:
-            session_age_str = f"✅ {session_age_hours:.1f} ساعة (جاهزة لطرد الجلسات فوراً)"
-        else:
-            remaining_hours = max(0.0, 24.0 - session_age_hours)
-            session_age_str = f"⏳ {session_age_hours:.1f} ساعة (متبقي {remaining_hours:.1f} س لتصبح 24H جاهزة)"
+    if session_age_hours >= 24.0:
+        session_age_str = f"✅ {session_age_hours:.1f} ساعة (جلسة معتقة 24H+ جاهزة لطرد الجلسات)"
     else:
-        session_age_str = "غير محدد"
+        remaining_hours = max(0.0, 24.0 - session_age_hours)
+        session_age_str = f"⏳ {session_age_hours:.1f} ساعة (متبقي {remaining_hours:.1f} س لتصبح 24H)"
 
     # Additional features / assets
     extras = []
@@ -1276,29 +1298,18 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     extras_str = " | ".join(extras) if extras else "لا يوجد"
     tier_badge = " [🏆 صيد ذهبي]" if sell_usd >= 1.50 else ""
 
-    if stream_type == "premium":
-        prem_exp = item.get("telegram_premium_expires") or 0
-        rem_days = max(0, int((prem_exp - time.time()) / 86400)) if prem_exp > time.time() else 0
-        header = f"<b>💎 [كنز تيليجرام بريميوم 💎{tier_badge}] حساب بريميوم بسعر {price_rub} ₽!</b>"
-        note = f"<b>💎 تفاصيل البريميوم:</b> اشتراك بريميوم نشط (متبقي {rem_days} يوماً) - ربح مرتفع جداً."
-    elif stream_type == "fresh":
-        header = f"<b>⚡ [صيد خاطف ⚡{tier_badge}] حساب جديد بسعر {price_rub} ₽ (≤ 40 ₽ | خالٍ من السبام)</b>"
-        note = "<b>⚡ نوع الصفقة:</b> حساب طازج بسعر رخيص وخالٍ تماماً من حظر السبام (0% Spam)."
-    else:
-        header = f"<b>🔔 [حساب معتق 24H+{tier_badge}] صفقة مربحة (+${profit_usd:.2f} USD)</b>"
-        note = "<b>⏳ حالة الجلسة:</b> جلسة مسجلة منذ 24H+ (جاهزة لطرد الجلسات من الموقع أو تليجرام فوراً)."
+    header = f"<b>🔔 [حساب مطابق للفلاتر{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
 
     text = (
         f"{header}\n\n"
         f"<b>📝 العنوان:</b> {title}\n"
-        f"<b>💵 سعر الشراء:</b> {price_rub} ₽ (≈ ${buy_usd:.2f} USD)\n"
+        f"<b>💵 سعر الشراء:</b> {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD)\n"
         f"<b>🌍 الدولة:</b> {country_display}\n"
         f"<b>💰 أعلى سعر بيع لبوتاتك:</b> ${sell_usd:.2f} USD (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
         f"<b>💚 الربح الصافي المتوقع:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"<b>⏳ عمر الجلسة (Session Age):</b> {session_age_str}\n"
         f"<b>🚫 حالة السبام:</b> {spam_status}\n"
-        f"<b>✨ مميزات الحساب:</b> {extras_str}\n"
-        f"{note}\n\n"
+        f"<b>✨ مميزات إضافية:</b> {extras_str}\n\n"
         f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء يدوياً من الموقع</a>"
     )
     
@@ -1324,7 +1335,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     try:
         r = requests.post(url, json=payload, timeout=10)
         if r.status_code == 200:
-            print(f"[Telegram] Alert sent for item {item_id} ({stream_type}).")
+            print(f"[Telegram] Alert sent for item {item_id}.")
             return True
         else:
             print(f"[Telegram] Failed to send alert: {r.status_code} - {r.text}")
@@ -1333,9 +1344,6 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         print(f"[Telegram] Error sending alert: {e}")
         return False
 
-# -------------------------------------------------------------------
-# Price List Text Parser from Forwarded Messages
-# -------------------------------------------------------------------
 def parse_and_update_prices_from_text(text):
     sell_prices = load_sell_prices()
     updated_count = 0
@@ -1795,27 +1803,188 @@ def process_stream_items(
 # -------------------------------------------------------------------
 # Lightweight Background Health Check Server (For Koyeb, Render, etc.)
 # -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Process Listings (Strict Country Filtering & Real Pricing)
+# -------------------------------------------------------------------
+def process_stream_items(
+    items, min_profit_usd, max_price_rub, rub_per_usd,
+    target_countries_set, require_session_age_24h,
+    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+    auto_buy_enabled, auto_buy_min_profit_usd,
+    conditional_auto_buy_enabled, cond_min_profit_usd, cond_max_price_rub
+):
+    global AUTO_BUY_TIMESTAMPS
+    for item in items:
+        item_id = str(item.get("item_id"))
+        if not item_id:
+            continue
+
+        # 1. STRICT COUNTRY FILTER:
+        country_raw = item.get("telegram_country", "")
+        title_raw = item.get("title", "")
+        ccode = resolve_country_code(country_raw, title_raw)
+        
+        if target_countries_set:
+            is_target = False
+            if ccode and ccode.upper() in target_countries_set:
+                is_target = True
+            elif country_raw and country_raw.upper() in target_countries_set:
+                is_target = True
+            elif country_raw:
+                res_c = resolve_country_code(country_raw)
+                if res_c and res_c.upper() in target_countries_set:
+                    is_target = True
+            if not is_target:
+                continue  # STRICTLY SKIP non-target countries!
+
+        # 2. ACCURATE PRICE EXTRACTION:
+        buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
+
+        # 3. Price Ceiling Filter:
+        if max_price_rub and buy_rub > max_price_rub:
+            continue
+
+        # 4. Check Spam Block (Strict 0% Spam Clean):
+        spam_block_val = item.get("telegram_spam_block")
+        is_accepted, spam_status = parse_spamblock(spam_block_val)
+        if not is_accepted:
+            continue
+
+        # 5. Session Age Calculation:
+        session_created_at = item.get("telegram_session_created_at") or 0
+        now_ts = time.time()
+        session_age_hours = (now_ts - session_created_at) / 3600 if session_created_at > 0 else 0
+
+        if require_session_age_24h and session_age_hours < 24.0:
+            # User requires session age >= 24h.
+            # Skip alerting now without marking as alerted,
+            # so as soon as it crosses 24h it will be alerted!
+            continue
+
+        # 6. Check if already alerted:
+        alert_key = f"{item_id}:aged" if session_age_hours >= 24.0 else f"{item_id}:fresh"
+        if alert_key in sent_alerts or str(item_id) in sent_alerts:
+            continue
+
+        # 7. Real Bot Sell Price for this Country (No Fake Premium Markup!):
+        sell_info = sell_prices.get(ccode, {})
+        if isinstance(sell_info, dict):
+            sell_usd = sell_info.get("best_usd", 0.0)
+            best_bot = sell_info.get("best_bot", "Bot")
+        else:
+            sell_usd = float(sell_info) if sell_info else 0.0
+            best_bot = "Bot"
+            
+        if not sell_usd or sell_usd <= 0:
+            fallback_info = DEFAULT_SELL_PRICES.get(ccode, {})
+            sell_usd = fallback_info.get("best_usd", 0.0)
+            best_bot = fallback_info.get("best_bot", "Bot")
+
+        # Skip if no selling price defined for this country
+        if not sell_usd or sell_usd <= 0:
+            continue
+
+        # 8. Profit Calculation:
+        expected_profit_usd = round(sell_usd - buy_usd, 2)
+        if expected_profit_usd < min_profit_usd:
+            continue
+
+        # 9. Smart Conditional Auto-Snipe (Strictly for real profit deals within max price):
+        should_auto_buy = False
+        trigger_reason_ar = ""
+        trigger_reason_en = ""
+        
+        if auto_buy_enabled and expected_profit_usd >= auto_buy_min_profit_usd:
+            should_auto_buy = True
+            trigger_reason_ar = f"ربح عام مرتفع (+${expected_profit_usd:.2f} USD)"
+            trigger_reason_en = f"High Profit (+${expected_profit_usd:.2f} USD)"
+        elif conditional_auto_buy_enabled:
+            if expected_profit_usd >= cond_min_profit_usd and buy_rub <= cond_max_price_rub:
+                should_auto_buy = True
+                trigger_reason_ar = f"صفقة أرباح خارقة (+${expected_profit_usd:.2f} USD)"
+                trigger_reason_en = f"Insane Profit Deal (+${expected_profit_usd:.2f} USD)"
+
+        if should_auto_buy and buy_rub > cond_max_price_rub:
+            print(f"[SAFEGUARD] Auto-buy skipped for item {item_id}: price {buy_rub:.0f} RUB > max limit {cond_max_price_rub} RUB.")
+            should_auto_buy = False
+
+        if should_auto_buy:
+            now_t = time.time()
+            with AUTO_BUY_LOCK:
+                while AUTO_BUY_TIMESTAMPS and (now_t - AUTO_BUY_TIMESTAMPS[0]) > 60:
+                    AUTO_BUY_TIMESTAMPS.pop(0)
+                if len(AUTO_BUY_TIMESTAMPS) >= 2:
+                    print(f"[SAFEGUARD] Auto-buy rate limit reached (2 purchases in last 60s). Falling back to manual alert.")
+                    should_auto_buy = False
+                else:
+                    AUTO_BUY_TIMESTAMPS.append(now_t)
+
+        if should_auto_buy:
+            print(f"[AUTO-SNIPE TRIGGERED: {trigger_reason_en}] Buying Item {item_id} automatically via API! (Price: {buy_rub:.0f} RUB | Profit: +${expected_profit_usd:.2f})")
+            buy_ok, buy_resp = execute_lzt_fast_buy(lzt_token, item_id)
+            if buy_ok:
+                log_bought_item(item_id, buy_usd, expected_profit_usd, best_bot, ccode)
+                sent_alerts.add(alert_key)
+                sent_alerts.add(str(item_id))
+                save_sent_alerts(sent_alerts)
+                
+                auto_text = (
+                    f"🎯 <b>[تم القنص الآلي والشراء بنجاح! ⚡]</b>\n"
+                    f"<b>سبب القنص الفوري:</b> {trigger_reason_ar}\n\n"
+                    f"<b>📝 العنوان:</b> {item.get('title', 'بدون عنوان')}\n"
+                    f"<b>💵 سعر الشراء:</b> {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD)\n"
+                    f"<b>🌍 الدولة:</b> {country_raw} ({ccode})\n"
+                    f"<b>💰 أعلى سعر بيع لبوتاتك:</b> ${sell_usd:.2f} USD <i>[{best_bot}]</i>\n"
+                    f"<b>💚 الربح الصافي المتوقع:</b> <b>+${expected_profit_usd:.2f} USD</b>\n"
+                    f"<b>⚡ السرعة:</b> تم حجز وشراء الحساب آلياً عبر API في 0.2 ثانية!\n\n"
+                    f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا لفتح وتحميل بيانات الحساب</a>\n\n"
+                    f"<i>اختر حالة البيع لتسجيل الأرباح في السجل المالي /stats:</i>"
+                )
+                auto_markup = {
+                    "inline_keyboard": [
+                        [
+                            {"text": "✅ تم البيع بنجاح للبوت", "callback_data": f"sold:{item_id}"},
+                            {"text": "💔 تم حظره / سحبه (خسارة)", "callback_data": f"banned:{item_id}"}
+                        ]
+                    ]
+                }
+                requests.post(f"https://api.telegram.org/bot{tg_token}/sendMessage", json={
+                    "chat_id": tg_chat_id, "text": auto_text, "parse_mode": "HTML", "reply_markup": auto_markup
+                })
+                continue
+
+        # 10. Standard Telegram Alert:
+        print(f"[Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
+        success = send_telegram_alert(
+            tg_token, tg_chat_id, item, spam_status, 
+            sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours
+        )
+        if success:
+            sent_alerts.add(alert_key)
+            sent_alerts.add(str(item_id))
+            save_sent_alerts(sent_alerts)
+
+# -------------------------------------------------------------------
+# Lightweight Background Health Check Server (For Koyeb, Render, etc.)
+# -------------------------------------------------------------------
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
-        self.send_header('Content-type', 'application/json')
+        self.send_header('Content-type', 'text/plain; charset=utf-8')
         self.end_headers()
-        self.wfile.write(b'{"status": "ok", "service": "lzt-telegram-monitor"}')
-        
+        self.wfile.write(b"LZT Telegram Monitor is Running & Healthy!")
+
     def log_message(self, format, *args):
-        pass # Suppress access logs in terminal
+        pass
 
 def run_health_server():
     port = int(os.environ.get("PORT", 8080))
-    try:
-        server = HTTPServer(("0.0.0.0", port), HealthHandler)
-        print(f"[Health Check] HTTP health server listening on port {port} (Ready for Koyeb/Render)")
-        server.serve_forever()
-    except Exception as e:
-        print(f"[Health Check] Notice: Could not bind to port {port} ({e})")
+    server = HTTPServer(('0.0.0.0', port), HealthHandler)
+    print(f"[System] Health check server listening on port {port}...")
+    server.serve_forever()
 
 # -------------------------------------------------------------------
-# Main Intensive Multi-Stream LZT Monitoring Loop (3s Interval)
+# Main Monitor Loop (Target Countries Only, Strict Session Age & Pricing)
 # -------------------------------------------------------------------
 def monitor_lzt():
     init_db()
@@ -1827,37 +1996,45 @@ def monitor_lzt():
     interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
     
+    target_countries = filters.get("countries", [
+        "UA", "AE", "LT", "KR", "TW", "CH", "QA", "BN", "MO", "GI"
+    ])
+    target_countries_set = set()
+    for c in target_countries:
+        c_str = str(c).strip().upper()
+        target_countries_set.add(c_str)
+        res_code = resolve_country_code(c_str)
+        if res_code:
+            target_countries_set.add(res_code.upper())
+            
+    pmin = filters.get("pmin", 2)
+    pmax = filters.get("pmax", 60)
     min_profit_usd = filters.get("min_profit_usd", 0.20)
+    require_session_age_24h = filters.get("require_session_age_24h", True)
+    
     auto_buy_enabled = filters.get("auto_buy_enabled", False)
     auto_buy_min_profit_usd = filters.get("auto_buy_min_profit_usd", 0.80)
     conditional_auto_buy_enabled = filters.get("conditional_auto_buy_enabled", True)
     conditional_auto_buy_min_profit_usd = filters.get("conditional_auto_buy_min_profit_usd", 1.50)
-    conditional_auto_buy_max_price_rub = filters.get("conditional_auto_buy_max_price_rub", 80)
-    fresh_max_price_rub = filters.get("fresh_max_price_rub", 75)
-    premium_stream_enabled = filters.get("premium_stream_enabled", True)
-    premium_max_price_rub = filters.get("premium_max_price_rub", 120)
+    conditional_auto_buy_max_price_rub = filters.get("conditional_auto_buy_max_price_rub", 60)
     scan_dual_pages = filters.get("scan_dual_pages", True)
-    max_wait_hours = filters.get("spam_block_max_wait_hours", 72)
     rub_per_usd = 90.0
     
     if not lzt_token or not tg_token or not tg_chat_id:
         print("Error: Missing credentials in config.json or environment variables.")
         sys.exit(1)
 
-    # Launch background services: Health check HTTP server & Telegram command listener
     threading.Thread(target=run_health_server, daemon=True).start()
     threading.Thread(target=telegram_bot_listener, args=(tg_token, lzt_token, min_profit_usd), daemon=True).start()
 
     sent_alerts = load_sent_alerts()
     
     print("--------------------------------------------------")
-    print(f"Starting Ultra-Smart Multi-Stream Telegram Monitor (3s loop)...")
-    print(f"Smart Conditional Auto-Snipe: {'Enabled' if conditional_auto_buy_enabled else 'Disabled'} (>= +${conditional_auto_buy_min_profit_usd:.2f} USD or Premium/Assets <= {conditional_auto_buy_max_price_rub} RUB)")
-    print(f"Stream 1 (Aged 24H+): Min Profit +${min_profit_usd:.2f} USD")
-    print(f"Stream 2 (Fresh Cheap ⚡): Max Price {fresh_max_price_rub} RUB, 0% Spam")
-    if premium_stream_enabled:
-        print(f"Stream 3 (Premium 💎): Max Price {premium_max_price_rub} RUB, 0% Spam")
-    print(f"Dual-Page Scan: {'Enabled (Alternating Page 1 & 2)' if scan_dual_pages else 'Single Page'}")
+    print(f"Starting Target-Focused Telegram Monitor (3s loop)...")
+    print(f"Target Countries ({len(target_countries_set)}): {', '.join(sorted(target_countries_set))}")
+    print(f"Price Range: {pmin} - {pmax} RUB | Min Profit: +${min_profit_usd:.2f} USD")
+    print(f"Session Age: {'Require >= 24H' if require_session_age_24h else 'All Ages'}")
+    print(f"Auto-Snipe: {'Enabled' if conditional_auto_buy_enabled else 'Disabled'} (>= +${conditional_auto_buy_min_profit_usd:.2f} USD, <= {conditional_auto_buy_max_price_rub} RUB)")
     print("--------------------------------------------------")
     
     session = requests.Session()
@@ -1872,10 +2049,23 @@ def monitor_lzt():
     consecutive_errors = 0
     cycle_count = 0
 
-    # Clean initial pre-population of all existing market items so no old accounts are alerted
+    api_countries = [c for c in target_countries if len(c) == 2 and c.isalpha()]
+
+    # Startup pre-population of existing items
     try:
         print("[System] Pre-populating existing market items to avoid duplicate old alerts...")
-        r_init = session.get(url, headers=headers, params={"pmin": 2, "pmax": 500, "currency": "rub", "order_by": "pdate_to_down"}, timeout=10)
+        prep_params = {
+            "pmin": pmin,
+            "pmax": pmax,
+            "currency": "rub",
+            "spam": "no",
+            "2fa": "no",
+            "order_by": "pdate_to_down"
+        }
+        if api_countries:
+            prep_params["country[]"] = api_countries
+            
+        r_init = session.get(url, headers=headers, params=prep_params, timeout=10)
         if r_init.status_code == 200:
             init_items = r_init.json().get("items") or r_init.json().get("accounts") or []
             for item in init_items:
@@ -1884,54 +2074,24 @@ def monitor_lzt():
                     session_created = item.get("telegram_session_created_at") or 0
                     if session_created > 0 and (time.time() - session_created) >= 86400:
                         sent_alerts.add(f"{item_id}:aged")
-                        sent_alerts.add(f"{item_id}:fresh")
-                    else:
-                        sent_alerts.add(f"{item_id}:fresh")
+                    sent_alerts.add(f"{item_id}:fresh")
             save_sent_alerts(sent_alerts)
-            print(f"[System] Successfully pre-populated {len(init_items)} existing items. Monitoring active!")
+            print(f"[System] Pre-populated {len(init_items)} existing items. Monitoring active!")
     except Exception as e:
-        print(f"[Warning] Initial pre-population error: {e}")
+        print(f"[Warning] Startup pre-population error: {e}")
     
     while True:
         try:
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # Determine scanning page (Dual-Page Scanning: Page 1 <-> Page 2)
             current_page = 1 if (not scan_dual_pages or cycle_count % 2 == 0) else 2
             cycle_count += 1
 
-            # Query 1: Stream 1 (Aged 24H+ Accounts)
-            params_aged = {
-                "pmin": filters.get("pmin", 2),
-                "pmax": filters.get("pmax", 500),
-                "currency": filters.get("currency", "rub"),
-                "2fa": "no",
-                "nsb": 1,
-                "nsb_by_me": 1,
-                "allow_geo_spamblock": 0,
-                "spam": "no",
-                "session_age": filters.get("session_age", 1),
-                "page": current_page,
-                "order_by": "pdate_to_down"
-            }
-            
-            resp_aged = session.get(current_url, headers=headers, params=params_aged, timeout=10)
-            if resp_aged.status_code == 200:
-                consecutive_errors = 0
-                items_aged = resp_aged.json().get("items") or resp_aged.json().get("accounts") or []
-                process_stream_items(
-                    items_aged, "aged", min_profit_usd, None, max_wait_hours, rub_per_usd,
-                    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
-                    auto_buy_enabled, auto_buy_min_profit_usd,
-                    conditional_auto_buy_enabled, conditional_auto_buy_min_profit_usd, conditional_auto_buy_max_price_rub
-                )
-
-            # Query 2: Stream 2 (Fresh Cheap <= 40 RUB Accounts, No Spam)
-            params_fresh = {
-                "pmin": filters.get("pmin", 2),
-                "pmax": fresh_max_price_rub,
-                "currency": filters.get("currency", "rub"),
+            query_params = {
+                "pmin": pmin,
+                "pmax": pmax,
+                "currency": "rub",
                 "2fa": "no",
                 "nsb": 1,
                 "nsb_by_me": 1,
@@ -1940,48 +2100,32 @@ def monitor_lzt():
                 "page": current_page,
                 "order_by": "pdate_to_down"
             }
-            
-            resp_fresh = session.get(current_url, headers=headers, params=params_fresh, timeout=10)
-            if resp_fresh.status_code == 200:
+            if api_countries:
+                query_params["country[]"] = api_countries
+
+            resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
+            if resp.status_code == 200:
                 consecutive_errors = 0
-                items_fresh = resp_fresh.json().get("items") or resp_fresh.json().get("accounts") or []
+                items = resp.json().get("items") or resp.json().get("accounts") or []
                 process_stream_items(
-                    items_fresh, "fresh", 0.15, fresh_max_price_rub, max_wait_hours, rub_per_usd,
+                    items, min_profit_usd, pmax, rub_per_usd,
+                    target_countries_set, require_session_age_24h,
                     sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
                     auto_buy_enabled, auto_buy_min_profit_usd,
                     conditional_auto_buy_enabled, conditional_auto_buy_min_profit_usd, conditional_auto_buy_max_price_rub
                 )
-
-            # Query 3: Stream 3 (Telegram Premium Sniping - if enabled)
-            if premium_stream_enabled:
-                params_premium = {
-                    "pmin": filters.get("pmin", 2),
-                    "pmax": premium_max_price_rub,
-                    "currency": filters.get("currency", "rub"),
-                    "premium": "yes",
-                    "2fa": "no",
-                    "nsb": 1,
-                    "nsb_by_me": 1,
-                    "allow_geo_spamblock": 0,
-                    "spam": "no",
-                    "page": current_page,
-                    "order_by": "pdate_to_down"
-                }
-                resp_prem = session.get(current_url, headers=headers, params=params_premium, timeout=10)
-                if resp_prem.status_code == 200:
-                    consecutive_errors = 0
-                    items_prem = resp_prem.json().get("items") or resp_prem.json().get("accounts") or []
-                    process_stream_items(
-                        items_prem, "premium", 0.50, premium_max_price_rub, max_wait_hours,
-                        rub_per_usd, sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
-                        auto_buy_enabled, auto_buy_min_profit_usd,
-                        conditional_auto_buy_enabled, conditional_auto_buy_min_profit_usd, conditional_auto_buy_max_price_rub
-                    )
+            elif resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", 10))
+                print(f"[Warning] Rate limited (429). Sleeping {retry_after}s...")
+                time.sleep(retry_after)
+            else:
+                consecutive_errors += 1
+                time.sleep(min(30, interval * 2))
 
         except requests.exceptions.RequestException as req_err:
             print(f"[Connection Error] {req_err}")
             consecutive_errors += 1
-            time.sleep(5)
+            time.sleep(4)
         except Exception as e:
             print(f"[Unexpected Error] {e}")
             time.sleep(interval)
