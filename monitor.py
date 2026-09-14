@@ -7,6 +7,7 @@ import sqlite3
 import threading
 import requests
 from datetime import datetime
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 CONFIG_FILE = "config.json"
 SENT_ALERTS_FILE = "sent_alerts.json"
@@ -1792,7 +1793,29 @@ def process_stream_items(
             save_sent_alerts(sent_alerts)
 
 # -------------------------------------------------------------------
-# Main Intensive Dual-Stream LZT Monitoring Loop (3s Interval)
+# Lightweight Background Health Check Server (For Koyeb, Render, etc.)
+# -------------------------------------------------------------------
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(b'{"status": "ok", "service": "lzt-telegram-monitor"}')
+        
+    def log_message(self, format, *args):
+        pass # Suppress access logs in terminal
+
+def run_health_server():
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        server = HTTPServer(("0.0.0.0", port), HealthHandler)
+        print(f"[Health Check] HTTP health server listening on port {port} (Ready for Koyeb/Render)")
+        server.serve_forever()
+    except Exception as e:
+        print(f"[Health Check] Notice: Could not bind to port {port} ({e})")
+
+# -------------------------------------------------------------------
+# Main Intensive Multi-Stream LZT Monitoring Loop (3s Interval)
 # -------------------------------------------------------------------
 def monitor_lzt():
     init_db()
@@ -1821,6 +1844,8 @@ def monitor_lzt():
         print("Error: Missing credentials in config.json or environment variables.")
         sys.exit(1)
 
+    # Launch background services: Health check HTTP server & Telegram command listener
+    threading.Thread(target=run_health_server, daemon=True).start()
     threading.Thread(target=telegram_bot_listener, args=(tg_token, lzt_token, min_profit_usd), daemon=True).start()
 
     sent_alerts = load_sent_alerts()
