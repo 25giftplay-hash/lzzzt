@@ -1260,6 +1260,35 @@ def extract_item_prices(item, rub_per_usd=90.0):
 # -------------------------------------------------------------------
 # Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
 # -------------------------------------------------------------------
+def extract_item_prices(item, rub_per_usd=90.0):
+    """
+    Accurately extracts buy_rub and buy_usd from LZT API item object.
+    LZT API returns 'rub_price' (e.g. 50, 60, 80) and 'price' (e.g. 0.59 if USD or 50 if RUB).
+    """
+    rub_price_raw = item.get("rub_price")
+    price_raw = item.get("price")
+    curr_raw = str(item.get("price_currency") or "rub").lower()
+
+    if rub_price_raw is not None and float(rub_price_raw) > 0:
+        buy_rub = float(rub_price_raw)
+        if curr_raw in ("usd", "$") and price_raw is not None:
+            buy_usd = float(price_raw)
+        else:
+            buy_usd = round(buy_rub / rub_per_usd, 2)
+    else:
+        raw_val = float(price_raw or 0.0)
+        if curr_raw in ("usd", "$"):
+            buy_usd = raw_val
+            buy_rub = round(buy_usd * rub_per_usd, 2)
+        else:
+            buy_rub = raw_val
+            buy_usd = round(buy_rub / rub_per_usd, 2)
+
+    return buy_rub, buy_usd
+
+# -------------------------------------------------------------------
+# Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
+# -------------------------------------------------------------------
 def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
@@ -1952,6 +1981,112 @@ def process_stream_items(
                     "chat_id": tg_chat_id, "text": auto_text, "parse_mode": "HTML", "reply_markup": auto_markup
                 })
                 continue
+
+        # 10. Standard Telegram Alert:
+        print(f"[Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
+        success = send_telegram_alert(
+            tg_token, tg_chat_id, item, spam_status, 
+            sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours
+        )
+        if success:
+            sent_alerts.add(alert_key)
+            sent_alerts.add(str(item_id))
+            save_sent_alerts(sent_alerts)
+
+# -------------------------------------------------------------------
+# Lightweight Background Health Check Server (For Koyeb, Render, etc.)
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Process Listings (Strict Country Filtering & Real Pricing)
+# -------------------------------------------------------------------
+def process_stream_items(
+    items, min_profit_usd, max_price_rub, rub_per_usd,
+    target_countries_set, require_session_age_24h,
+    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+    auto_buy_enabled, auto_buy_min_profit_usd,
+    conditional_auto_buy_enabled, cond_min_profit_usd, cond_max_price_rub
+):
+    global AUTO_BUY_TIMESTAMPS
+    for item in items:
+        item_id = str(item.get("item_id"))
+        if not item_id:
+            continue
+
+        # 1. STRICT COUNTRY FILTER:
+        country_raw = item.get("telegram_country", "")
+        title_raw = item.get("title", "")
+        ccode = resolve_country_code(country_raw, title_raw)
+        
+        if target_countries_set:
+            is_target = False
+            if ccode and ccode.upper() in target_countries_set:
+                is_target = True
+            elif country_raw and country_raw.upper() in target_countries_set:
+                is_target = True
+            elif country_raw:
+                res_c = resolve_country_code(country_raw)
+                if res_c and res_c.upper() in target_countries_set:
+                    is_target = True
+            if not is_target:
+                continue  # STRICTLY SKIP non-target countries!
+
+        # 2. ACCURATE PRICE EXTRACTION:
+        buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
+
+        # 3. Price Ceiling Filter:
+        if max_price_rub and buy_rub > max_price_rub:
+            continue
+
+        # 4. Check Spam Block (Strict 0% Spam Clean):
+        spam_block_val = item.get("telegram_spam_block")
+        is_accepted, spam_status = parse_spamblock(spam_block_val)
+        if not is_accepted:
+            continue
+
+        # 5. Session Age Calculation:
+        session_created_at = item.get("telegram_session_created_at") or 0
+        now_ts = time.time()
+        session_age_hours = (now_ts - session_created_at) / 3600 if session_created_at > 0 else 0
+
+        if require_session_age_24h and session_age_hours < 24.0:
+            # User requires session age >= 24h.
+            # Skip alerting now without marking as alerted,
+            # so as soon as it crosses 24h it will be alerted!
+            continue
+
+        # 6. Check if already alerted:
+        alert_key = f"{item_id}:aged" if session_age_hours >= 24.0 else f"{item_id}:fresh"
+        if alert_key in sent_alerts or str(item_id) in sent_alerts:
+            continue
+
+        # 7. Real Bot Sell Price for this Country (No Fake Premium Markup!):
+        sell_info = sell_prices.get(ccode, {})
+        if isinstance(sell_info, dict):
+            sell_usd = sell_info.get("best_usd", 0.0)
+            best_bot = sell_info.get("best_bot", "Bot")
+        else:
+            sell_usd = float(sell_info) if sell_info else 0.0
+            best_bot = "Bot"
+            
+        if not sell_usd or sell_usd <= 0:
+            fallback_info = DEFAULT_SELL_PRICES.get(ccode, {})
+            sell_usd = fallback_info.get("best_usd", 0.0)
+            best_bot = fallback_info.get("best_bot", "Bot")
+
+        # Skip if no selling price defined for this country
+        if not sell_usd or sell_usd <= 0:
+            continue
+
+        # 8. Profit Calculation:
+        expected_profit_usd = round(sell_usd - buy_usd, 2)
+        if expected_profit_usd < min_profit_usd:
+            continue
+
+        # 9. Auto-Buy Safeguard:
+        # Auto-buying is COMPLETELY DISABLED to protect user balance.
+        # Purchases are ONLY made when the user clicks the buy button in Telegram!
+        should_auto_buy = False
+
 
         # 10. Standard Telegram Alert:
         print(f"[Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
