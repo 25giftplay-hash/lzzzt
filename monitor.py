@@ -1178,25 +1178,27 @@ def load_sell_prices():
     return DEFAULT_SELL_PRICES
 
 def parse_spamblock(spam_block_val, max_wait_hours=0):
-    if spam_block_val is None or spam_block_val is False or spam_block_val == "":
+    if spam_block_val is None or spam_block_val == "":
+        return False, "غير مفحوص (مرفوض للأمان)"
+    if spam_block_val is False:
         return True, "خالٍ تماماً من السبام (0% Spam Clean)"
     low = str(spam_block_val).strip().lower()
-    if low in ('no', 'false', 'none', '0', '', '-1', '-3'):
+    if low in ('no', 'false', '0', '-1'):
         return True, "خالٍ تماماً من السبام (0% Spam Clean)"
     try:
         val_int = int(low)
-        if val_int <= 0:  # In Lolzteam: -1, -3, 0 all indicate No Spam Block!
+        if val_int == -1 or val_int == 0:
             return True, "خالٍ تماماً من السبام (0% Spam Clean)"
         elif val_int > 0:
             expire_dt = datetime.fromtimestamp(val_int).strftime('%Y-%m-%d %H:%M')
             return False, f"محظور سبام حتى {expire_dt}"
+        else:
+            # Any negative value other than -1 (such as -3, -4) is strictly SPAM!
+            return False, f"محظور سبام (كود {val_int})"
     except (ValueError, TypeError):
         pass
     return False, f"محظور سبام ({spam_block_val})"
 
-# -------------------------------------------------------------------
-# Fast Buy Action via Lolzteam API
-# -------------------------------------------------------------------
 def execute_lzt_fast_buy(lzt_token, item_id):
     headers = {
         "Authorization": f"Bearer {lzt_token}",
@@ -1829,9 +1831,10 @@ def monitor_lzt():
                 "pmax": pmax,
                 "currency": "rub",
                 "2fa": "no",
+                "spam": "no",
+                "allow_geo_spamblock": 0,
                 "nsb": 1,
                 "nsb_by_me": 1,
-                "allow_geo_spamblock": 0,
                 "page": current_page,
                 "order_by": sort_order
             }
