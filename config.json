@@ -6,30 +6,30 @@
   "filters": {
     "countries": [
       "UA",
+      "IQ",
       "AE",
+      "BY",
       "LT",
-      "KR",
+      "AU",
       "TW",
+      "KR",
       "CH",
+      "NO",
+      "SG",
       "QA",
       "BN",
+      "BH",
       "MO",
       "GI"
     ],
     "pmin": 2,
-    "pmax": 60,
+    "pmax": 70,
     "currency": "rub",
     "min_profit_usd": 0.2,
     "require_session_age_24h": true,
     "2fa": "no",
-    "spam": "no",
     "allow_geo_spamblock": false,
     "nsb": true,
-    "nsb_by_me": true,
-    "auto_buy_enabled": false,
-    "auto_buy_min_profit_usd": 0.8,
-    "conditional_auto_buy_enabled": true,
-    "conditional_auto_buy_min_profit_usd": 1.5,
-    "conditional_auto_buy_max_price_rub": 60
+    "nsb_by_me": true
   }
 }
