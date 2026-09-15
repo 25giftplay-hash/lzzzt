@@ -1181,17 +1181,15 @@ def parse_spamblock(spam_block_val, max_wait_hours=0):
     if spam_block_val is None or spam_block_val is False or spam_block_val == "":
         return True, "خالٍ تماماً من السبام (0% Spam Clean)"
     low = str(spam_block_val).strip().lower()
-    if low in ('no', 'false', 'none', '0', '', '-1'):
+    if low in ('no', 'false', 'none', '0', '', '-1', '-3'):
         return True, "خالٍ تماماً من السبام (0% Spam Clean)"
     try:
         val_int = int(low)
-        if val_int == -1 or val_int == 0:
+        if val_int <= 0:  # In Lolzteam: -1, -3, 0 all indicate No Spam Block!
             return True, "خالٍ تماماً من السبام (0% Spam Clean)"
         elif val_int > 0:
             expire_dt = datetime.fromtimestamp(val_int).strftime('%Y-%m-%d %H:%M')
             return False, f"محظور سبام حتى {expire_dt}"
-        else:
-            return False, f"محظور سبام (كود {val_int})"
     except (ValueError, TypeError):
         pass
     return False, f"محظور سبام ({spam_block_val})"
@@ -1632,12 +1630,14 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
 # -------------------------------------------------------------------
 # Process Listings (Strict Country Filtering & Real Pricing)
 # -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Process Listings (Strict Country Filtering & Real Pricing)
+# -------------------------------------------------------------------
 def process_stream_items(
     items, min_profit_usd, max_price_rub, rub_per_usd,
     target_countries_set, require_session_age_24h,
     sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
-    auto_buy_enabled=False, auto_buy_min_profit_usd=0.80,
-    conditional_auto_buy_enabled=False, cond_min_profit_usd=1.50, cond_max_price_rub=60
+    scan_tag="Listing"
 ):
     for item in items:
         item_id = str(item.get("item_id"))
@@ -1669,7 +1669,7 @@ def process_stream_items(
         if max_price_rub and buy_rub > max_price_rub:
             continue
 
-        # 4. Check Spam Block (Strict 0% Spam Clean):
+        # 4. Check Spam Block (Strict 0% Spam Clean, accepts -1, -3, 0):
         spam_block_val = item.get("telegram_spam_block")
         is_accepted, spam_status = parse_spamblock(spam_block_val)
         if not is_accepted:
@@ -1714,12 +1714,8 @@ def process_stream_items(
         if expected_profit_usd < min_profit_usd:
             continue
 
-        # 9. Auto-Buy Safeguard:
-        # Auto-buying is PERMANENTLY DISABLED to protect user balance.
-        # Purchases are ONLY made when the user clicks the buy button in Telegram!
-
-        # 10. Send Standard Telegram Alert:
-        print(f"[Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
+        # 9. Send Standard Telegram Alert:
+        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
             sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours
@@ -1749,7 +1745,7 @@ def run_health_server():
     server.serve_forever()
 
 # -------------------------------------------------------------------
-# Main Monitor Loop (Target Countries Only, Strict Session Age & Pricing)
+# Main Monitor Loop (Dual Scanning: Newest First & Cheapest First)
 # -------------------------------------------------------------------
 def monitor_lzt():
     init_db()
@@ -1761,8 +1757,9 @@ def monitor_lzt():
     interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
     
+    # 16-Country Comprehensive Target List
     target_countries = filters.get("countries", [
-        "UA", "AE", "LT", "KR", "TW", "CH", "QA", "BN", "MO", "GI"
+        "UA", "IQ", "AE", "BY", "LT", "AU", "TW", "KR", "CH", "NO", "SG", "QA", "BN", "BH", "MO", "GI"
     ])
     target_countries_set = set()
     for c in target_countries:
@@ -1773,10 +1770,9 @@ def monitor_lzt():
             target_countries_set.add(res_code.upper())
             
     pmin = filters.get("pmin", 2)
-    pmax = filters.get("pmax", 60)
+    pmax = filters.get("pmax", 70)
     min_profit_usd = filters.get("min_profit_usd", 0.20)
     require_session_age_24h = filters.get("require_session_age_24h", True)
-    scan_dual_pages = filters.get("scan_dual_pages", True)
     rub_per_usd = 90.0
     
     if not lzt_token or not tg_token or not tg_chat_id:
@@ -1789,11 +1785,11 @@ def monitor_lzt():
     sent_alerts = load_sent_alerts()
     
     print("--------------------------------------------------")
-    print(f"Starting Target-Focused Telegram Monitor (3s loop)...")
+    print(f"Starting Target-Focused Dual-Scan Telegram Monitor (3s loop)...")
     print(f"Target Countries ({len(target_countries_set)}): {', '.join(sorted(target_countries_set))}")
     print(f"Price Range: {pmin} - {pmax} RUB | Min Profit: +${min_profit_usd:.2f} USD")
     print(f"Session Age: {'Require >= 24H' if require_session_age_24h else 'All Ages'}")
-    print(f"Auto-Buy: PERMANENTLY DISABLED (Manual buy buttons only)")
+    print(f"Dual Scan Mode: Alternating Newest First (pdate_to_down) & Cheapest First (price_to_up)")
     print("--------------------------------------------------")
     
     session = requests.Session()
@@ -1810,41 +1806,22 @@ def monitor_lzt():
 
     api_countries = [c for c in target_countries if len(c) == 2 and c.isalpha()]
 
-    # Startup pre-population of existing items
-    try:
-        print("[System] Pre-populating existing market items to avoid duplicate old alerts...")
-        prep_params = {
-            "pmin": pmin,
-            "pmax": pmax,
-            "currency": "rub",
-            "spam": "no",
-            "2fa": "no",
-            "order_by": "pdate_to_down"
-        }
-        if api_countries:
-            prep_params["country[]"] = api_countries
-            
-        r_init = session.get(url, headers=headers, params=prep_params, timeout=10)
-        if r_init.status_code == 200:
-            init_items = r_init.json().get("items") or r_init.json().get("accounts") or []
-            for item in init_items:
-                item_id = str(item.get("item_id"))
-                if item_id:
-                    session_created = item.get("telegram_session_created_at") or 0
-                    if session_created > 0 and (time.time() - session_created) >= 86400:
-                        sent_alerts.add(f"{item_id}:aged")
-                    sent_alerts.add(f"{item_id}:fresh")
-            save_sent_alerts(sent_alerts)
-            print(f"[System] Pre-populated {len(init_items)} existing items. Monitoring active!")
-    except Exception as e:
-        print(f"[Warning] Startup pre-population error: {e}")
-    
     while True:
         try:
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            current_page = 1 if (not scan_dual_pages or cycle_count % 2 == 0) else 2
+            # Dual Scan Strategy:
+            # - Even cycles: Scan NEWEST first (pdate_to_down) to snipe new listings instantly
+            # - Odd cycles: Scan CHEAPEST first (price_to_up) to catch existing bargains (like in manual search)
+            if cycle_count % 2 == 0:
+                sort_order = "pdate_to_down"
+                scan_tag = "Newest"
+            else:
+                sort_order = "price_to_up"
+                scan_tag = "Cheapest"
+                
+            current_page = 1 if (cycle_count % 4 in (0, 1)) else 2
             cycle_count += 1
 
             query_params = {
@@ -1855,9 +1832,8 @@ def monitor_lzt():
                 "nsb": 1,
                 "nsb_by_me": 1,
                 "allow_geo_spamblock": 0,
-                "spam": "no",
                 "page": current_page,
-                "order_by": "pdate_to_down"
+                "order_by": sort_order
             }
             if api_countries:
                 query_params["country[]"] = api_countries
@@ -1869,7 +1845,8 @@ def monitor_lzt():
                 process_stream_items(
                     items, min_profit_usd, pmax, rub_per_usd,
                     target_countries_set, require_session_age_24h,
-                    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token
+                    sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
+                    scan_tag=scan_tag
                 )
             elif resp.status_code == 429:
                 retry_after = int(resp.headers.get("Retry-After", 10))
