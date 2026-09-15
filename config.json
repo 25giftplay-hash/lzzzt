@@ -81,7 +81,7 @@
     "pmin": 2,
     "pmax": 70,
     "currency": "rub",
-    "min_profit_usd": 0.2,
+    "min_profit_usd": 0.5,
     "require_session_age_24h": true,
     "2fa": "no",
     "allow_geo_spamblock": false,
