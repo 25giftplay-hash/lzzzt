@@ -216,16 +216,16 @@
     "best_bot": "Bot 2"
   },
   "AM": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 1"
+    "best_usd": 0.6,
+    "best_bot": "Iranian Bot (Main)"
   },
   "VE": {
-    "best_usd": 0.95,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 1.1,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BH": {
-    "best_usd": 1.7,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 1.8,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BZ": {
     "best_usd": 1,
@@ -244,12 +244,12 @@
     "best_bot": "Bot 1"
   },
   "PE": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.5,
+    "best_bot": "Iranian Bot (Main)"
   },
   "LA": {
-    "best_usd": 0.8,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.9,
+    "best_bot": "Iranian Bot (Main)"
   },
   "DO": {
     "best_usd": 0.6,
@@ -288,16 +288,16 @@
     "best_bot": "Bot 2"
   },
   "SG": {
-    "best_usd": 1.5,
-    "best_bot": "Bot 1"
+    "best_usd": 1.6,
+    "best_bot": "Iranian Bot (Main)"
   },
   "RW": {
     "best_usd": 0.3,
     "best_bot": "Bot 2"
   },
   "MD": {
-    "best_usd": 1.35,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 1.45,
+    "best_bot": "Iranian Bot (Main)"
   },
   "CZ": {
     "best_usd": 0.75,
@@ -308,16 +308,16 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "LK": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 1 & 2"
+    "best_usd": 0.53,
+    "best_bot": "Iranian Bot (Main)"
   },
   "NZ": {
     "best_usd": 1.2,
     "best_bot": "Bot 3 (New Bot)"
   },
   "GF": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.8,
+    "best_bot": "Iranian Bot (Main)"
   },
   "NE": {
     "best_usd": 0.35,
@@ -328,8 +328,8 @@
     "best_bot": "Bot 1"
   },
   "TG": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.35,
+    "best_bot": "Iranian Bot (Main)"
   },
   "UY": {
     "best_usd": 0.72,
@@ -348,16 +348,16 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "KR": {
-    "best_usd": 2.5,
-    "best_bot": "Bot 1"
+    "best_usd": 2.7,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BO": {
-    "best_usd": 1.4,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 1.5,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BJ": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.33,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BG": {
     "best_usd": 1.1,
@@ -376,8 +376,8 @@
     "best_bot": "Bot 1"
   },
   "ML": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.43,
+    "best_bot": "Iranian Bot (Main)"
   },
   "NU": {
     "best_usd": 1,
@@ -420,12 +420,12 @@
     "best_bot": "Bot 1"
   },
   "EC": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 1"
+    "best_usd": 0.75,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TM": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.75,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BM": {
     "best_usd": 0.4,
@@ -476,8 +476,8 @@
     "best_bot": "Bot 1"
   },
   "PG": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.5,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TZ": {
     "best_usd": 0.4,
@@ -532,8 +532,8 @@
     "best_bot": "Bot 1"
   },
   "GA": {
-    "best_usd": 0.68,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.75,
+    "best_bot": "Iranian Bot (Main)"
   },
   "HU": {
     "best_usd": 1.1,
@@ -572,8 +572,8 @@
     "best_bot": "Bot 1"
   },
   "NG": {
-    "best_usd": 0.24,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.3,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TF": {
     "best_usd": 0.75,
@@ -588,8 +588,8 @@
     "best_bot": "Bot 1"
   },
   "CH": {
-    "best_usd": 1.75,
-    "best_bot": "Bot 1"
+    "best_usd": 2,
+    "best_bot": "Iranian Bot (Main)"
   },
   "KW": {
     "best_usd": 1.4,
@@ -636,8 +636,8 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "HK": {
-    "best_usd": 0.65,
-    "best_bot": "Bot 1"
+    "best_usd": 0.75,
+    "best_bot": "Iranian Bot (Main)"
   },
   "UG": {
     "best_usd": 0.4,
@@ -648,8 +648,8 @@
     "best_bot": "Bot 1"
   },
   "TJ": {
-    "best_usd": 0.5,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.6,
+    "best_bot": "Iranian Bot (Main)"
   },
   "PK": {
     "best_usd": 0.35,
@@ -676,8 +676,8 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "JO": {
-    "best_usd": 0.85,
-    "best_bot": "Bot 1"
+    "best_usd": 0.9,
+    "best_bot": "Iranian Bot (Main)"
   },
   "DE": {
     "best_usd": 1.2,
@@ -740,8 +740,8 @@
     "best_bot": "Bot 1"
   },
   "SY": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 1"
+    "best_usd": 0.75,
+    "best_bot": "Iranian Bot (Main)"
   },
   "ZW": {
     "best_usd": 0.3,
@@ -768,12 +768,12 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "IL": {
-    "best_usd": 0.2,
-    "best_bot": "Bot 1"
+    "best_usd": 0.45,
+    "best_bot": "Iranian Bot (Main)"
   },
   "BR": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.5,
+    "best_bot": "Iranian Bot (Main)"
   },
   "MV": {
     "best_usd": 1,
@@ -784,8 +784,8 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "PY": {
-    "best_usd": 0.5,
-    "best_bot": "Bot 1"
+    "best_usd": 0.55,
+    "best_bot": "Iranian Bot (Main)"
   },
   "SD": {
     "best_usd": 0.2,
@@ -808,8 +808,8 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "MY": {
-    "best_usd": 0.35,
-    "best_bot": "Bot 1"
+    "best_usd": 0.55,
+    "best_bot": "Iranian Bot (Main)"
   },
   "CA": {
     "best_usd": 0.25,
@@ -828,24 +828,24 @@
     "best_bot": "Bot 1"
   },
   "BD": {
-    "best_usd": 0.2,
-    "best_bot": "Bot 1"
+    "best_usd": 0.22,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TR": {
-    "best_usd": 0.55,
-    "best_bot": "Bot 1"
+    "best_usd": 0.7,
+    "best_bot": "Iranian Bot (Main)"
   },
   "US": {
-    "best_usd": 0.22,
-    "best_bot": "Bot 1"
+    "best_usd": 0.24,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TD": {
     "best_usd": 0.5,
     "best_bot": "Bot 3 (New Bot)"
   },
   "LB": {
-    "best_usd": 0.6,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.7,
+    "best_bot": "Iranian Bot (Main)"
   },
   "ME": {
     "best_usd": 0.55,
@@ -892,8 +892,8 @@
     "best_bot": "Bot 2"
   },
   "SL": {
-    "best_usd": 0.2,
-    "best_bot": "Bot 2"
+    "best_usd": 0.25,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TT": {
     "best_usd": 0.5,
@@ -904,12 +904,12 @@
     "best_bot": "Bot 2"
   },
   "AF": {
-    "best_usd": 0.4,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.45,
+    "best_bot": "Iranian Bot (Main)"
   },
   "MA": {
-    "best_usd": 0.3,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.35,
+    "best_bot": "Iranian Bot (Main)"
   },
   "SO": {
     "best_usd": 0.35,
@@ -928,11 +928,19 @@
     "best_bot": "Bot 3 (New Bot)"
   },
   "TN": {
-    "best_usd": 0.45,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.55,
+    "best_bot": "Iranian Bot (Main)"
   },
   "TL": {
-    "best_usd": 0.7,
-    "best_bot": "Bot 3 (New Bot)"
+    "best_usd": 0.75,
+    "best_bot": "Iranian Bot (Main)"
+  },
+  "PH": {
+    "best_usd": 0.35,
+    "best_bot": "Iranian Bot (Main)"
+  },
+  "LY": {
+    "best_usd": 0.45,
+    "best_bot": "Iranian Bot (Main)"
   }
 }
