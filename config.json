@@ -91,9 +91,10 @@
   "group_sniper": {
     "enabled": true,
     "max_year": 2019,
-    "max_price_rub": 500,
-    "min_session_age_hours": 24,
+    "max_price_rub": 70,
+    "min_session_age_hours": 24.0,
     "require_no_2fa": true,
-    "require_owner": true
+    "require_owner": true,
+    "require_only_groups": true
   }
 }
