@@ -1289,6 +1289,117 @@ def extract_item_prices(item, rub_per_usd=90.0):
 # -------------------------------------------------------------------
 # Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
 # -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# Estimate Telegram Channel / Supergroup Creation Year from ID
+# -------------------------------------------------------------------
+def estimate_group_year(gid):
+    try:
+        gid = int(gid)
+    except (ValueError, TypeError):
+        return None
+    # Basic chats (prior to widespread supergroups) have IDs < 1,000,000,000
+    if gid < 1_000_000_000:
+        return 2017
+    elif gid <= 1_050_000_000:
+        return 2015
+    elif gid <= 1_150_000_000:
+        return 2016
+    elif gid <= 1_280_000_000:
+        return 2017
+    elif gid <= 1_400_000_000:
+        return 2018
+    elif gid <= 1_550_000_000:
+        return 2019
+    elif gid <= 1_700_000_000:
+        return 2020
+    elif gid <= 1_950_000_000:
+        return 2021
+    elif gid <= 2_150_000_000:
+        return 2022
+    elif gid <= 2_600_000_000:
+        return 2023
+    elif gid <= 3_200_000_000:
+        return 2024
+    elif gid <= 3_800_000_000:
+        return 2025
+    else:
+        return 2026
+
+def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, buy_usd, session_age_hours, spam_status):
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    item_id = item.get("item_id")
+    title = item.get("title", "بدون عنوان")
+    country = item.get("telegram_country", "غير معروف")
+    ccode = resolve_country_code(country, title)
+    country_display = f"{country} ({ccode})" if ccode and ccode != country else country
+    
+    group_lines = []
+    for g, est_year in aged_groups:
+        g_title = g.get("title", "بدون اسم")
+        g_members = g.get("participants_count", 0)
+        g_id = g.get("id", "??")
+        g_user = g.get("username")
+        is_owner = g.get("owner", False)
+        
+        user_str = f"<a href='https://t.me/{g_user}'>@{g_user}</a>" if g_user else "خاصة (Private)"
+        owner_str = "👑 المالك الأساسي (Owner)" if is_owner else "👮‍♂️ مشرف كامل الصلاحيات"
+        
+        group_lines.append(
+            f"🔹 <b>اسم المجموعة:</b> {g_title}\n"
+            f"   • <b>الرابط:</b> {user_str}\n"
+            f"   • <b>الأعضاء:</b> {g_members} عضو\n"
+            f"   • <b>الرتبة:</b> {owner_str}\n"
+            f"   • <b>معرف تيليجرام:</b> <code>{g_id}</code>\n"
+            f"   • <b>سنة الإنشاء المقدرة:</b> 📅 <b>{est_year} أو أقدم</b>"
+        )
+        
+    groups_text = "\n\n".join(group_lines)
+    
+    text = (
+        f"<b>👑 [صيد استثنائي: حساب يملك مجموعة قديمة (2019 وأقدم)!] 👑</b>\n\n"
+        f"<b>📝 العنوان:</b> {title}\n"
+        f"<b>💵 سعر الشراء:</b> {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD)\n"
+        f"<b>🌍 الدولة:</b> {country_display}\n"
+        f"<b>⏳ عمر الجلسة:</b> ✅ {session_age_hours:.1f} ساعة (فوق 24H)\n"
+        f"<b>🔐 كلمة السر (2FA):</b> ❌ لا توجد (جاهز للدخول)\n"
+        f"<b>🚫 حالة السبام:</b> {spam_status} <i>(مستثنى لحسابات المجموعات القديمة)</i>\n\n"
+        f"<b>👥 تفاصيل المجموعة القديمة المكتشفة:</b>\n"
+        f"{groups_text}\n\n"
+        f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء يدوياً من الموقع</a>"
+    )
+    
+    reply_markup = {
+        "inline_keyboard": [
+            [
+                {"text": "⚡ شراء فوري من رصيدي ⚡", "callback_data": f"fastbuy:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"}
+            ],
+            [
+                {"text": "🛒 تم الشراء يدوياً", "callback_data": f"buy:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"},
+                {"text": "❌ تجاهل", "callback_data": f"ignore:{item_id}"}
+            ]
+        ]
+    }
+    
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+        "reply_markup": reply_markup
+    }
+    
+    try:
+        r = requests.post(url, json=payload, timeout=10)
+        if r.status_code == 200:
+            print(f"[Telegram Group Alert] Alert sent for item {item_id} with aged group!")
+            return True
+        else:
+            print(f"[Telegram Group Alert] Failed: {r.status_code} - {r.text}")
+            return False
+    except Exception as e:
+        print(f"[Telegram Group Alert] Error: {e}")
+        return False
+
 def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
@@ -1639,12 +1750,61 @@ def process_stream_items(
     items, min_profit_usd, max_price_rub, rub_per_usd,
     target_countries_set, require_session_age_24h,
     sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
-    scan_tag="Listing"
+    scan_tag="Listing", group_sniper_cfg=None
 ):
+    if group_sniper_cfg is None:
+        group_sniper_cfg = {}
+
     for item in items:
         item_id = str(item.get("item_id"))
         if not item_id:
             continue
+
+        # -------------------------------------------------------------
+        # 0. AGED GROUP SNIPER FILTER (2019 or older):
+        # -------------------------------------------------------------
+        if group_sniper_cfg.get("enabled", True):
+            session_created_at = item.get("telegram_session_created_at") or 0
+            now_ts = time.time()
+            session_age_hours = (now_ts - session_created_at) / 3600 if session_created_at > 0 else 0
+            min_grp_age = group_sniper_cfg.get("min_session_age_hours", 24.0)
+
+            # Condition 1: Session Age >= 24 Hours
+            if session_age_hours >= min_grp_age:
+                # Condition 2: No 2FA password
+                has_2fa = item.get("telegram_password")
+                is_no_2fa = (not has_2fa) or (str(has_2fa).strip().lower() in ("", "no", "false", "none", "0"))
+                if is_no_2fa:
+                    admin_groups = item.get("telegram_admin_groups") or []
+                    aged_groups = []
+                    max_year = group_sniper_cfg.get("max_year", 2019)
+                    require_owner = group_sniper_cfg.get("require_owner", True)
+                    
+                    for g in admin_groups:
+                        gid = g.get("id")
+                        est_year = estimate_group_year(gid)
+                        if est_year and est_year <= max_year:
+                            if (not require_owner) or g.get("owner", False):
+                                aged_groups.append((g, est_year))
+                                
+                    if aged_groups:
+                        buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
+                        max_grp_price = group_sniper_cfg.get("max_price_rub", 500)
+                        if (not max_grp_price) or buy_rub <= max_grp_price:
+                            alert_key = f"group:{item_id}"
+                            if alert_key not in sent_alerts and str(item_id) not in sent_alerts:
+                                spam_val = item.get("telegram_spam_block")
+                                spam_status = f"سبام ({spam_val})" if spam_val not in (-1, 0, None) else "✅ سليم"
+                                print(f"[AGED GROUP MATCH] Item {item_id} has {len(aged_groups)} group(s) <= {max_year}!")
+                                success = send_telegram_group_alert(
+                                    tg_token, tg_chat_id, item, aged_groups,
+                                    buy_rub, buy_usd, session_age_hours, spam_status
+                                )
+                                if success:
+                                    sent_alerts.add(alert_key)
+                                    sent_alerts.add(str(item_id))
+                                    save_sent_alerts(sent_alerts)
+                                    continue
 
         # 1. STRICT COUNTRY FILTER:
         country_raw = item.get("telegram_country", "")
@@ -1758,6 +1918,10 @@ def monitor_lzt():
     tg_chat_id = config.get("telegram_chat_id")
     interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
+    group_sniper_cfg = config.get("group_sniper", {
+        "enabled": True, "max_year": 2019, "max_price_rub": 500,
+        "min_session_age_hours": 24.0, "require_no_2fa": True, "require_owner": True
+    })
     
     # 16-Country Comprehensive Target List
     target_countries = filters.get("countries", [
@@ -1813,33 +1977,49 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # Dual Scan Strategy:
-            # - Even cycles: Scan NEWEST first (pdate_to_down) to snipe new listings instantly
-            # - Odd cycles: Scan CHEAPEST first (price_to_up) to catch existing bargains (like in manual search)
-            if cycle_count % 2 == 0:
+            # Dual + Global Scan Strategy:
+            # - Every 3rd cycle: Global Scan (no country filter, no spam filter) to discover aged groups worldwide!
+            # - Other cycles: Alternating Newest First & Cheapest First within target countries
+            is_global_cycle = (cycle_count % 3 == 0) and group_sniper_cfg.get("enabled", True)
+            
+            if is_global_cycle:
                 sort_order = "pdate_to_down"
-                scan_tag = "Newest"
+                scan_tag = "Global-GroupScan"
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": group_sniper_cfg.get("max_price_rub", 500),
+                    "currency": "rub",
+                    "2fa": "no",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": "pdate_to_down"
+                }
             else:
-                sort_order = "price_to_up"
-                scan_tag = "Cheapest"
-                
-            current_page = 1 if (cycle_count % 4 in (0, 1)) else 2
-            cycle_count += 1
+                if cycle_count % 2 == 0:
+                    sort_order = "pdate_to_down"
+                    scan_tag = "Newest"
+                else:
+                    sort_order = "price_to_up"
+                    scan_tag = "Cheapest"
+                    
+                current_page = 1 if (cycle_count % 4 in (0, 1)) else 2
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "allow_geo_spamblock": 0,
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": current_page,
+                    "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
 
-            query_params = {
-                "pmin": pmin,
-                "pmax": pmax,
-                "currency": "rub",
-                "2fa": "no",
-                "spam": "no",
-                "allow_geo_spamblock": 0,
-                "nsb": 1,
-                "nsb_by_me": 1,
-                "page": current_page,
-                "order_by": sort_order
-            }
-            if api_countries:
-                query_params["country[]"] = api_countries
+            cycle_count += 1
 
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
             if resp.status_code == 200:
@@ -1849,7 +2029,7 @@ def monitor_lzt():
                     items, min_profit_usd, pmax, rub_per_usd,
                     target_countries_set, require_session_age_24h,
                     sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
-                    scan_tag=scan_tag
+                    scan_tag=scan_tag, group_sniper_cfg=group_sniper_cfg
                 )
             elif resp.status_code == 429:
                 retry_after = int(resp.headers.get("Retry-After", 10))
