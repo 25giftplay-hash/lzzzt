@@ -87,5 +87,13 @@
     "allow_geo_spamblock": false,
     "nsb": true,
     "nsb_by_me": true
+  },
+  "group_sniper": {
+    "enabled": true,
+    "max_year": 2019,
+    "max_price_rub": 500,
+    "min_session_age_hours": 24,
+    "require_no_2fa": true,
+    "require_owner": true
   }
 }
