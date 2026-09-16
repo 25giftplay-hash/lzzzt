@@ -1293,6 +1293,44 @@ def extract_item_prices(item, rub_per_usd=90.0):
 # -------------------------------------------------------------------
 # Estimate Telegram Channel / Supergroup Creation Year from ID
 # -------------------------------------------------------------------
+
+def is_telegram_group(group_obj, item):
+    """
+    Strictly verifies that the entity is a GROUP / CHAT and NOT a Channel.
+    """
+    # 1. Total chats check on the account
+    chats_count = item.get("telegram_chats_count", 0)
+    group_counters = item.get("telegram_group_counters") or {}
+    chats_in_counter = group_counters.get("chats", 0)
+    
+    # If the account has ZERO chats, all its entities are Channels!
+    if chats_count == 0 and chats_in_counter == 0:
+        return False, "الحساب لا يحتوي على مجموعات إطلاقاً (فقط قنوات)"
+
+    # 2. Check title for channel keywords
+    title = (group_obj.get("title") or "").lower()
+    channel_keywords = ["channel", "канал", "news", "новости", "قناة"]
+    if any(k in title for k in channel_keywords):
+        return False, f"العنوان يشير لقناة ({title})"
+
+    # 3. Check username if public via Telegram preview
+    username = group_obj.get("username")
+    if username:
+        try:
+            r = requests.get(f"https://t.me/{username}", timeout=3)
+            if r.status_code == 200:
+                text = r.text.lower()
+                # Channels have subscribers / подписчиков
+                if "subscribers" in text or "подписчик" in text or "مشترك" in text:
+                    return False, f"المعرف {username} يتبع لقناة (مشتركين) وليس مجموعة"
+                # Groups have members / участников
+                if "members" in text or "участник" in text or "عضو" in text:
+                    return True, "مجموعة عامة مؤكدة"
+        except Exception:
+            pass
+
+    return True, "مجموعة"
+
 def estimate_group_year(gid):
     try:
         gid = int(gid)
@@ -1781,6 +1819,11 @@ def process_stream_items(
                     require_owner = group_sniper_cfg.get("require_owner", True)
                     
                     for g in admin_groups:
+                        # Strictly verify it is a GROUP and NOT a Channel
+                        is_grp, reason = is_telegram_group(g, item)
+                        if not is_grp:
+                            continue
+                            
                         gid = g.get("id")
                         est_year = estimate_group_year(gid)
                         if est_year and est_year <= max_year:
@@ -1789,7 +1832,7 @@ def process_stream_items(
                                 
                     if aged_groups:
                         buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
-                        max_grp_price = group_sniper_cfg.get("max_price_rub", 500)
+                        max_grp_price = group_sniper_cfg.get("max_price_rub", 70)
                         if (not max_grp_price) or buy_rub <= max_grp_price:
                             alert_key = f"group:{item_id}"
                             if alert_key not in sent_alerts and str(item_id) not in sent_alerts:
@@ -1919,7 +1962,7 @@ def monitor_lzt():
     interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
     group_sniper_cfg = config.get("group_sniper", {
-        "enabled": True, "max_year": 2019, "max_price_rub": 500,
+        "enabled": True, "max_year": 2019, "max_price_rub": 70,
         "min_session_age_hours": 24.0, "require_no_2fa": True, "require_owner": True
     })
     
@@ -1987,7 +2030,7 @@ def monitor_lzt():
                 scan_tag = "Global-GroupScan"
                 query_params = {
                     "pmin": pmin,
-                    "pmax": group_sniper_cfg.get("max_price_rub", 500),
+                    "pmax": group_sniper_cfg.get("max_price_rub", 70),
                     "currency": "rub",
                     "2fa": "no",
                     "nsb": 1,
