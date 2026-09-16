@@ -1832,7 +1832,7 @@ def process_stream_items(
                                 
                     if aged_groups:
                         buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
-                        max_grp_price = group_sniper_cfg.get("max_price_rub", 70)
+                        max_grp_price = group_sniper_cfg.get("max_price_rub", 200)
                         if (not max_grp_price) or buy_rub <= max_grp_price:
                             alert_key = f"group:{item_id}"
                             if alert_key not in sent_alerts and str(item_id) not in sent_alerts:
@@ -1962,7 +1962,7 @@ def monitor_lzt():
     interval = config.get("check_interval_seconds", 3)
     filters = config.get("filters", {})
     group_sniper_cfg = config.get("group_sniper", {
-        "enabled": True, "max_year": 2019, "max_price_rub": 70,
+        "enabled": True, "max_year": 2019, "max_price_rub": 200,
         "min_session_age_hours": 24.0, "require_no_2fa": True, "require_owner": True
     })
     
@@ -2030,7 +2030,7 @@ def monitor_lzt():
                 scan_tag = "Global-GroupScan"
                 query_params = {
                     "pmin": pmin,
-                    "pmax": group_sniper_cfg.get("max_price_rub", 70),
+                    "pmax": group_sniper_cfg.get("max_price_rub", 200),
                     "currency": "rub",
                     "2fa": "no",
                     "nsb": 1,
