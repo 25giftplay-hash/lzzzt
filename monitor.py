@@ -1296,70 +1296,82 @@ def extract_item_prices(item, rub_per_usd=90.0):
 
 def is_telegram_group(group_obj, item):
     """
-    Strictly verifies that the entity is a GROUP / CHAT and NOT a Channel.
+    Strictly verifies that the entity is a REAL GROUP / CHAT and NOT a Channel.
+    Uses official Telegram MTProto specifications:
+    - Channels have post_messages/edit_messages permissions (CHANNELS ONLY).
+    - Groups have ban_users permissions and NO post_messages permission.
     """
-    # 1. Total chats check on the account
+    perms = group_obj.get("permissions") or {}
+    
+    # 1. MTProto Rights Check (post_messages/edit_messages exist ONLY for Channels!)
+    if perms.get("post_messages") is True or perms.get("edit_messages") is True:
+        return False, "قناة بث (Channel) وليست مجموعة"
+
+    # 2. In groups, admins have ban_users / restrict_members
+    if not perms.get("ban_users"):
+        return False, "ليست مجموعة حقيقية (لا توجد صلاحية حظر الأعضاء)"
+
+    # 3. Total chats check on the account
     chats_count = item.get("telegram_chats_count", 0)
     group_counters = item.get("telegram_group_counters") or {}
     chats_in_counter = group_counters.get("chats", 0)
-    
-    # If the account has ZERO chats, all its entities are Channels!
     if chats_count == 0 and chats_in_counter == 0:
         return False, "الحساب لا يحتوي على مجموعات إطلاقاً (فقط قنوات)"
 
-    # 2. Check title for channel keywords
+    # 4. Check title for channel keywords
     title = (group_obj.get("title") or "").lower()
     channel_keywords = ["channel", "канал", "news", "новости", "قناة"]
     if any(k in title for k in channel_keywords):
         return False, f"العنوان يشير لقناة ({title})"
 
-    # 3. Check username if public via Telegram preview
+    # 5. Check username if public via Telegram preview
     username = group_obj.get("username")
     if username:
         try:
             r = requests.get(f"https://t.me/{username}", timeout=3)
             if r.status_code == 200:
                 text = r.text.lower()
-                # Channels have subscribers / подписчиков
                 if "subscribers" in text or "подписчик" in text or "مشترك" in text:
                     return False, f"المعرف {username} يتبع لقناة (مشتركين) وليس مجموعة"
-                # Groups have members / участников
                 if "members" in text or "участник" in text or "عضو" in text:
                     return True, "مجموعة عامة مؤكدة"
         except Exception:
             pass
 
-    return True, "مجموعة"
+    return True, "مجموعة مؤكدة"
 
 def estimate_group_year(gid):
+    """
+    Calibrated estimation of Telegram supergroup/chat creation year.
+    IDs created in 2019 and earlier were under 1,180,000,000.
+    IDs above 1,200,000,000 were created in late 2020 and 2021+.
+    """
     try:
         gid = int(gid)
     except (ValueError, TypeError):
         return None
-    # Basic chats (prior to widespread supergroups) have IDs < 1,000,000,000
-    if gid < 1_000_000_000:
+    # Basic legacy chats (created prior to 2018)
+    if gid < 500_000_000:
         return 2017
     elif gid <= 1_050_000_000:
-        return 2015
-    elif gid <= 1_150_000_000:
         return 2016
-    elif gid <= 1_280_000_000:
+    elif gid <= 1_100_000_000:
         return 2017
-    elif gid <= 1_400_000_000:
+    elif gid <= 1_150_000_000:
         return 2018
-    elif gid <= 1_550_000_000:
+    elif gid <= 1_180_000_000:
         return 2019
-    elif gid <= 1_700_000_000:
+    elif gid <= 1_250_000_000:
         return 2020
-    elif gid <= 1_950_000_000:
+    elif gid <= 1_400_000_000:
         return 2021
-    elif gid <= 2_150_000_000:
+    elif gid <= 1_700_000_000:
         return 2022
-    elif gid <= 2_600_000_000:
+    elif gid <= 2_100_000_000:
         return 2023
-    elif gid <= 3_200_000_000:
+    elif gid <= 2_800_000_000:
         return 2024
-    elif gid <= 3_800_000_000:
+    elif gid <= 3_500_000_000:
         return 2025
     else:
         return 2026
