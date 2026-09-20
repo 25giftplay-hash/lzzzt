@@ -79,9 +79,9 @@
       "MV"
     ],
     "pmin": 2,
-    "pmax": 70,
+    "pmax": 75,
     "currency": "rub",
-    "min_profit_usd": 0.5,
+    "min_profit_usd": 0.35,
     "require_session_age_24h": true,
     "2fa": "no",
     "allow_geo_spamblock": false,
