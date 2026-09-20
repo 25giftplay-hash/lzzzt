@@ -2056,15 +2056,71 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 4-Stage Aggressive Search Engine (Turbo-MultiScan):
-            # Mode 0: Targeted Newest (pdate_to_down, Page 1)
-            # Mode 1: Targeted Cheapest (price_to_up, Page 1) - catches underpriced bargains
-            # Mode 2: Global Aged-Group Scan (no country filter, max 200 RUB)
-            # Mode 3: Targeted Deep Scan (pdate_to_down, Page 2) - catches fast listings
-            scan_mode = cycle_count % 4
+            # 5-Stage High-Velocity Aggressive Search Engine:
+            # Mode 0: Targeted Aged Stream (daybreak=1, newest first) - Catches 24H+ accounts directly!
+            # Mode 1: Targeted Fresh Stream (pdate_to_down, Page 1) - Real-time new listings
+            # Mode 2: Targeted Bargain Hunter (price_to_up, Page 1) - Catches underpriced items (10-40 RUB)
+            # Mode 3: Global Group Sniper (no country filter, up to 200 RUB, groups <= 2019)
+            # Mode 4: Global Deep Stream (daybreak=1, page 1 without country filter)
+            scan_mode = cycle_count % 5
             cycle_count += 1
-            
-            if scan_mode == 2 and group_sniper_cfg.get("enabled", True):
+
+            if scan_mode == 0:
+                sort_order = "pdate_to_down"
+                scan_tag = "Aged-24H-Stream"
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "allow_geo_spamblock": 0,
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "daybreak": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
+
+            elif scan_mode == 1:
+                sort_order = "pdate_to_down"
+                scan_tag = "Target-Newest"
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "allow_geo_spamblock": 0,
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
+
+            elif scan_mode == 2:
+                sort_order = "price_to_up"
+                scan_tag = "Target-Bargains"
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "allow_geo_spamblock": 0,
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
+
+            elif scan_mode == 3 and group_sniper_cfg.get("enabled", True):
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-GroupScan"
                 query_params = {
@@ -2075,22 +2131,12 @@ def monitor_lzt():
                     "nsb": 1,
                     "nsb_by_me": 1,
                     "page": 1,
-                    "order_by": "pdate_to_down"
+                    "order_by": sort_order
                 }
-            else:
-                if scan_mode == 0:
-                    sort_order = "pdate_to_down"
-                    scan_page = 1
-                    scan_tag = "Target-Newest"
-                elif scan_mode == 1:
-                    sort_order = "price_to_up"
-                    scan_page = 1
-                    scan_tag = "Target-Cheapest"
-                else:
-                    sort_order = "pdate_to_down"
-                    scan_page = 2
-                    scan_tag = "Target-DeepScan"
 
+            else:
+                sort_order = "pdate_to_down"
+                scan_tag = "Global-AgedStream"
                 query_params = {
                     "pmin": pmin,
                     "pmax": pmax,
@@ -2098,13 +2144,10 @@ def monitor_lzt():
                     "2fa": "no",
                     "spam": "no",
                     "allow_geo_spamblock": 0,
-                    "nsb": 1,
-                    "nsb_by_me": 1,
-                    "page": scan_page,
+                    "daybreak": 1,
+                    "page": 1,
                     "order_by": sort_order
                 }
-                if api_countries:
-                    query_params["country[]"] = api_countries
 
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
             if resp.status_code == 200:
