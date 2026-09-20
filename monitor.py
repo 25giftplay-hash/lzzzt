@@ -1080,43 +1080,52 @@ def mark_item_banned(item_id):
 def get_stats_summary(min_profit_usd=0.30):
     conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
-    c.execute("SELECT status, cost_usd, profit_usd FROM ledger")
+    c.execute("SELECT status, cost_usd, profit_usd, timestamp FROM ledger")
     rows = c.fetchall()
     conn.close()
     
-    total_bought = len(rows)
-    sold_count = 0
-    banned_count = 0
-    pending_count = 0
-    total_profit_usd = 0.0
-    total_loss_usd = 0.0
-    
-    for status, cost_usd, profit_usd in rows:
-        if status == 'sold':
-            sold_count += 1
-            total_profit_usd += (profit_usd or 0.0)
-        elif status == 'banned':
-            banned_count += 1
-            total_loss_usd += (cost_usd or 0.0)
-        elif status == 'bought':
-            pending_count += 1
-            
-    net_balance_usd = total_profit_usd - total_loss_usd
-    
-    recovery_accounts_needed = 0
-    if total_loss_usd > 0 and min_profit_usd > 0:
+    now = time.time()
+    one_day_ago = now - 86400
+    one_week_ago = now - (7 * 86400)
+    one_month_ago = now - (30 * 86400)
+
+    def calc_period(data_rows):
+        total = len(data_rows)
+        sold = sum(1 for r in data_rows if r[0] == 'sold')
+        banned = sum(1 for r in data_rows if r[0] == 'banned')
+        pending = sum(1 for r in data_rows if r[0] == 'bought')
+        profit = sum(r[2] or 0.0 for r in data_rows if r[0] == 'sold')
+        loss = sum(r[1] or 0.0 for r in data_rows if r[0] == 'banned')
+        net = profit - loss
+        return {
+            "total": total, "sold": sold, "banned": banned, "pending": pending,
+            "profit": profit, "loss": loss, "net": net
+        }
+
+    all_time = calc_period(rows)
+    today = calc_period([r for r in rows if (r[3] or 0) >= one_day_ago])
+    week = calc_period([r for r in rows if (r[3] or 0) >= one_week_ago])
+    month = calc_period([r for r in rows if (r[3] or 0) >= one_month_ago])
+
+    recovery_needed = 0
+    if all_time["loss"] > 0 and min_profit_usd > 0:
         import math
-        recovery_accounts_needed = math.ceil(total_loss_usd / min_profit_usd)
-        
+        recovery_needed = math.ceil(all_time["loss"] / min_profit_usd)
+
     return {
-        "total_bought": total_bought,
-        "sold_count": sold_count,
-        "banned_count": banned_count,
-        "pending_count": pending_count,
-        "total_profit_usd": total_profit_usd,
-        "total_loss_usd": total_loss_usd,
-        "net_balance_usd": net_balance_usd,
-        "recovery_needed": recovery_accounts_needed
+        "all_time": all_time,
+        "today": today,
+        "week": week,
+        "month": month,
+        "recovery_needed": recovery_needed,
+        # backward compatibility keys
+        "total_bought": all_time["total"],
+        "sold_count": all_time["sold"],
+        "banned_count": all_time["banned"],
+        "pending_count": all_time["pending"],
+        "total_profit_usd": all_time["profit"],
+        "total_loss_usd": all_time["loss"],
+        "net_balance_usd": all_time["net"]
     }
 
 def reset_db_stats():
@@ -1746,24 +1755,39 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                     chat_id = m.get("chat", {}).get("id")
                     text = m.get("text", "").strip()
                     
-                    if text in ("/stats", "/start"):
+                    if text in ("/stats", "/start", "احصائيات", "ارباحي"):
                         stats = get_stats_summary(min_profit_usd)
+                        w = stats["week"]
+                        t = stats["today"]
+                        a = stats["all_time"]
+                        
+                        net_icon_w = "💚" if w["net"] >= 0 else "💔"
+                        net_icon_a = "💚" if a["net"] >= 0 else "💔"
+
                         report = (
-                            f"📊 <b>التقرير المالي وإحصائيات التجار المباشرة:</b>\n"
-                            f"--------------------------------------------------\n"
-                            f"🛒 <b>إجمالي الحسابات المشتراة:</b> {stats['total_bought']}\n"
-                            f"✅ <b>حسابات تم بيعها بنجاح:</b> {stats['sold_count']}\n"
-                            f"💔 <b>حسابات خاسرة (حظر/سحب):</b> {stats['banned_count']}\n"
-                            f"⏳ <b>حسابات قيد الانتظار:</b> {stats['pending_count']}\n\n"
-                            f"💵 <b>إجمالي الأرباح المحققة:</b> +${stats['total_profit_usd']:.2f} USD\n"
-                            f"💸 <b>إجمالي الخسائر:</b> -${stats['total_loss_usd']:.2f} USD\n"
-                            f"⚖️ <b>صافي الربح الفعلي الحقيقي:</b> <b>+${stats['net_balance_usd']:.2f} USD</b>\n"
-                            f"--------------------------------------------------\n"
+                            f"📊 <b>لوحة التحكم والحاسبة المالية المحدثة:</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"🗓️ <b>أرباح وخسائر هذا الأسبوع (7 أيام):</b>\n"
+                            f"  • تم الشراء: <b>{w['total']}</b> حساب\n"
+                            f"  • تم البيع: <b>{w['sold']}</b> | تم الحظر: <b>{w['banned']}</b>\n"
+                            f"  • الأرباح: <b>+${w['profit']:.2f} USD</b>\n"
+                            f"  • الخسائر: <b>-${w['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_w} <b>صافي ربح الأسبوع:</b> <b>{'+' if w['net']>=0 else ''}${w['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"📅 <b>أرباح وخسائر اليوم (24 ساعة):</b>\n"
+                            f"  • بيع: {t['sold']} | خسارة: {t['banned']} | صافي: <b>{'+' if t['net']>=0 else ''}${t['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"👑 <b>الإجمالي الشامل منذ بداية العمل:</b>\n"
+                            f"  • إجمالي الحسابات: <b>{a['total']}</b>\n"
+                            f"  • إجمالي الأرباح: <b>+${a['profit']:.2f} USD</b>\n"
+                            f"  • إجمالي الخسائر: <b>-${a['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_a} <b>صافي الربح النهائي:</b> <b>{'+' if a['net']>=0 else ''}${a['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
                         )
                         if stats['recovery_needed'] > 0:
-                            report += f"🎯 <b>حاسبة التعويض:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتعويض كافة الخسائر الحالية!"
+                            report += f"🎯 <b>حاسبة التعويض الذكية:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتغطية أي خسارة سابقة تماماً! 🚀"
                         else:
-                            report += f"✨ <b>وضعك المالي ممتاز: لا توجد خسائر تحتاج لتعويض حالياً! 🎉</b>"
+                            report += f"✨ <b>أداء مالي أسطوري: لا توجد أي خسائر تحتاج لتعويض! 🎉</b>"
                             
                         requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": report, "parse_mode": "HTML"})
                         
@@ -2032,12 +2056,15 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # Dual + Global Scan Strategy:
-            # - Every 3rd cycle: Global Scan (no country filter, no spam filter) to discover aged groups worldwide!
-            # - Other cycles: Alternating Newest First & Cheapest First within target countries
-            is_global_cycle = (cycle_count % 3 == 0) and group_sniper_cfg.get("enabled", True)
+            # 4-Stage Aggressive Search Engine (Turbo-MultiScan):
+            # Mode 0: Targeted Newest (pdate_to_down, Page 1)
+            # Mode 1: Targeted Cheapest (price_to_up, Page 1) - catches underpriced bargains
+            # Mode 2: Global Aged-Group Scan (no country filter, max 200 RUB)
+            # Mode 3: Targeted Deep Scan (pdate_to_down, Page 2) - catches fast listings
+            scan_mode = cycle_count % 4
+            cycle_count += 1
             
-            if is_global_cycle:
+            if scan_mode == 2 and group_sniper_cfg.get("enabled", True):
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-GroupScan"
                 query_params = {
@@ -2051,14 +2078,19 @@ def monitor_lzt():
                     "order_by": "pdate_to_down"
                 }
             else:
-                if cycle_count % 2 == 0:
+                if scan_mode == 0:
                     sort_order = "pdate_to_down"
-                    scan_tag = "Newest"
-                else:
+                    scan_page = 1
+                    scan_tag = "Target-Newest"
+                elif scan_mode == 1:
                     sort_order = "price_to_up"
-                    scan_tag = "Cheapest"
-                    
-                current_page = 1 if (cycle_count % 4 in (0, 1)) else 2
+                    scan_page = 1
+                    scan_tag = "Target-Cheapest"
+                else:
+                    sort_order = "pdate_to_down"
+                    scan_page = 2
+                    scan_tag = "Target-DeepScan"
+
                 query_params = {
                     "pmin": pmin,
                     "pmax": pmax,
@@ -2068,13 +2100,11 @@ def monitor_lzt():
                     "allow_geo_spamblock": 0,
                     "nsb": 1,
                     "nsb_by_me": 1,
-                    "page": current_page,
+                    "page": scan_page,
                     "order_by": sort_order
                 }
                 if api_countries:
                     query_params["country[]"] = api_countries
-
-            cycle_count += 1
 
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
             if resp.status_code == 200:
