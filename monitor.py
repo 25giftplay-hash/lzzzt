@@ -1077,6 +1077,28 @@ def mark_item_banned(item_id):
     conn.commit()
     conn.close()
 
+def log_manual_profit(amount_usd, note="Manual Profit"):
+    conn = sqlite3.connect(DB_FILE, timeout=20)
+    c = conn.cursor()
+    manual_id = f"profit_{int(time.time()*1000)}"
+    c.execute('''
+        INSERT INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
+        VALUES (?, 'sold', 0.0, ?, ?, 'MANUAL', ?)
+    ''', (manual_id, float(amount_usd), note, time.time()))
+    conn.commit()
+    conn.close()
+
+def log_manual_loss(amount_usd, note="Manual Loss"):
+    conn = sqlite3.connect(DB_FILE, timeout=20)
+    c = conn.cursor()
+    manual_id = f"loss_{int(time.time()*1000)}"
+    c.execute('''
+        INSERT INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
+        VALUES (?, 'banned', ?, 0.0, ?, 'MANUAL', ?)
+    ''', (manual_id, float(amount_usd), note, time.time()))
+    conn.commit()
+    conn.close()
+
 def get_stats_summary(min_profit_usd=0.30):
     conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
@@ -1749,23 +1771,22 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                         })
                         requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم التجاهل."})
 
-                # Handle Text Messages & Forwarded Price Lists
-                if "message" in update:
-                    m = update["message"]
-                    chat_id = m.get("chat", {}).get("id")
-                    text = m.get("text", "").strip()
-                    
-                    if text in ("/stats", "/start", "احصائيات", "ارباحي"):
+                    elif action == "quick_profit":
+                        val = float(parts[1])
+                        log_manual_profit(val, note="Quick Button")
+                        requests.post(f"{base_url}answerCallbackQuery", json={
+                            "callback_query_id": cb_id,
+                            "text": f"✅ تم تسجيل ربح +${val:.2f} USD بنجاح!"
+                        })
+                        # Refresh stats message
                         stats = get_stats_summary(min_profit_usd)
                         w = stats["week"]
                         t = stats["today"]
                         a = stats["all_time"]
-                        
                         net_icon_w = "💚" if w["net"] >= 0 else "💔"
                         net_icon_a = "💚" if a["net"] >= 0 else "💔"
-
                         report = (
-                            f"📊 <b>لوحة التحكم والحاسبة المالية المحدثة:</b>\n"
+                            f"📊 <b>لوحة التحكم والحاسبة المالية التفاعلية (محدثة):</b>\n"
                             f"━━━━━━━━━━━━━━━━━━━━\n"
                             f"🗓️ <b>أرباح وخسائر هذا الأسبوع (7 أيام):</b>\n"
                             f"  • تم الشراء: <b>{w['total']}</b> حساب\n"
@@ -1785,11 +1806,201 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                             f"━━━━━━━━━━━━━━━━━━━━\n"
                         )
                         if stats['recovery_needed'] > 0:
-                            report += f"🎯 <b>حاسبة التعويض الذكية:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتغطية أي خسارة سابقة تماماً! 🚀"
+                            report += f"🎯 <b>حاسبة التعويض:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتغطية أي خسارة سابقة تماماً! 🚀\n\n"
                         else:
-                            report += f"✨ <b>أداء مالي أسطوري: لا توجد أي خسائر تحتاج لتعويض! 🎉</b>"
+                            report += f"✨ <b>أداء مالي أسطوري: لا توجد أي خسائر تحتاج لتعويض! 🎉</b>\n\n"
+                        report += (
+                            f"👇 <i>اضغط على الأزرار أدناه لتسجيل ربح أو خسارة فوراً:</i>\n"
+                            f"💡 <i>أو اكتب مباشرة للشات: <code>ربح 0.8</code> أو <code>خسارة 0.7</code></i>"
+                        )
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id, "message_id": msg_id,
+                            "text": report, "parse_mode": "HTML", "reply_markup": msg.get("reply_markup")
+                        })
+
+                    elif action == "quick_loss":
+                        val = float(parts[1])
+                        log_manual_loss(val, note="Quick Button")
+                        requests.post(f"{base_url}answerCallbackQuery", json={
+                            "callback_query_id": cb_id,
+                            "text": f"💔 تم تسجيل خسارة -${val:.2f} USD وتحديث الحسابات."
+                        })
+                        # Refresh stats message
+                        stats = get_stats_summary(min_profit_usd)
+                        w = stats["week"]
+                        t = stats["today"]
+                        a = stats["all_time"]
+                        net_icon_w = "💚" if w["net"] >= 0 else "💔"
+                        net_icon_a = "💚" if a["net"] >= 0 else "💔"
+                        report = (
+                            f"📊 <b>لوحة التحكم والحاسبة المالية التفاعلية (محدثة):</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"🗓️ <b>أرباح وخسائر هذا الأسبوع (7 أيام):</b>\n"
+                            f"  • تم الشراء: <b>{w['total']}</b> حساب\n"
+                            f"  • تم البيع: <b>{w['sold']}</b> | تم الحظر: <b>{w['banned']}</b>\n"
+                            f"  • الأرباح: <b>+${w['profit']:.2f} USD</b>\n"
+                            f"  • الخسائر: <b>-${w['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_w} <b>صافي ربح الأسبوع:</b> <b>{'+' if w['net']>=0 else ''}${w['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"📅 <b>أرباح وخسائر اليوم (24 ساعة):</b>\n"
+                            f"  • بيع: {t['sold']} | خسارة: {t['banned']} | صافي: <b>{'+' if t['net']>=0 else ''}${t['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"👑 <b>الإجمالي الشامل منذ بداية العمل:</b>\n"
+                            f"  • إجمالي الحسابات: <b>{a['total']}</b>\n"
+                            f"  • إجمالي الأرباح: <b>+${a['profit']:.2f} USD</b>\n"
+                            f"  • إجمالي الخسائر: <b>-${a['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_a} <b>صافي الربح النهائي:</b> <b>{'+' if a['net']>=0 else ''}${a['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                        )
+                        if stats['recovery_needed'] > 0:
+                            report += f"🎯 <b>حاسبة التعويض:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتغطية أي خسارة سابقة تماماً! 🚀\n\n"
+                        else:
+                            report += f"✨ <b>أداء مالي أسطوري: لا توجد أي خسائر تحتاج لتعويض! 🎉</b>\n\n"
+                        report += (
+                            f"👇 <i>اضغط على الأزرار أدناه لتسجيل ربح أو خسارة فوراً:</i>\n"
+                            f"💡 <i>أو اكتب مباشرة للشات: <code>ربح 0.8</code> أو <code>خسارة 0.7</code></i>"
+                        )
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id, "message_id": msg_id,
+                            "text": report, "parse_mode": "HTML", "reply_markup": msg.get("reply_markup")
+                        })
+
+                    elif action == "refresh_stats":
+                        stats = get_stats_summary(min_profit_usd)
+                        w = stats["week"]
+                        t = stats["today"]
+                        a = stats["all_time"]
+                        net_icon_w = "💚" if w["net"] >= 0 else "💔"
+                        net_icon_a = "💚" if a["net"] >= 0 else "💔"
+                        report = (
+                            f"📊 <b>لوحة التحكم والحاسبة المالية التفاعلية (محدثة):</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"🗓️ <b>أرباح وخسائر هذا الأسبوع (7 أيام):</b>\n"
+                            f"  • تم الشراء: <b>{w['total']}</b> حساب\n"
+                            f"  • تم البيع: <b>{w['sold']}</b> | تم الحظر: <b>{w['banned']}</b>\n"
+                            f"  • الأرباح: <b>+${w['profit']:.2f} USD</b>\n"
+                            f"  • الخسائر: <b>-${w['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_w} <b>صافي ربح الأسبوع:</b> <b>{'+' if w['net']>=0 else ''}${w['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"📅 <b>أرباح وخسائر اليوم (24 ساعة):</b>\n"
+                            f"  • بيع: {t['sold']} | خسارة: {t['banned']} | صافي: <b>{'+' if t['net']>=0 else ''}${t['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"👑 <b>الإجمالي الشامل منذ بداية العمل:</b>\n"
+                            f"  • إجمالي الحسابات: <b>{a['total']}</b>\n"
+                            f"  • إجمالي الأرباح: <b>+${a['profit']:.2f} USD</b>\n"
+                            f"  • إجمالي الخسائر: <b>-${a['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_a} <b>صافي الربح النهائي:</b> <b>{'+' if a['net']>=0 else ''}${a['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                        )
+                        if stats['recovery_needed'] > 0:
+                            report += f"🎯 <b>حاسبة التعويض:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتغطية أي خسارة سابقة تماماً! 🚀\n\n"
+                        else:
+                            report += f"✨ <b>أداء مالي أسطوري: لا توجد أي خسائر تحتاج لتعويض! 🎉</b>\n\n"
+                        report += (
+                            f"👇 <i>اضغط على الأزرار أدناه لتسجيل ربح أو خسارة فوراً:</i>\n"
+                            f"💡 <i>أو اكتب مباشرة للشات: <code>ربح 0.8</code> أو <code>خسارة 0.7</code></i>"
+                        )
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id, "message_id": msg_id,
+                            "text": report, "parse_mode": "HTML", "reply_markup": msg.get("reply_markup")
+                        })
+                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم تحديث الإحصائيات!"})
+
+                # Handle Text Messages & Forwarded Price Lists
+                if "message" in update:
+                    m = update["message"]
+                    chat_id = m.get("chat", {}).get("id")
+                    text = m.get("text", "").strip()
+                    
+                    if text in ("/stats", "/start", "احصائيات", "ارباحي"):
+                        stats = get_stats_summary(min_profit_usd)
+                        w = stats["week"]
+                        t = stats["today"]
+                        a = stats["all_time"]
+                        
+                        net_icon_w = "💚" if w["net"] >= 0 else "💔"
+                        net_icon_a = "💚" if a["net"] >= 0 else "💔"
+
+                        report = (
+                            f"📊 <b>لوحة التحكم والحاسبة المالية التفاعلية:</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"🗓️ <b>أرباح وخسائر هذا الأسبوع (7 أيام):</b>\n"
+                            f"  • تم الشراء: <b>{w['total']}</b> حساب\n"
+                            f"  • تم البيع: <b>{w['sold']}</b> | تم الحظر: <b>{w['banned']}</b>\n"
+                            f"  • الأرباح: <b>+${w['profit']:.2f} USD</b>\n"
+                            f"  • الخسائر: <b>-${w['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_w} <b>صافي ربح الأسبوع:</b> <b>{'+' if w['net']>=0 else ''}${w['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"📅 <b>أرباح وخسائر اليوم (24 ساعة):</b>\n"
+                            f"  • بيع: {t['sold']} | خسارة: {t['banned']} | صافي: <b>{'+' if t['net']>=0 else ''}${t['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                            f"👑 <b>الإجمالي الشامل منذ بداية العمل:</b>\n"
+                            f"  • إجمالي الحسابات: <b>{a['total']}</b>\n"
+                            f"  • إجمالي الأرباح: <b>+${a['profit']:.2f} USD</b>\n"
+                            f"  • إجمالي الخسائر: <b>-${a['loss']:.2f} USD</b>\n"
+                            f"  • {net_icon_a} <b>صافي الربح النهائي:</b> <b>{'+' if a['net']>=0 else ''}${a['net']:.2f} USD</b>\n"
+                            f"━━━━━━━━━━━━━━━━━━━━\n"
+                        )
+                        if stats['recovery_needed'] > 0:
+                            report += f"🎯 <b>حاسبة التعويض:</b> تحتاج لبيع <b>{stats['recovery_needed']} حسابات</b> جديدة بربح ${min_profit_usd:.2f} لتغطية أي خسارة سابقة تماماً! 🚀\n\n"
+                        else:
+                            report += f"✨ <b>أداء مالي أسطوري: لا توجد أي خسائر تحتاج لتعويض! 🎉</b>\n\n"
+
+                        report += (
+                            f"👇 <i>اضغط على الأزرار أدناه لتسجيل ربح أو خسارة فوراً:</i>\n"
+                            f"💡 <i>أو اكتب مباشرة للشات: <code>ربح 0.8</code> أو <code>خسارة 0.7</code></i>"
+                        )
                             
-                        requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": report, "parse_mode": "HTML"})
+                        calc_markup = {
+                            "inline_keyboard": [
+                                [
+                                    {"text": "➕ ربح +$0.50", "callback_data": "quick_profit:0.50"},
+                                    {"text": "➕ ربح +$0.80", "callback_data": "quick_profit:0.80"},
+                                    {"text": "➕ ربح +$1.00", "callback_data": "quick_profit:1.00"}
+                                ],
+                                [
+                                    {"text": "➕ ربح +$1.50", "callback_data": "quick_profit:1.50"},
+                                    {"text": "➕ ربح +$2.00", "callback_data": "quick_profit:2.00"},
+                                    {"text": "➕ ربح +$2.50", "callback_data": "quick_profit:2.50"}
+                                ],
+                                [
+                                    {"text": "💔 خسارة -$0.70", "callback_data": "quick_loss:0.70"},
+                                    {"text": "💔 خسارة -$0.80", "callback_data": "quick_loss:0.80"},
+                                    {"text": "💔 خسارة -$1.00", "callback_data": "quick_loss:1.00"}
+                                ],
+                                [
+                                    {"text": "🔄 تحديث الإحصائيات", "callback_data": "refresh_stats"}
+                                ]
+                            ]
+                        }
+                        requests.post(f"{base_url}sendMessage", json={
+                            "chat_id": chat_id, "text": report, "parse_mode": "HTML", "reply_markup": calc_markup
+                        })
+
+                    # Handle direct text additions like: ربح 0.5 or خسارة 0.8 or +0.5 or -0.8
+                    elif text.startswith(("ربح", "+", "ربحت", "profit", "Profit")):
+                        m_val = re.search(r'[\d]+[.,]?[\d]*', text)
+                        if m_val:
+                            val = float(m_val.group(0).replace(',', '.'))
+                            if 0 < val <= 500:
+                                log_manual_profit(val, note="Direct Chat")
+                                requests.post(f"{base_url}sendMessage", json={
+                                    "chat_id": chat_id,
+                                    "text": f"✅ <b>تمت إضافة ربح +${val:.2f} USD بنجاح! 💚</b>\nأرسل /stats لرؤية الحسابات المحدثة.",
+                                    "parse_mode": "HTML"
+                                })
+
+                    elif text.startswith(("خسارة", "-", "خسرت", "loss", "Loss")):
+                        m_val = re.search(r'[\d]+[.,]?[\d]*', text)
+                        if m_val:
+                            val = float(m_val.group(0).replace(',', '.'))
+                            if 0 < val <= 500:
+                                log_manual_loss(val, note="Direct Chat")
+                                requests.post(f"{base_url}sendMessage", json={
+                                    "chat_id": chat_id,
+                                    "text": f"💔 <b>تم تسجيل خسارة -${val:.2f} USD وتحديث حاسبة التعويض.</b>\nأرسل /stats لرؤية الحسابات المحدثة.",
+                                    "parse_mode": "HTML"
+                                })
                         
                     elif text == "/reset_stats":
                         reset_db_stats()
