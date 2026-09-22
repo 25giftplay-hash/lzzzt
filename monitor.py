@@ -1,3 +1,4 @@
+import html
 import os
 import sys
 import re
@@ -1015,7 +1016,7 @@ PHONE_PREFIX_TO_CODE = {
     "387": "BA", "970": "PS", "49": "DE", "40": "RO", "968": "OM", "597": "SR", "31": "NL",
     "46": "SE", "976": "MN", "420": "CZ", "36": "HU", "32": "BE", "359": "BG", "33": "FR",
     "994": "AZ", "965": "KW", "673": "BN", "371": "LV", "61": "AU", "974": "QA", "370": "LT",
-    "373": "MD", "674": "NR", "386": "SI", "47": "NO", "971": "AE", "65": "SG", "375": "BY",
+    "373": "MD", "674": "NR", "675": "PG", "386": "SI", "47": "NO", "971": "AE", "65": "SG", "375": "BY",
     "853": "MO", "886": "TW", "356": "MT", "383": "XK", "591": "BO", "58": "VE", "380": "UA",
     "41": "CH", "973": "BH", "82": "KR", "350": "GI", "682": "CK", "7": "RU", "966": "SA",
     "964": "IQ", "45": "DK", "381": "RS", "372": "EE", "351": "PT", "98": "IR", "880": "BD",
@@ -2221,6 +2222,80 @@ def run_health_server():
 # -------------------------------------------------------------------
 # Main Monitor Loop (Dual Scanning: Newest First & Cheapest First)
 # -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# Automatic Live Price Sync from Iranian Channel (@OzvAcc1)
+# -------------------------------------------------------------------
+def sync_channel_prices_loop():
+    """
+    Periodically scrapes the Iranian Bot update channel (https://t.me/s/OzvAcc1)
+    to keep sell prices and new country capacities fresh and updated in real time.
+    """
+    channel_url = "https://t.me/s/OzvAcc1"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+    
+    time.sleep(5)  # Start shortly after boot
+    while True:
+        try:
+            r = requests.get(channel_url, headers=headers, timeout=15)
+            if r.status_code == 200:
+                blocks = re.findall(r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', r.text, re.DOTALL)
+                channel_prices = {}
+                for b in blocks:
+                    clean = html.unescape(re.sub(r'<[^>]+>', ' ', b))
+                    # Individual capacity alerts
+                    matches = re.findall(r'پیش شماره \+(\d+).*?\(([\d\.]+)\$\)', clean)
+                    for prefix, p_str in matches:
+                        iso = PHONE_PREFIX_TO_CODE.get(prefix)
+                        if iso:
+                            channel_prices[iso] = float(p_str)
+                    # Full price list if present
+                    if "نام کشور" in clean:
+                        entries = clean.split("✅")
+                        for e in entries:
+                            m_code = re.search(r'\(\+(\d+)\)', e)
+                            m_price = re.search(r'\(([\d\.]+)\$\)', e)
+                            if m_code and m_price:
+                                iso = PHONE_PREFIX_TO_CODE.get(m_code.group(1))
+                                if iso:
+                                    channel_prices[iso] = float(m_price.group(1))
+                                    
+                if channel_prices:
+                    sell_prices = load_sell_prices()
+                    updated = False
+                    for iso, p1 in channel_prices.items():
+                        if iso not in sell_prices:
+                            sell_prices[iso] = {
+                                "best_usd": p1,
+                                "best_bot": "البوت الأول 🥇 (الإيراني)",
+                                "bot1_usd": p1,
+                                "bot2_usd": 0.0
+                            }
+                            updated = True
+                        else:
+                            entry = sell_prices[iso]
+                            if entry.get("bot1_usd") != p1:
+                                entry["bot1_usd"] = p1
+                                p2 = entry.get("bot2_usd", 0.0)
+                                if p1 > p2:
+                                    entry["best_usd"] = p1
+                                    entry["best_bot"] = "البوت الأول 🥇 (الإيراني)"
+                                elif p2 > p1:
+                                    entry["best_usd"] = p2
+                                    entry["best_bot"] = "البوت الثاني 🥈"
+                                else:
+                                    entry["best_usd"] = p1
+                                    entry["best_bot"] = "البوت الأول أو الثاني (متطابق)"
+                                updated = True
+                    if updated:
+                        with open(SELL_PRICES_FILE, "w", encoding="utf-8") as f:
+                            json.dump(sell_prices, f, indent=2, ensure_ascii=False)
+                        print(f"[Price Sync] Automatically updated {len(channel_prices)} live prices from @OzvAcc1!")
+        except Exception as e:
+            print(f"[Price Sync] Background sync error: {e}")
+            
+        time.sleep(600)  # Check every 10 minutes
+
 def monitor_lzt():
     init_db()
     config = load_config()
@@ -2259,6 +2334,7 @@ def monitor_lzt():
 
     threading.Thread(target=run_health_server, daemon=True).start()
     threading.Thread(target=telegram_bot_listener, args=(tg_token, lzt_token, min_profit_usd), daemon=True).start()
+    threading.Thread(target=sync_channel_prices_loop, daemon=True).start()
 
     sent_alerts = load_sent_alerts()
     
