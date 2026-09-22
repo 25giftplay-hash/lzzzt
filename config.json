@@ -96,5 +96,11 @@
     "require_no_2fa": true,
     "require_owner": true,
     "require_only_groups": true
+  },
+  "global_profit_sniper": {
+    "enabled": true,
+    "min_profit_usd": 0.5,
+    "require_session_age_24h": true,
+    "pmax": 150
   }
 }
