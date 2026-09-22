@@ -999,17 +999,27 @@ MULTI_LANG_COUNTRY_MAP = {
 }
 
 PHONE_PREFIX_TO_CODE = {
-    "971": "AE", "380": "UA", "966": "SA", "974": "QA", "41": "CH", "82": "KR",
-    "7": "RU", "65": "SG", "964": "IQ", "49": "DE", "33": "FR", "44": "GB",
-    "31": "NL", "34": "ES", "39": "IT", "43": "AT", "45": "DK", "386": "SI",
-    "385": "HR", "381": "RS", "886": "TW", "853": "MO", "375": "BY", "371": "LV",
-    "370": "LT", "372": "EE", "358": "FI", "47": "NO", "46": "SE", "420": "CZ",
-    "32": "BE", "351": "PT", "40": "RO", "359": "BG", "972": "IL", "98": "IR",
-    "965": "KW", "968": "OM", "973": "BH", "962": "JO", "961": "LB", "92": "PK",
-    "880": "BD", "63": "PH", "60": "MY", "84": "VN", "66": "TH", "62": "ID",
-    "1": "US", "52": "MX", "54": "AR", "57": "CO", "56": "CL", "51": "PE",
-    "20": "EG", "213": "DZ", "212": "MA", "216": "TN", "998": "UZ", "994": "AZ",
-    "996": "KG", "992": "TJ", "81": "JP", "61": "AU", "64": "NZ", "27": "ZA"
+    "95": "MM", "86": "CN", "62": "ID", "91": "IN", "234": "NG", "92": "PK", "232": "SL",
+    "226": "BF", "254": "KE", "261": "MG", "1849": "DO", "1829": "DO", "1809": "DO",
+    "263": "ZW", "63": "PH", "93": "AF", "233": "GH", "252": "SO", "244": "AO", "255": "TZ",
+    "212": "MA", "229": "BJ", "227": "NE", "228": "TG", "249": "SD", "236": "CF", "977": "NP",
+    "509": "HT", "260": "ZM", "264": "NA", "223": "ML", "502": "GT", "53": "CU", "20": "EG",
+    "998": "UZ", "55": "BR", "268": "SZ", "972": "IL", "256": "UG", "213": "DZ", "44": "GB",
+    "505": "NI", "258": "MZ", "60": "MY", "66": "TH", "218": "LY", "94": "LK", "967": "YE",
+    "84": "VN", "52": "MX", "51": "PE", "235": "TD", "266": "LS", "596": "MQ", "992": "TJ",
+    "54": "AR", "48": "PL", "595": "PY", "216": "TN", "211": "SS", "355": "AL", "90": "TR",
+    "963": "SY", "503": "SV", "598": "UY", "852": "HK", "670": "TL", "39": "IT", "225": "CI",
+    "507": "PA", "594": "GF", "961": "LB", "43": "AT", "993": "TM", "855": "KH", "374": "AM",
+    "358": "FI", "299": "GL", "241": "GA", "501": "BZ", "593": "EC", "687": "NC", "960": "MV",
+    "975": "BT", "590": "GP", "421": "SK", "962": "JO", "856": "LA", "995": "GE", "34": "ES",
+    "387": "BA", "970": "PS", "49": "DE", "40": "RO", "968": "OM", "597": "SR", "31": "NL",
+    "46": "SE", "976": "MN", "420": "CZ", "36": "HU", "32": "BE", "359": "BG", "33": "FR",
+    "994": "AZ", "965": "KW", "673": "BN", "371": "LV", "61": "AU", "974": "QA", "370": "LT",
+    "373": "MD", "674": "NR", "386": "SI", "47": "NO", "971": "AE", "65": "SG", "375": "BY",
+    "853": "MO", "886": "TW", "356": "MT", "383": "XK", "591": "BO", "58": "VE", "380": "UA",
+    "41": "CH", "973": "BH", "82": "KR", "350": "GI", "682": "CK", "7": "RU", "966": "SA",
+    "964": "IQ", "45": "DK", "381": "RS", "372": "EE", "351": "PT", "98": "IR", "880": "BD",
+    "1": "US", "57": "CO", "56": "CL", "996": "KG", "81": "JP", "64": "NZ", "27": "ZA"
 }
 
 def resolve_country_code(country_str, title_str=""):
@@ -1481,7 +1491,7 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
         print(f"[Telegram Group Alert] Error: {e}")
         return False
 
-def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours):
+def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing'):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
     item_id = item.get("item_id")
@@ -1519,7 +1529,12 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     extras_str = " | ".join(extras) if extras else "لا يوجد"
     tier_badge = " [🏆 صيد ذهبي]" if sell_usd >= 1.50 else ""
 
-    header = f"<b>🔔 [حساب مطابق للفلاتر{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+    if "IranianTurbo" in scan_tag or "Global-BargainAged" in scan_tag:
+        header = f"<b>⚡ [صيد البوت الإيراني - كل الدول 🇮🇷{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+    elif "Target-Bargains" in scan_tag:
+        header = f"<b>🔥 [صيدة لقطة بسعر رخيص{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+    else:
+        header = f"<b>🔔 [حساب مطابق للفلاتر{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
 
     text = (
         f"{header}\n\n"
@@ -2128,9 +2143,15 @@ def process_stream_items(
             continue
 
         # 5. Session Age Calculation:
-        session_created_at = item.get("telegram_session_created_at") or 0
+        session_created_at = item.get("telegram_session_created_at") or item.get("session_created_at") or 0
         now_ts = time.time()
-        session_age_hours = (now_ts - session_created_at) / 3600 if session_created_at > 0 else 0
+        if session_created_at > 0:
+            session_age_hours = (now_ts - session_created_at) / 3600
+        elif item.get("daybreak") or (scan_tag and ("daybreak" in scan_tag.lower() or "aged" in scan_tag.lower() or "iranianturbo" in scan_tag.lower())):
+            # Guaranteed 24H+ by LZT daybreak filter
+            session_age_hours = 24.5
+        else:
+            session_age_hours = 0.0
 
         if require_session_age_24h and session_age_hours < 24.0:
             # User requires session age >= 24h.
@@ -2170,7 +2191,8 @@ def process_stream_items(
         print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
-            sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours
+            sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours,
+            scan_tag=scan_tag
         )
         if success:
             sent_alerts.add(alert_key)
@@ -2267,18 +2289,29 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 5-Stage High-Velocity Aggressive Search Engine:
-            # Mode 0: Targeted Aged Stream (daybreak=1, newest first) - Catches 24H+ accounts directly!
-            # Mode 1: Targeted Fresh Stream (pdate_to_down, Page 1) - Real-time new listings
-            # Mode 2: Targeted Bargain Hunter (price_to_up, Page 1) - Catches underpriced items (10-40 RUB)
-            # Mode 3: Global Group Sniper (no country filter, up to 200 RUB, groups <= 2019)
-            # Mode 4: Global Deep Stream (daybreak=1, page 1 without country filter)
-            scan_mode = cycle_count % 5
+            # 6-Stage Advanced Multi-Vector Search Engine:
+            # Mode 0: Targeted Aged Stream (Target countries, daybreak=1, newest first)
+            # Mode 1: Targeted Fresh Stream (Target countries, pdate_to_down, Page 1)
+            # Mode 2: Targeted Bargain Hunter (Target countries, price_to_up, Page 1)
+            # Mode 3: Global Group Sniper (ALL countries, <= 2019 groups, max 200 RUB)
+            # Mode 4: 🌟 Global Iranian Turbo Sniper (ALL countries, daybreak=1, profit > $0.50, newest first)
+            # Mode 5: 🌟 Global Bargain Aged Hunter (ALL countries, daybreak=1, profit > $0.50, cheapest first)
+            global_sniper_cfg = config.get("global_profit_sniper", {
+                "enabled": True, "min_profit_usd": 0.50, "require_session_age_24h": True, "pmax": 150
+            })
+            
+            scan_mode = cycle_count % 6
             cycle_count += 1
+
+            current_target_set = target_countries_set
+            current_min_profit = min_profit_usd
+            current_req_age = require_session_age_24h
+            current_pmax = pmax
 
             if scan_mode == 0:
                 sort_order = "pdate_to_down"
-                scan_tag = "Aged-24H-Stream"
+                scan_tag = "Target-AgedStream"
+                current_req_age = True
                 query_params = {
                     "pmin": pmin,
                     "pmax": pmax,
@@ -2334,9 +2367,11 @@ def monitor_lzt():
             elif scan_mode == 3 and group_sniper_cfg.get("enabled", True):
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-GroupScan"
+                current_target_set = None
+                current_pmax = group_sniper_cfg.get("max_price_rub", 200)
                 query_params = {
                     "pmin": pmin,
-                    "pmax": group_sniper_cfg.get("max_price_rub", 200),
+                    "pmax": current_pmax,
                     "currency": "rub",
                     "2fa": "no",
                     "nsb": 1,
@@ -2345,17 +2380,46 @@ def monitor_lzt():
                     "order_by": sort_order
                 }
 
-            else:
+            elif scan_mode == 4:
+                # 🌟 Global Iranian Bot Turbo Hunter (ANY Country, Session > 24H, Profit >= $0.50)
                 sort_order = "pdate_to_down"
-                scan_tag = "Global-AgedStream"
+                scan_tag = "Global-IranianTurbo-50c"
+                current_target_set = None  # SCAN ALL COUNTRIES!
+                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
+                current_req_age = True     # SESSION AGE > 1 DAY
+                current_pmax = global_sniper_cfg.get("pmax", 150)
                 query_params = {
                     "pmin": pmin,
-                    "pmax": pmax,
+                    "pmax": current_pmax,
                     "currency": "rub",
                     "2fa": "no",
                     "spam": "no",
                     "allow_geo_spamblock": 0,
                     "daybreak": 1,
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+
+            else:
+                # 🌟 Global Bargain Aged Hunter (Cheapest 24H+ accounts across ALL countries)
+                sort_order = "price_to_up"
+                scan_tag = "Global-BargainAged-50c"
+                current_target_set = None  # SCAN ALL COUNTRIES!
+                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
+                current_req_age = True     # SESSION AGE > 1 DAY
+                current_pmax = global_sniper_cfg.get("pmax", 150)
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": current_pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "allow_geo_spamblock": 0,
+                    "daybreak": 1,
+                    "nsb": 1,
+                    "nsb_by_me": 1,
                     "page": 1,
                     "order_by": sort_order
                 }
@@ -2365,8 +2429,8 @@ def monitor_lzt():
                 consecutive_errors = 0
                 items = resp.json().get("items") or resp.json().get("accounts") or []
                 process_stream_items(
-                    items, min_profit_usd, pmax, rub_per_usd,
-                    target_countries_set, require_session_age_24h,
+                    items, current_min_profit, current_pmax, rub_per_usd,
+                    current_target_set, current_req_age,
                     sell_prices, sent_alerts, tg_token, tg_chat_id, lzt_token,
                     scan_tag=scan_tag, group_sniper_cfg=group_sniper_cfg
                 )
