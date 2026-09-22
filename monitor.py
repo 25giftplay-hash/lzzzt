@@ -2398,6 +2398,8 @@ def monitor_lzt():
                     "nsb": 1,
                     "nsb_by_me": 1,
                     "daybreak": 1,
+                    "session_age": 1,
+                    "session_age_period": "day",
                     "page": 1,
                     "order_by": sort_order
                 }
@@ -2472,6 +2474,8 @@ def monitor_lzt():
                     "spam": "no",
                     "allow_geo_spamblock": 0,
                     "daybreak": 1,
+                    "session_age": 1,
+                    "session_age_period": "day",
                     "nsb": 1,
                     "nsb_by_me": 1,
                     "page": 1,
@@ -2494,6 +2498,8 @@ def monitor_lzt():
                     "spam": "no",
                     "allow_geo_spamblock": 0,
                     "daybreak": 1,
+                    "session_age": 1,
+                    "session_age_period": "day",
                     "nsb": 1,
                     "nsb_by_me": 1,
                     "page": 1,
