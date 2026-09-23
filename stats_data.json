@@ -1,20 +1,470 @@
 [
   {
-    "item_id": "restored_previous_profit",
+    "item_id": "261349827",
     "status": "sold",
-    "cost_usd": 0.0,
-    "profit_usd": 8.65,
-    "best_bot": "الأرباح السابقة المستعادة",
-    "country": "RESTORED",
-    "timestamp": 1789900000.0
+    "cost_usd": 0.94,
+    "profit_usd": 0.86,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1790169200
   },
   {
-    "item_id": "recent_session_profit",
+    "item_id": "261142014",
     "status": "sold",
-    "cost_usd": 0.0,
-    "profit_usd": 1.35,
-    "best_bot": "الأرباح الأخيرة",
-    "country": "RESTORED",
-    "timestamp": 1790100000.0
+    "cost_usd": 0.95,
+    "profit_usd": 0.35,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1790161051
+  },
+  {
+    "item_id": "261269851",
+    "status": "sold",
+    "cost_usd": 0.59,
+    "profit_usd": 0.51,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "DE",
+    "timestamp": 1790122716
+  },
+  {
+    "item_id": "260979546",
+    "status": "sold",
+    "cost_usd": 0.91,
+    "profit_usd": 0.39,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1790121916
+  },
+  {
+    "item_id": "261238653",
+    "status": "sold",
+    "cost_usd": 2.04,
+    "profit_usd": 0.96,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "KR",
+    "timestamp": 1790121728
+  },
+  {
+    "item_id": "260999507",
+    "status": "sold",
+    "cost_usd": 0.78,
+    "profit_usd": 0.52,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1790120743
+  },
+  {
+    "item_id": "260961496",
+    "status": "sold",
+    "cost_usd": 0.85,
+    "profit_usd": 0.45,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1790120377
+  },
+  {
+    "item_id": "261077789",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1790117262
+  },
+  {
+    "item_id": "261045462",
+    "status": "sold",
+    "cost_usd": 1.01,
+    "profit_usd": 0.49,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "QA",
+    "timestamp": 1790116451
+  },
+  {
+    "item_id": "261079891",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1790115205
+  },
+  {
+    "item_id": "260441804",
+    "status": "sold",
+    "cost_usd": 1.81,
+    "profit_usd": 1.19,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "KR",
+    "timestamp": 1790091246
+  },
+  {
+    "item_id": "260441858",
+    "status": "sold",
+    "cost_usd": 1.81,
+    "profit_usd": 1.19,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "KR",
+    "timestamp": 1790090796
+  },
+  {
+    "item_id": "261133222",
+    "status": "sold",
+    "cost_usd": 0.71,
+    "profit_usd": 2.29,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "KR",
+    "timestamp": 1790077273
+  },
+  {
+    "item_id": "260985276",
+    "status": "sold",
+    "cost_usd": 1.23,
+    "profit_usd": 1.77,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "KR",
+    "timestamp": 1790072706
+  },
+  {
+    "item_id": "260618988",
+    "status": "sold",
+    "cost_usd": 1.21,
+    "profit_usd": 0.59,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1790035845
+  },
+  {
+    "item_id": "261053137",
+    "status": "sold",
+    "cost_usd": 0.47,
+    "profit_usd": 1.13,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "SG",
+    "timestamp": 1790035664
+  },
+  {
+    "item_id": "261086835",
+    "status": "sold",
+    "cost_usd": 0.72,
+    "profit_usd": 0.88,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "SG",
+    "timestamp": 1790033470
+  },
+  {
+    "item_id": "261067898",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1790033105
+  },
+  {
+    "item_id": "260855067",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1790032090
+  },
+  {
+    "item_id": "260928076",
+    "status": "sold",
+    "cost_usd": 0.77,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "NO",
+    "timestamp": 1790029379
+  },
+  {
+    "item_id": "260673503",
+    "status": "sold",
+    "cost_usd": 0.95,
+    "profit_usd": 0.35,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1789947636
+  },
+  {
+    "item_id": "260661701",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789946479
+  },
+  {
+    "item_id": "260457938",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789945681
+  },
+  {
+    "item_id": "260751952",
+    "status": "sold",
+    "cost_usd": 1.13,
+    "profit_usd": 0.67,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789944359
+  },
+  {
+    "item_id": "260720386",
+    "status": "sold",
+    "cost_usd": 1.13,
+    "profit_usd": 0.67,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789943298
+  },
+  {
+    "item_id": "260313265",
+    "status": "sold",
+    "cost_usd": 1.12,
+    "profit_usd": 0.68,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789942237
+  },
+  {
+    "item_id": "260498546",
+    "status": "sold",
+    "cost_usd": 1.19,
+    "profit_usd": 0.61,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789864337
+  },
+  {
+    "item_id": "260504514",
+    "status": "sold",
+    "cost_usd": 1.13,
+    "profit_usd": 0.67,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789863311
+  },
+  {
+    "item_id": "260495196",
+    "status": "sold",
+    "cost_usd": 1.16,
+    "profit_usd": 0.64,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789862830
+  },
+  {
+    "item_id": "260581662",
+    "status": "sold",
+    "cost_usd": 1.13,
+    "profit_usd": 0.67,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789861595
+  },
+  {
+    "item_id": "260581673",
+    "status": "sold",
+    "cost_usd": 1.13,
+    "profit_usd": 0.67,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789860825
+  },
+  {
+    "item_id": "260426766",
+    "status": "sold",
+    "cost_usd": 0.47,
+    "profit_usd": 1.13,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "TW",
+    "timestamp": 1789771102
+  },
+  {
+    "item_id": "260221300",
+    "status": "sold",
+    "cost_usd": 1.04,
+    "profit_usd": 0.76,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789769436
+  },
+  {
+    "item_id": "260227620",
+    "status": "sold",
+    "cost_usd": 1.01,
+    "profit_usd": 0.79,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789766006
+  },
+  {
+    "item_id": "260232217",
+    "status": "sold",
+    "cost_usd": 1.07,
+    "profit_usd": 0.73,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789764737
+  },
+  {
+    "item_id": "260235436",
+    "status": "sold",
+    "cost_usd": 1.06,
+    "profit_usd": 0.74,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IQ",
+    "timestamp": 1789764045
+  },
+  {
+    "item_id": "260203162",
+    "status": "sold",
+    "cost_usd": 0.47,
+    "profit_usd": 1.03,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "NO",
+    "timestamp": 1789685098
+  },
+  {
+    "item_id": "260204454",
+    "status": "sold",
+    "cost_usd": 0.78,
+    "profit_usd": 0.02,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "IT",
+    "timestamp": 1789659372
+  },
+  {
+    "item_id": "259674546",
+    "status": "sold",
+    "cost_usd": 0.53,
+    "profit_usd": 0.77,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1789498508
+  },
+  {
+    "item_id": "259639317",
+    "status": "sold",
+    "cost_usd": 0.76,
+    "profit_usd": 0.34,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "SK",
+    "timestamp": 1789492116
+  },
+  {
+    "item_id": "259223309",
+    "status": "sold",
+    "cost_usd": 0.76,
+    "profit_usd": 0.94,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "VE",
+    "timestamp": 1789491260
+  },
+  {
+    "item_id": "259493190",
+    "status": "sold",
+    "cost_usd": 0.82,
+    "profit_usd": 0.68,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "LT",
+    "timestamp": 1789490139
+  },
+  {
+    "item_id": "258661828",
+    "status": "sold",
+    "cost_usd": 0.63,
+    "profit_usd": 1.07,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "VE",
+    "timestamp": 1789489062
+  },
+  {
+    "item_id": "254296529",
+    "status": "sold",
+    "cost_usd": 0.76,
+    "profit_usd": 0.54,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "AE",
+    "timestamp": 1789488364
+  },
+  {
+    "item_id": "259429471",
+    "status": "sold",
+    "cost_usd": 0.21,
+    "profit_usd": 1.29,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "BN",
+    "timestamp": 1789391248
+  },
+  {
+    "item_id": "259420770",
+    "status": "sold",
+    "cost_usd": 0.55,
+    "profit_usd": -0.3,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "CA",
+    "timestamp": 1789390772
+  },
+  {
+    "item_id": "259420802",
+    "status": "sold",
+    "cost_usd": 0.55,
+    "profit_usd": -0.3,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "CA",
+    "timestamp": 1789390650
+  },
+  {
+    "item_id": "259421007",
+    "status": "sold",
+    "cost_usd": 0.55,
+    "profit_usd": -0.3,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "CA",
+    "timestamp": 1789390637
+  },
+  {
+    "item_id": "259424682",
+    "status": "sold",
+    "cost_usd": 0.83,
+    "profit_usd": -0.43,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "NP",
+    "timestamp": 1789390579
+  },
+  {
+    "item_id": "259392593",
+    "status": "sold",
+    "cost_usd": 0.36,
+    "profit_usd": 1.24,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "SG",
+    "timestamp": 1789377113
+  },
+  {
+    "item_id": "259315744",
+    "status": "sold",
+    "cost_usd": 0.36,
+    "profit_usd": 1.24,
+    "best_bot": "البوت الإيراني 🇮🇷",
+    "country": "SG",
+    "timestamp": 1789334226
+  },
+  {
+    "item_id": "reported_losses_banned",
+    "status": "banned",
+    "cost_usd": 4.0,
+    "profit_usd": 0.0,
+    "best_bot": "خسائر الحظر/تسجيل الخروج",
+    "country": "LOSS",
+    "timestamp": 1790174179.7933884
   }
 ]
