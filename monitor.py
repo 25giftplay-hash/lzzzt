@@ -2295,9 +2295,11 @@ def fetch_user_purchases_analysis(days=10):
 
     all_orders = []
     debug_info = {}
+    lzt_total_items = 0
+    lzt_total_price = 0
 
-    # Try 1: /user/orders
-    for page in range(1, 11):
+    # Retrieve from /user/orders
+    for page in range(1, 15):
         try:
             url = "https://api.lzt.market/user/orders"
             r = requests.get(url, headers=headers, params={"category_id": 24, "page": page}, timeout=15)
@@ -2307,24 +2309,32 @@ def fetch_user_purchases_analysis(days=10):
             debug_info[f"orders_p{page}_status"] = r.status_code
             if r.status_code == 200:
                 data = r.json()
-                debug_info[f"orders_p{page}_keys"] = list(data.keys())
-                if orders and "sample_item_dates" not in debug_info:
-                    debug_info["sample_item_keys"] = list(orders[0].keys())
-                    debug_info["sample_item_dates"] = {k: orders[0][k] for k in orders[0] if any(sub in k.lower() for sub in ["date", "time", "created", "buy", "purchase"])}
-                orders = data.get("orders") or data.get("items") or data.get("accounts") or []
+                if page == 1:
+                    lzt_total_items = data.get("totalItems", 0)
+                    lzt_total_price = data.get("totalItemsPrice", 0)
+                    debug_info["totalItems"] = lzt_total_items
+                    debug_info["totalItemsPrice"] = lzt_total_price
+
+                orders = data.get("items") or data.get("orders") or data.get("accounts") or []
                 if not orders and isinstance(data.get("user"), dict):
                     orders = data.get("user", {}).get("orders") or []
                 
+                if orders and "sample_item_dates" not in debug_info:
+                    debug_info["sample_item_keys"] = list(orders[0].keys())
+                    debug_info["sample_item_dates"] = {k: orders[0][k] for k in orders[0] if any(sub in k.lower() for sub in ["date", "time", "created", "buy", "purchase", "download"])}
+
                 if not orders:
                     break
                     
                 stop_paging = False
                 for it in orders:
-                    pdate = it.get("order_date") or it.get("purchase_date") or it.get("date") or it.get("item_date") or it.get("create_date") or 0
+                    # Check every possible date field
+                    pdate = it.get("buyer_download_date") or it.get("item_date") or it.get("date") or it.get("order_date") or it.get("purchase_date") or it.get("upload_date") or 0
                     if pdate and float(pdate) < cutoff_ts:
                         stop_paging = True
                         break
                     all_orders.append(it)
+
                 if stop_paging or len(orders) < 10:
                     break
             else:
@@ -2332,23 +2342,6 @@ def fetch_user_purchases_analysis(days=10):
         except Exception as e:
             debug_info[f"orders_p{page}_err"] = str(e)
             break
-
-    # Try 2: If /user/orders returned 0, try /user/payments
-    if not all_orders:
-        try:
-            url = "https://api.lzt.market/user/payments"
-            r = requests.get(url, headers=headers, params={"operation_type": "paid_item", "page": 1}, timeout=15)
-            debug_info["payments_status"] = r.status_code
-            if r.status_code == 200:
-                pdata = r.json()
-                debug_info["payments_keys"] = list(pdata.keys())
-                payments = pdata.get("payments") or pdata.get("operations") or []
-                for p in payments:
-                    pdate = p.get("data") or p.get("date") or 0
-                    if pdate and float(pdate) >= cutoff_ts:
-                        all_orders.append(p)
-        except Exception as e:
-            debug_info["payments_err"] = str(e)
 
     results = []
     total_cost_rub = 0.0
@@ -2383,7 +2376,8 @@ def fetch_user_purchases_analysis(days=10):
             "buy_usd": buy_usd,
             "iranian_bot_price_usd": bot1_price,
             "profit_usd": profit_usd,
-            "date": item.get("order_date") or item.get("purchase_date") or item.get("date")
+            "buyer_download_date": item.get("buyer_download_date"),
+            "item_date": item.get("item_date")
         })
 
     reported_loss_usd = 4.0
@@ -2392,6 +2386,8 @@ def fetch_user_purchases_analysis(days=10):
 
     return {
         "period_days": days,
+        "lzt_total_items": lzt_total_items,
+        "lzt_total_price": lzt_total_price,
         "total_accounts": len(results),
         "total_cost_rub": round(total_cost_rub, 2),
         "total_cost_usd": round(total_cost_usd, 2),
@@ -2402,7 +2398,6 @@ def fetch_user_purchases_analysis(days=10):
         "debug": debug_info,
         "items": results
     }
-
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/api/analyze_purchases"):
