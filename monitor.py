@@ -2498,6 +2498,98 @@ def fetch_user_purchases_analysis(days=10):
     }
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path.startswith("/api/diagnose_market"):
+            try:
+                cfg = load_config()
+                token = cfg.get("lzt_api_token")
+                hdrs = {
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/json",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                }
+                sell_prices = load_sell_prices()
+                
+                # Test 1: With spam: "no"
+                p1 = {
+                    "pmin": 2, "pmax": 200, "currency": "rub", "2fa": "no",
+                    "spam": "no", "session_age": 1, "session_age_period": "day",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": "pdate_to_down"
+                }
+                r1 = requests.get("https://api.lzt.market/telegram", headers=hdrs, params=p1, timeout=10)
+                d1 = r1.json() if r1.status_code == 200 else {}
+                items1 = d1.get("items") or d1.get("accounts") or []
+
+                # Test 2: Without spam param (spam is parsed by our Python parser anyway)
+                p2 = {
+                    "pmin": 2, "pmax": 200, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": "pdate_to_down"
+                }
+                r2 = requests.get("https://api.lzt.market/telegram", headers=hdrs, params=p2, timeout=10)
+                d2 = r2.json() if r2.status_code == 200 else {}
+                items2 = d2.get("items") or d2.get("accounts") or []
+
+                # Test 3: Raw newest items without session_age param
+                p3 = {
+                    "pmin": 2, "pmax": 200, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": "pdate_to_down"
+                }
+                r3 = requests.get("https://api.lzt.market/telegram", headers=hdrs, params=p3, timeout=10)
+                d3 = r3.json() if r3.status_code == 200 else {}
+                items3 = d3.get("items") or d3.get("accounts") or []
+
+                def analyze_list(items):
+                    out = []
+                    for it in items[:10]:
+                        c_raw = it.get("telegram_country", "")
+                        t_raw = it.get("title", "")
+                        cc = resolve_country_code(c_raw, t_raw)
+                        b_rub, b_usd = extract_item_prices(it)
+                        s_info = sell_prices.get(cc, {})
+                        s_usd = s_info.get("best_usd", 0.0) if isinstance(s_info, dict) else float(s_info or 0.0)
+                        profit = round(s_usd - b_usd, 2)
+                        s_created = it.get("telegram_session_created_at") or 0
+                        s_age = (time.time() - s_created) / 3600 if s_created else (24.5 if it.get("daybreak") else 0)
+                        spam_v = it.get("telegram_spam_block")
+                        is_clean, spam_msg = parse_spamblock(spam_v)
+                        reasons = []
+                        if profit < 0.35:
+                            reasons.append(f"Low profit (${profit:.2f})")
+                        if s_age < 24.0:
+                            reasons.append(f"Young session ({s_age:.1f}h)")
+                        if not is_clean:
+                            reasons.append(f"Spam: {spam_msg}")
+                        out.append({
+                            "id": it.get("item_id"),
+                            "country": cc,
+                            "buy_rub": b_rub,
+                            "buy_usd": b_usd,
+                            "sell_usd": s_usd,
+                            "profit_usd": profit,
+                            "session_age_hours": round(s_age, 1),
+                            "spam_val": spam_v,
+                            "spam_clean": is_clean,
+                            "verdict": "WOULD_ALERT" if not reasons else f"SKIP ({reasons})"
+                        })
+                    return out
+
+                res = {
+                    "test1_with_spam_no": {"status": r1.status_code, "items_count": len(items1), "sample": analyze_list(items1)},
+                    "test2_without_spam_param": {"status": r2.status_code, "items_count": len(items2), "sample": analyze_list(items2)},
+                    "test3_raw_newest_all_ages": {"status": r3.status_code, "items_count": len(items3), "sample": analyze_list(items3)}
+                }
+                self.send_response(200)
+                self.send_header("Content-type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(res, ensure_ascii=False, indent=2).encode("utf-8"))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header("Content-type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
+                return
+
         if self.path.startswith("/api/analyze_purchases"):
             try:
                 res = fetch_user_purchases_analysis(days=10)
