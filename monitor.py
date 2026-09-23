@@ -2308,6 +2308,9 @@ def fetch_user_purchases_analysis(days=10):
             if r.status_code == 200:
                 data = r.json()
                 debug_info[f"orders_p{page}_keys"] = list(data.keys())
+                if orders and "sample_item_dates" not in debug_info:
+                    debug_info["sample_item_keys"] = list(orders[0].keys())
+                    debug_info["sample_item_dates"] = {k: orders[0][k] for k in orders[0] if any(sub in k.lower() for sub in ["date", "time", "created", "buy", "purchase"])}
                 orders = data.get("orders") or data.get("items") or data.get("accounts") or []
                 if not orders and isinstance(data.get("user"), dict):
                     orders = data.get("user", {}).get("orders") or []
