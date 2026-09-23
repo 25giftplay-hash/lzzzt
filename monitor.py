@@ -2328,8 +2328,12 @@ def fetch_user_purchases_analysis(days=10):
                     
                 stop_paging = False
                 for it in orders:
-                    # Check every possible date field
-                    pdate = it.get("buyer_download_date") or it.get("item_date") or it.get("date") or it.get("order_date") or it.get("purchase_date") or it.get("upload_date") or 0
+                    # The exact purchase timestamp from LZT API: buyer.operation_date
+                    buyer_obj = it.get("buyer") or {}
+                    pdate = buyer_obj.get("operation_date") if isinstance(buyer_obj, dict) else None
+                    if not pdate:
+                        pdate = it.get("published_date") or 0
+                        
                     if pdate and float(pdate) < cutoff_ts:
                         stop_paging = True
                         break
@@ -2376,8 +2380,7 @@ def fetch_user_purchases_analysis(days=10):
             "buy_usd": buy_usd,
             "iranian_bot_price_usd": bot1_price,
             "profit_usd": profit_usd,
-            "buyer_download_date": item.get("buyer_download_date"),
-            "item_date": item.get("item_date")
+            "purchase_date": (item.get("buyer") or {}).get("operation_date") if isinstance(item.get("buyer"), dict) else item.get("published_date")
         })
 
     reported_loss_usd = 4.0
