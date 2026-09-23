@@ -79,7 +79,7 @@
       "MV"
     ],
     "pmin": 2,
-    "pmax": 75,
+    "pmax": 180,
     "currency": "rub",
     "min_profit_usd": 0.35,
     "require_session_age_24h": true,
@@ -101,6 +101,6 @@
     "enabled": true,
     "min_profit_usd": 0.5,
     "require_session_age_24h": true,
-    "pmax": 150
+    "pmax": 200
   }
 }
