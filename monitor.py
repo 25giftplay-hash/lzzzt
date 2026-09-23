@@ -2507,6 +2507,21 @@ class HealthHandler(BaseHTTPRequestHandler):
                     "Accept": "application/json",
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
                 }
+                if "item_id=" in self.path:
+                    iid = self.path.split("item_id=")[1].split("&")[0]
+                    ritem = requests.get(f"https://api.lzt.market/{iid}", headers=hdrs, timeout=10)
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(ritem.text.encode("utf-8"))
+                    return
+                cfg = load_config()
+                token = cfg.get("lzt_api_token")
+                hdrs = {
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/json",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                }
                 sell_prices = load_sell_prices()
                 
                 # Test 1: With spam: "no"
