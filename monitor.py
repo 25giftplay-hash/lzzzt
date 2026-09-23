@@ -2273,8 +2273,150 @@ def process_stream_items(
 # -------------------------------------------------------------------
 # Lightweight Background Health Check Server (For Koyeb, Render, etc.)
 # -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# LZT Purchases Analyzer (Last 10 Days)
+# -------------------------------------------------------------------
+def fetch_user_purchases_analysis(days=10):
+    config = load_config()
+    lzt_token = config.get("lzt_api_token")
+    if not lzt_token:
+        return {"error": "Missing LZT API Token"}
+
+    headers = {
+        "Authorization": f"Bearer {lzt_token}",
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    sell_prices = load_sell_prices()
+    cutoff_ts = time.time() - (days * 86400)
+    rub_per_usd = 90.0
+
+    all_orders = []
+    debug_info = {}
+
+    # Try 1: /user/orders
+    for page in range(1, 11):
+        try:
+            url = "https://api.lzt.market/user/orders"
+            r = requests.get(url, headers=headers, params={"category_id": 24, "page": page}, timeout=15)
+            if r.status_code != 200:
+                r = requests.get("https://prod-api.lzt.market/user/orders", headers=headers, params={"category_id": 24, "page": page}, timeout=15)
+            
+            debug_info[f"orders_p{page}_status"] = r.status_code
+            if r.status_code == 200:
+                data = r.json()
+                debug_info[f"orders_p{page}_keys"] = list(data.keys())
+                orders = data.get("orders") or data.get("items") or data.get("accounts") or []
+                if not orders and isinstance(data.get("user"), dict):
+                    orders = data.get("user", {}).get("orders") or []
+                
+                if not orders:
+                    break
+                    
+                stop_paging = False
+                for it in orders:
+                    pdate = it.get("order_date") or it.get("purchase_date") or it.get("date") or it.get("item_date") or it.get("create_date") or 0
+                    if pdate and float(pdate) < cutoff_ts:
+                        stop_paging = True
+                        break
+                    all_orders.append(it)
+                if stop_paging or len(orders) < 10:
+                    break
+            else:
+                break
+        except Exception as e:
+            debug_info[f"orders_p{page}_err"] = str(e)
+            break
+
+    # Try 2: If /user/orders returned 0, try /user/payments
+    if not all_orders:
+        try:
+            url = "https://api.lzt.market/user/payments"
+            r = requests.get(url, headers=headers, params={"operation_type": "paid_item", "page": 1}, timeout=15)
+            debug_info["payments_status"] = r.status_code
+            if r.status_code == 200:
+                pdata = r.json()
+                debug_info["payments_keys"] = list(pdata.keys())
+                payments = pdata.get("payments") or pdata.get("operations") or []
+                for p in payments:
+                    pdate = p.get("data") or p.get("date") or 0
+                    if pdate and float(pdate) >= cutoff_ts:
+                        all_orders.append(p)
+        except Exception as e:
+            debug_info["payments_err"] = str(e)
+
+    results = []
+    total_cost_rub = 0.0
+    total_cost_usd = 0.0
+    total_revenue_usd = 0.0
+
+    for item in all_orders:
+        item_id = item.get("item_id") or item.get("data_id") or item.get("operation_id")
+        title = item.get("title") or item.get("comment", "بدون عنوان")
+        country = item.get("telegram_country", "")
+        ccode = resolve_country_code(country, title)
+        
+        buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
+        
+        sell_info = sell_prices.get(ccode, {})
+        if isinstance(sell_info, dict):
+            bot1_price = sell_info.get("bot1_usd") or sell_info.get("best_usd", 0.0)
+        else:
+            bot1_price = float(sell_info) if sell_info else 0.0
+            
+        profit_usd = round(bot1_price - buy_usd, 2)
+        total_cost_rub += buy_rub
+        total_cost_usd += buy_usd
+        total_revenue_usd += bot1_price
+        
+        results.append({
+            "item_id": item_id,
+            "title": title,
+            "country": country or ccode,
+            "ccode": ccode,
+            "buy_rub": buy_rub,
+            "buy_usd": buy_usd,
+            "iranian_bot_price_usd": bot1_price,
+            "profit_usd": profit_usd,
+            "date": item.get("order_date") or item.get("purchase_date") or item.get("date")
+        })
+
+    reported_loss_usd = 4.0
+    gross_profit_usd = round(total_revenue_usd - total_cost_usd, 2)
+    final_net_profit = round(gross_profit_usd - reported_loss_usd, 2)
+
+    return {
+        "period_days": days,
+        "total_accounts": len(results),
+        "total_cost_rub": round(total_cost_rub, 2),
+        "total_cost_usd": round(total_cost_usd, 2),
+        "total_revenue_usd": round(total_revenue_usd, 2),
+        "gross_profit_usd": gross_profit_usd,
+        "reported_loss_usd": reported_loss_usd,
+        "final_net_profit_usd": final_net_profit,
+        "debug": debug_info,
+        "items": results
+    }
+
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path.startswith("/api/analyze_purchases"):
+            try:
+                res = fetch_user_purchases_analysis(days=10)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps(res, ensure_ascii=False, indent=2).encode('utf-8'))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json; charset=utf-8')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+                return
+
         self.send_response(200)
         self.send_header('Content-type', 'text/plain; charset=utf-8')
         self.end_headers()
