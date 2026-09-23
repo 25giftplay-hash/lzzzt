@@ -1,0 +1,20 @@
+[
+  {
+    "item_id": "restored_previous_profit",
+    "status": "sold",
+    "cost_usd": 0.0,
+    "profit_usd": 8.65,
+    "best_bot": "الأرباح السابقة المستعادة",
+    "country": "RESTORED",
+    "timestamp": 1789900000.0
+  },
+  {
+    "item_id": "recent_session_profit",
+    "status": "sold",
+    "cost_usd": 0.0,
+    "profit_usd": 1.35,
+    "best_bot": "الأرباح الأخيرة",
+    "country": "RESTORED",
+    "timestamp": 1790100000.0
+  }
+]
