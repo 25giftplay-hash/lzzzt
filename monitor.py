@@ -14,6 +14,7 @@ CONFIG_FILE = "config.json"
 SENT_ALERTS_FILE = "sent_alerts.json"
 SELL_PRICES_FILE = "sell_prices.json"
 DB_FILE = "stats.db"
+STATS_DATA_FILE = "stats_data.json"
 
 # Auto-Buy Rate Limit Tracking (Safeguard)
 AUTO_BUY_TIMESTAMPS = []
@@ -1046,6 +1047,25 @@ def resolve_country_code(country_str, title_str=""):
 # -------------------------------------------------------------------
 # Database Ledger Functions
 # -------------------------------------------------------------------
+def save_stats_to_file():
+    try:
+        conn = sqlite3.connect(DB_FILE, timeout=20)
+        c = conn.cursor()
+        c.execute("SELECT item_id, status, cost_usd, profit_usd, best_bot, country, timestamp FROM ledger")
+        rows = c.fetchall()
+        conn.close()
+        data = [
+            {
+                "item_id": r[0], "status": r[1], "cost_usd": r[2],
+                "profit_usd": r[3], "best_bot": r[4], "country": r[5], "timestamp": r[6]
+            }
+            for r in rows
+        ]
+        with open(STATS_DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[Database] Error saving to {STATS_DATA_FILE}: {e}")
+
 def init_db():
     conn = sqlite3.connect(DB_FILE, timeout=20)
     c = conn.cursor()
@@ -1062,6 +1082,27 @@ def init_db():
         )
     ''')
     conn.commit()
+
+    # Auto-restore from stats_data.json if ledger table is empty
+    c.execute("SELECT COUNT(*) FROM ledger")
+    cnt = c.fetchone()[0]
+    if cnt == 0 and os.path.exists(STATS_DATA_FILE):
+        try:
+            with open(STATS_DATA_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for row in data:
+                c.execute('''
+                    INSERT OR REPLACE INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    row["item_id"], row["status"], row.get("cost_usd", 0.0),
+                    row.get("profit_usd", 0.0), row.get("best_bot", ""), row.get("country", ""),
+                    row.get("timestamp", time.time())
+                ))
+            conn.commit()
+            print(f"[Database] Auto-restored {len(data)} transactions from {STATS_DATA_FILE}!")
+        except Exception as e:
+            print(f"[Database] Error restoring stats: {e}")
     conn.close()
 
 def log_bought_item(item_id, cost_usd, expected_profit_usd, best_bot, country):
@@ -1073,6 +1114,7 @@ def log_bought_item(item_id, cost_usd, expected_profit_usd, best_bot, country):
     ''', (str(item_id), cost_usd, expected_profit_usd, best_bot, country, time.time()))
     conn.commit()
     conn.close()
+    save_stats_to_file()
 
 def mark_item_sold(item_id):
     conn = sqlite3.connect(DB_FILE, timeout=20)
@@ -1080,6 +1122,7 @@ def mark_item_sold(item_id):
     c.execute("UPDATE ledger SET status = 'sold' WHERE item_id = ?", (str(item_id),))
     conn.commit()
     conn.close()
+    save_stats_to_file()
 
 def mark_item_banned(item_id):
     conn = sqlite3.connect(DB_FILE, timeout=20)
@@ -1087,6 +1130,7 @@ def mark_item_banned(item_id):
     c.execute("UPDATE ledger SET status = 'banned' WHERE item_id = ?", (str(item_id),))
     conn.commit()
     conn.close()
+    save_stats_to_file()
 
 def log_manual_profit(amount_usd, note="Manual Profit"):
     conn = sqlite3.connect(DB_FILE, timeout=20)
@@ -1098,6 +1142,7 @@ def log_manual_profit(amount_usd, note="Manual Profit"):
     ''', (manual_id, float(amount_usd), note, time.time()))
     conn.commit()
     conn.close()
+    save_stats_to_file()
 
 def log_manual_loss(amount_usd, note="Manual Loss"):
     conn = sqlite3.connect(DB_FILE, timeout=20)
@@ -1109,6 +1154,20 @@ def log_manual_loss(amount_usd, note="Manual Loss"):
     ''', (manual_id, float(amount_usd), note, time.time()))
     conn.commit()
     conn.close()
+    save_stats_to_file()
+
+def set_total_profit(target_amount_usd):
+    conn = sqlite3.connect(DB_FILE, timeout=20)
+    c = conn.cursor()
+    c.execute("DELETE FROM ledger")
+    manual_id = f"profit_set_{int(time.time()*1000)}"
+    c.execute('''
+        INSERT INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
+        VALUES (?, 'sold', 0.0, ?, 'تعديل يدوي للرصيد', 'MANUAL', ?)
+    ''', (manual_id, float(target_amount_usd), time.time()))
+    conn.commit()
+    conn.close()
+    save_stats_to_file()
 
 def get_stats_summary(min_profit_usd=0.30):
     conn = sqlite3.connect(DB_FILE, timeout=20)
@@ -1167,6 +1226,7 @@ def reset_db_stats():
     c.execute("DELETE FROM ledger")
     conn.commit()
     conn.close()
+    save_stats_to_file()
 
 # -------------------------------------------------------------------
 # Configuration & Helpers
@@ -2018,6 +2078,16 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                                     "parse_mode": "HTML"
                                 })
                         
+                    elif text.startswith(("/setprofit", "تعديل الربح", "تحديد الربح", "ضبط الربح")):
+                        m_val = re.search(r'[\d]+[.,]?[\d]*', text)
+                        if m_val:
+                            target_val = float(m_val.group(0).replace(',', '.'))
+                            set_total_profit(target_val)
+                            requests.post(f"{base_url}sendMessage", json={
+                                "chat_id": chat_id,
+                                "text": f"✅ <b>تم ضبط إجمالي أرباحك وتثبيتها بنجاح إلى: +${target_val:.2f} USD! 🎯</b>\nأرسل /stats لرؤية التقرير المالي المحدث.",
+                                "parse_mode": "HTML"
+                            })
                     elif text == "/reset_stats":
                         reset_db_stats()
                         requests.post(f"{base_url}sendMessage", json={"chat_id": chat_id, "text": "♻️ تم تصفير جميع الإحصائيات والسجل المالي بنجاح."})
@@ -2365,18 +2435,19 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 6-Stage Advanced Multi-Vector Search Engine:
-            # Mode 0: Targeted Aged Stream (Target countries, daybreak=1, newest first)
-            # Mode 1: Targeted Fresh Stream (Target countries, pdate_to_down, Page 1)
-            # Mode 2: Targeted Bargain Hunter (Target countries, price_to_up, Page 1)
-            # Mode 3: Global Group Sniper (ALL countries, <= 2019 groups, max 200 RUB)
-            # Mode 4: 🌟 Global Iranian Turbo Sniper (ALL countries, daybreak=1, profit > $0.50, newest first)
-            # Mode 5: 🌟 Global Bargain Aged Hunter (ALL countries, daybreak=1, profit > $0.50, cheapest first)
+            # 7-Stage Comprehensive Multi-Vector Search Engine:
+            # Mode 0: Global Iranian Turbo - Newest Listed (ALL countries, Session Age >= 1 Day, Profit >= $0.50)
+            # Mode 1: Global Iranian Turbo - Previously Listed / Deep Scan (Page 2, ALL countries, Session Age >= 1 Day)
+            # Mode 2: Global Iranian Bargains - Cheapest Listed (ALL countries, Session Age >= 1 Day, price_to_up)
+            # Mode 3: Target Countries - Newest Listed (pdate_to_down, Page 1)
+            # Mode 4: Target Countries - Cheapest Bargains (price_to_up, Page 1)
+            # Mode 5: Target Countries - Aged Stream (session_age >= 1 day)
+            # Mode 6: Global Group Sniper (ALL countries, <= 2019 groups, max 200 RUB)
             global_sniper_cfg = config.get("global_profit_sniper", {
                 "enabled": True, "min_profit_usd": 0.50, "require_session_age_24h": True, "pmax": 150
             })
             
-            scan_mode = cycle_count % 6
+            scan_mode = cycle_count % 7
             cycle_count += 1
 
             current_target_set = target_countries_set
@@ -2385,6 +2456,109 @@ def monitor_lzt():
             current_pmax = pmax
 
             if scan_mode == 0:
+                # 🌟 Global Iranian Turbo Sniper - Newest additions on Market (Page 1)
+                sort_order = "pdate_to_down"
+                scan_tag = "Global-IranianTurbo-Newest"
+                current_target_set = None  # ALL COUNTRIES
+                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
+                current_req_age = True     # SESSION AGE >= 1 DAY
+                current_pmax = global_sniper_cfg.get("pmax", 150)
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": current_pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "session_age": 1,
+                    "session_age_period": "day",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+
+            elif scan_mode == 1:
+                # 🌟 Global Iranian Turbo Sniper - Older/Previous additions still on Market (Page 2 Deep Scan)
+                sort_order = "pdate_to_down"
+                scan_tag = "Global-IranianTurbo-DeepScan"
+                current_target_set = None  # ALL COUNTRIES
+                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
+                current_req_age = True     # SESSION AGE >= 1 DAY
+                current_pmax = global_sniper_cfg.get("pmax", 150)
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": current_pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "session_age": 1,
+                    "session_age_period": "day",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 2,
+                    "order_by": sort_order
+                }
+
+            elif scan_mode == 2:
+                # 🌟 Global Bargain Aged Hunter - Cheapest across ALL countries
+                sort_order = "price_to_up"
+                scan_tag = "Global-BargainAged-50c"
+                current_target_set = None  # ALL COUNTRIES
+                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
+                current_req_age = True     # SESSION AGE >= 1 DAY
+                current_pmax = global_sniper_cfg.get("pmax", 150)
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": current_pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "session_age": 1,
+                    "session_age_period": "day",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+
+            elif scan_mode == 3:
+                # Target Countries - Newest listings
+                sort_order = "pdate_to_down"
+                scan_tag = "Target-Newest"
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
+
+            elif scan_mode == 4:
+                # Target Countries - Cheapest Bargains
+                sort_order = "price_to_up"
+                scan_tag = "Target-Bargains"
+                query_params = {
+                    "pmin": pmin,
+                    "pmax": pmax,
+                    "currency": "rub",
+                    "2fa": "no",
+                    "spam": "no",
+                    "nsb": 1,
+                    "nsb_by_me": 1,
+                    "page": 1,
+                    "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
+
+            elif scan_mode == 5:
+                # Target Countries - Aged Stream
                 sort_order = "pdate_to_down"
                 scan_tag = "Target-AgedStream"
                 current_req_age = True
@@ -2394,28 +2568,8 @@ def monitor_lzt():
                     "currency": "rub",
                     "2fa": "no",
                     "spam": "no",
-                    "allow_geo_spamblock": 0,
-                    "nsb": 1,
-                    "nsb_by_me": 1,
-                    "daybreak": 1,
                     "session_age": 1,
                     "session_age_period": "day",
-                    "page": 1,
-                    "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 1:
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-Newest"
-                query_params = {
-                    "pmin": pmin,
-                    "pmax": pmax,
-                    "currency": "rub",
-                    "2fa": "no",
-                    "spam": "no",
-                    "allow_geo_spamblock": 0,
                     "nsb": 1,
                     "nsb_by_me": 1,
                     "page": 1,
@@ -2424,25 +2578,8 @@ def monitor_lzt():
                 if api_countries:
                     query_params["country[]"] = api_countries
 
-            elif scan_mode == 2:
-                sort_order = "price_to_up"
-                scan_tag = "Target-Bargains"
-                query_params = {
-                    "pmin": pmin,
-                    "pmax": pmax,
-                    "currency": "rub",
-                    "2fa": "no",
-                    "spam": "no",
-                    "allow_geo_spamblock": 0,
-                    "nsb": 1,
-                    "nsb_by_me": 1,
-                    "page": 1,
-                    "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 3 and group_sniper_cfg.get("enabled", True):
+            else:
+                # Global Group Sniper (groups <= 2019)
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-GroupScan"
                 current_target_set = None
@@ -2452,54 +2589,6 @@ def monitor_lzt():
                     "pmax": current_pmax,
                     "currency": "rub",
                     "2fa": "no",
-                    "nsb": 1,
-                    "nsb_by_me": 1,
-                    "page": 1,
-                    "order_by": sort_order
-                }
-
-            elif scan_mode == 4:
-                # 🌟 Global Iranian Bot Turbo Hunter (ANY Country, Session > 24H, Profit >= $0.50)
-                sort_order = "pdate_to_down"
-                scan_tag = "Global-IranianTurbo-50c"
-                current_target_set = None  # SCAN ALL COUNTRIES!
-                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
-                current_req_age = True     # SESSION AGE > 1 DAY
-                current_pmax = global_sniper_cfg.get("pmax", 150)
-                query_params = {
-                    "pmin": pmin,
-                    "pmax": current_pmax,
-                    "currency": "rub",
-                    "2fa": "no",
-                    "spam": "no",
-                    "allow_geo_spamblock": 0,
-                    "daybreak": 1,
-                    "session_age": 1,
-                    "session_age_period": "day",
-                    "nsb": 1,
-                    "nsb_by_me": 1,
-                    "page": 1,
-                    "order_by": sort_order
-                }
-
-            else:
-                # 🌟 Global Bargain Aged Hunter (Cheapest 24H+ accounts across ALL countries)
-                sort_order = "price_to_up"
-                scan_tag = "Global-BargainAged-50c"
-                current_target_set = None  # SCAN ALL COUNTRIES!
-                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
-                current_req_age = True     # SESSION AGE > 1 DAY
-                current_pmax = global_sniper_cfg.get("pmax", 150)
-                query_params = {
-                    "pmin": pmin,
-                    "pmax": current_pmax,
-                    "currency": "rub",
-                    "2fa": "no",
-                    "spam": "no",
-                    "allow_geo_spamblock": 0,
-                    "daybreak": 1,
-                    "session_age": 1,
-                    "session_age_period": "day",
                     "nsb": 1,
                     "nsb_by_me": 1,
                     "page": 1,
