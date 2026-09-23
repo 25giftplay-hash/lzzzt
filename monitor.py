@@ -1083,26 +1083,27 @@ def init_db():
     ''')
     conn.commit()
 
-    # Auto-restore from stats_data.json if ledger table is empty
-    c.execute("SELECT COUNT(*) FROM ledger")
-    cnt = c.fetchone()[0]
-    if cnt == 0 and os.path.exists(STATS_DATA_FILE):
+    # Auto-restore and sync from stats_data.json
+    if os.path.exists(STATS_DATA_FILE):
         try:
             with open(STATS_DATA_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            for row in data:
-                c.execute('''
-                    INSERT OR REPLACE INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                ''', (
-                    row["item_id"], row["status"], row.get("cost_usd", 0.0),
-                    row.get("profit_usd", 0.0), row.get("best_bot", ""), row.get("country", ""),
-                    row.get("timestamp", time.time())
-                ))
-            conn.commit()
-            print(f"[Database] Auto-restored {len(data)} transactions from {STATS_DATA_FILE}!")
+            c.execute("SELECT COUNT(*) FROM ledger")
+            cnt = c.fetchone()[0]
+            if cnt < len(data):
+                for row in data:
+                    c.execute('''
+                        INSERT OR IGNORE INTO ledger (item_id, status, cost_usd, profit_usd, best_bot, country, timestamp)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ''', (
+                        row["item_id"], row["status"], row.get("cost_usd", 0.0),
+                        row.get("profit_usd", 0.0), row.get("best_bot", ""), row.get("country", ""),
+                        row.get("timestamp", time.time())
+                    ))
+                conn.commit()
+                print(f"[Database] Auto-synced {len(data)} transactions from {STATS_DATA_FILE}!")
         except Exception as e:
-            print(f"[Database] Error restoring stats: {e}")
+            print(f"[Database] Error syncing stats: {e}")
     conn.close()
 
 def log_bought_item(item_id, cost_usd, expected_profit_usd, best_bot, country):
@@ -1362,35 +1363,6 @@ def extract_item_prices(item, rub_per_usd=90.0):
 # -------------------------------------------------------------------
 # Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
 # -------------------------------------------------------------------
-def extract_item_prices(item, rub_per_usd=90.0):
-    """
-    Accurately extracts buy_rub and buy_usd from LZT API item object.
-    LZT API returns 'rub_price' (e.g. 50, 60, 80) and 'price' (e.g. 0.59 if USD or 50 if RUB).
-    """
-    rub_price_raw = item.get("rub_price")
-    price_raw = item.get("price")
-    curr_raw = str(item.get("price_currency") or "rub").lower()
-
-    if rub_price_raw is not None and float(rub_price_raw) > 0:
-        buy_rub = float(rub_price_raw)
-        if curr_raw in ("usd", "$") and price_raw is not None:
-            buy_usd = float(price_raw)
-        else:
-            buy_usd = round(buy_rub / rub_per_usd, 2)
-    else:
-        raw_val = float(price_raw or 0.0)
-        if curr_raw in ("usd", "$"):
-            buy_usd = raw_val
-            buy_rub = round(buy_usd * rub_per_usd, 2)
-        else:
-            buy_rub = raw_val
-            buy_usd = round(buy_rub / rub_per_usd, 2)
-
-    return buy_rub, buy_usd
-
-# -------------------------------------------------------------------
-# Send Alert Function (With Fast-Buy & Manual-Buy Buttons)
-# -------------------------------------------------------------------
 
 # -------------------------------------------------------------------
 # Estimate Telegram Channel / Supergroup Creation Year from ID
@@ -1509,25 +1481,33 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
     groups_text = "\n\n".join(group_lines)
     
     text = (
-        f"<b>👑 [صيد استثنائي: حساب يملك مجموعة قديمة (2019 وأقدم)!] 👑</b>\n\n"
-        f"<b>📝 العنوان:</b> {title}\n"
-        f"<b>💵 سعر الشراء:</b> {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD)\n"
-        f"<b>🌍 الدولة:</b> {country_display}\n"
-        f"<b>⏳ عمر الجلسة:</b> ✅ {session_age_hours:.1f} ساعة (فوق 24H)\n"
-        f"<b>🔐 كلمة السر (2FA):</b> ❌ لا توجد (جاهز للدخول)\n"
-        f"<b>🚫 حالة السبام:</b> {spam_status} <i>(مستثنى لحسابات المجموعات القديمة)</i>\n\n"
-        f"<b>👥 تفاصيل المجموعة القديمة المكتشفة:</b>\n"
-        f"{groups_text}\n\n"
-        f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء يدوياً من الموقع</a>"
+        f"👑 <b>[صيد استثنائي: حساب يملك مجموعة قديمة (2019 وأقدم)!]</b> 👑\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"📝 <b>العنوان:</b> {title}\n"
+        f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
+        f"🌍 <b>الدولة:</b> {country_display}\n"
+        f"⏳ <b>عمر الجلسة:</b> ✅ {session_age_hours:.1f} ساعة (فوق 24H)\n"
+        f"🔐 <b>كلمة السر (2FA):</b> ❌ لا توجد (جاهز للدخول)\n"
+        f"🚫 <b>حالة السبام:</b> {spam_status}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"👥 <b>تفاصيل المجموعة القديمة:</b>\n"
+        f"{groups_text}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"⚡ <i>التقط الصفقة قبل الجميع بالضغط على الأزرار أدناه:</i>"
     )
     
     reply_markup = {
         "inline_keyboard": [
             [
-                {"text": "⚡ شراء فوري من رصيدي ⚡", "callback_data": f"fastbuy:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"}
+                {"text": "⚡ شراء فوري عبر API ⚡", "callback_data": f"fastbuy:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"},
+                {"text": "🛒 فتح في LZT", "url": f"https://lzt.market/{item_id}/"}
             ],
             [
-                {"text": "🛒 تم الشراء يدوياً", "callback_data": f"buy:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"},
+                {"text": "✅ تم البيع (+ربح)", "callback_data": f"direct_sold:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"},
+                {"text": "💔 تم الحظر (-خسارة)", "callback_data": f"direct_loss:{item_id}:{buy_usd:.2f}:0:AgedGroup:{ccode}"}
+            ],
+            [
+                {"text": "📊 لوحة الأرباح", "callback_data": "refresh_stats"},
                 {"text": "❌ تجاهل", "callback_data": f"ignore:{item_id}"}
             ]
         ]
@@ -1540,17 +1520,18 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
         "reply_markup": reply_markup
     }
     
-    try:
-        r = requests.post(url, json=payload, timeout=10)
-        if r.status_code == 200:
-            print(f"[Telegram Group Alert] Alert sent for item {item_id} with aged group!")
-            return True
-        else:
-            print(f"[Telegram Group Alert] Failed: {r.status_code} - {r.text}")
-            return False
-    except Exception as e:
-        print(f"[Telegram Group Alert] Error: {e}")
-        return False
+    def _do_send_group():
+        try:
+            r = requests.post(url, json=payload, timeout=10)
+            if r.status_code == 200:
+                print(f"[Telegram Group Alert] Sent for item {item_id}.")
+            else:
+                print(f"[Telegram Group Alert] Failed: {r.status_code} - {r.text}")
+        except Exception as e:
+            print(f"[Telegram Group Alert] Error: {e}")
+
+    threading.Thread(target=_do_send_group, daemon=True).start()
+    return True
 
 def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing'):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
@@ -1579,7 +1560,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     if is_premium:
         prem_exp = item.get("telegram_premium_expires") or 0
         rem_days = max(0, int((prem_exp - time.time()) / 86400)) if prem_exp > time.time() else 0
-        extras.append(f"💎 بريميوم نشط ({rem_days} يوم متبقٍ)")
+        extras.append(f"💎 بريميوم ({rem_days} يوم)")
     stars_count = item.get("telegram_stars_count", 0)
     if stars_count and int(stars_count) > 0:
         extras.append(f"🌟 {stars_count} نجوم")
@@ -1588,35 +1569,55 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         extras.append(f"🎁 {gifts_count} هدايا")
     
     extras_str = " | ".join(extras) if extras else "لا يوجد"
-    tier_badge = " [🏆 صيد ذهبي]" if sell_usd >= 1.50 else ""
 
-    if "IranianTurbo" in scan_tag or "Global-BargainAged" in scan_tag:
-        header = f"<b>⚡ [صيد البوت الإيراني - كل الدول 🇮🇷{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+    if profit_usd >= 1.00:
+        header = (
+            f"🚨 <b>[صيد VIP عاجل - صيدة أرباح ضخمة 💎]</b> 🚨\n"
+            f"💰 <b>صافي ربح خيالي: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        )
+    elif profit_usd >= 0.50:
+        header = (
+            f"⚡ <b>[صيد البوت الإيراني - ربح ممتاز 🇮🇷]</b>\n"
+            f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        )
     elif "Target-Bargains" in scan_tag:
-        header = f"<b>🔥 [صيدة لقطة بسعر رخيص{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        header = (
+            f"🔥 <b>[صيدة لقطة بسعر مخفض 🎯]</b>\n"
+            f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        )
     else:
-        header = f"<b>🔔 [حساب مطابق للفلاتر{tier_badge}] ربح متوقع +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        header = (
+            f"🔔 <b>[حساب مطابق لشروط الفلتر]</b>\n"
+            f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        )
 
     text = (
-        f"{header}\n\n"
-        f"<b>📝 العنوان:</b> {title}\n"
-        f"<b>💵 سعر الشراء:</b> {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD)\n"
-        f"<b>🌍 الدولة:</b> {country_display}\n"
-        f"<b>💰 أعلى سعر بيع لبوتاتك:</b> ${sell_usd:.2f} USD (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
-        f"<b>💚 الربح الصافي المتوقع:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
-        f"<b>⏳ عمر الجلسة (Session Age):</b> {session_age_str}\n"
-        f"<b>🚫 حالة السبام:</b> {spam_status}\n"
-        f"<b>✨ مميزات إضافية:</b> {extras_str}\n\n"
-        f"🔗 <a href='https://lzt.market/{item_id}/'>اضغط هنا للشراء يدوياً من الموقع</a>"
+        f"{header}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"📝 <b>العنوان:</b> {title}\n"
+        f"🌍 <b>الدولة:</b> {country_display}\n"
+        f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
+        f"💰 <b>سعر بيع البوت:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
+        f"💎 <b>صافي ربحك:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
+        f"⏳ <b>عمر الجلسة:</b> {session_age_str}\n"
+        f"🚫 <b>حالة السبام:</b> {spam_status}\n"
+        f"✨ <b>المميزات:</b> {extras_str}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"⚡ <i>التقط الصفقة قبل الجميع بالضغط على الأزرار أدناه:</i>"
     )
     
     reply_markup = {
         "inline_keyboard": [
             [
-                {"text": "⚡ شراء فوري من رصيدي ⚡", "callback_data": f"fastbuy:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"}
+                {"text": "⚡ شراء فوري عبر API ⚡", "callback_data": f"fastbuy:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"},
+                {"text": "🛒 فتح في LZT", "url": f"https://lzt.market/{item_id}/"}
             ],
             [
-                {"text": "🛒 تم الشراء يدوياً", "callback_data": f"buy:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"},
+                {"text": "✅ تم البيع (+ربح)", "callback_data": f"direct_sold:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"},
+                {"text": "💔 تم الحظر (-خسارة)", "callback_data": f"direct_loss:{item_id}:{buy_usd:.2f}:{profit_usd:.2f}:{best_bot}:{ccode}"}
+            ],
+            [
+                {"text": "📊 لوحة الأرباح", "callback_data": "refresh_stats"},
                 {"text": "❌ تجاهل", "callback_data": f"ignore:{item_id}"}
             ]
         ]
@@ -1629,17 +1630,18 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         "reply_markup": reply_markup
     }
     
-    try:
-        r = requests.post(url, json=payload, timeout=10)
-        if r.status_code == 200:
-            print(f"[Telegram] Alert sent for item {item_id}.")
-            return True
-        else:
-            print(f"[Telegram] Failed to send alert: {r.status_code} - {r.text}")
-            return False
-    except Exception as e:
-        print(f"[Telegram] Error sending alert: {e}")
-        return False
+    def _do_send():
+        try:
+            r = requests.post(url, json=payload, timeout=10)
+            if r.status_code == 200:
+                print(f"[Telegram Alert] Sent for item {item_id}.")
+            else:
+                print(f"[Telegram Alert] Failed: {r.status_code} - {r.text}")
+        except Exception as e:
+            print(f"[Telegram Alert] Error: {e}")
+
+    threading.Thread(target=_do_send, daemon=True).start()
+    return True
 
 def parse_and_update_prices_from_text(text):
     sell_prices = load_sell_prices()
@@ -1806,6 +1808,52 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                         })
                         requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم تسجيل شراء الحساب!"})
                         
+                    elif action == "direct_sold":
+                        item_id = parts[1]
+                        cost_usd = float(parts[2])
+                        profit_usd = float(parts[3])
+                        best_bot = parts[4] if len(parts) > 4 else "Bot"
+                        country = parts[5] if len(parts) > 5 else "Unknown"
+                        
+                        log_bought_item(item_id, cost_usd, profit_usd, best_bot, country)
+                        mark_item_sold(item_id)
+                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": f"🎉 مبروك! تم تسجيل ربح +${profit_usd:.2f} USD بنجاح"})
+                        edit_text = (
+                            msg.get("text", "") + "\n\n"
+                            f"✅ <b>تم تسجيل البيع بنجاح للبوت الإيراني! 🎉</b>\n"
+                            f"💚 الربح المحقق: <b>+${profit_usd:.2f} USD</b>\n"
+                            f"📈 تم تحديث تقريرك المالي في <code>/stats</code>"
+                        )
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id,
+                            "message_id": msg_id,
+                            "text": edit_text,
+                            "parse_mode": "HTML"
+                        })
+
+                    elif action == "direct_loss":
+                        item_id = parts[1]
+                        cost_usd = float(parts[2])
+                        profit_usd = float(parts[3])
+                        best_bot = parts[4] if len(parts) > 4 else "Bot"
+                        country = parts[5] if len(parts) > 5 else "Unknown"
+                        
+                        log_bought_item(item_id, cost_usd, profit_usd, best_bot, country)
+                        mark_item_banned(item_id)
+                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": f"💔 تم تسجيل الخسارة -${cost_usd:.2f} USD"})
+                        edit_text = (
+                            msg.get("text", "") + "\n\n"
+                            f"💔 <b>تم تسجيل حظر / فقدان الحساب.</b>\n"
+                            f"📉 الخسارة المسجلة: <b>-${cost_usd:.2f} USD</b>\n"
+                            f"🎯 تم تحديث حاسبة التعويض في <code>/stats</code>"
+                        )
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id,
+                            "message_id": msg_id,
+                            "text": edit_text,
+                            "parse_mode": "HTML"
+                        })
+
                     elif action == "sold":
                         item_id = parts[1]
                         mark_item_sold(item_id)
@@ -1976,11 +2024,38 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                             f"👇 <i>اضغط على الأزرار أدناه لتسجيل ربح أو خسارة فوراً:</i>\n"
                             f"💡 <i>أو اكتب مباشرة للشات: <code>ربح 0.8</code> أو <code>خسارة 0.7</code></i>"
                         )
-                        requests.post(f"{base_url}editMessageText", json={
-                            "chat_id": chat_id, "message_id": msg_id,
-                            "text": report, "parse_mode": "HTML", "reply_markup": msg.get("reply_markup")
-                        })
-                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم تحديث الإحصائيات!"})
+                        stats_markup = {
+                            "inline_keyboard": [
+                                [
+                                    {"text": "➕ تسجيل ربح +$0.50", "callback_data": "quick_profit:0.50"},
+                                    {"text": "➕ تسجيل ربح +$1.00", "callback_data": "quick_profit:1.00"}
+                                ],
+                                [
+                                    {"text": "➕ تسجيل ربح +$1.50", "callback_data": "quick_profit:1.50"},
+                                    {"text": "➕ تسجيل ربح +$2.00", "callback_data": "quick_profit:2.00"}
+                                ],
+                                [
+                                    {"text": "➖ تسجيل خسارة -$0.50", "callback_data": "quick_loss:0.50"},
+                                    {"text": "➖ تسجيل خسارة -$1.00", "callback_data": "quick_loss:1.00"}
+                                ],
+                                [
+                                    {"text": "🔄 تحديث الأرقام الآن", "callback_data": "refresh_stats"}
+                                ]
+                            ]
+                        }
+                        # If clicked from an account alert, send as a new message to keep the alert intact!
+                        msg_body = msg.get("text", "")
+                        if "حساب" in msg_body or "صيد" in msg_body or "العنوان:" in msg_body or "سعر الشراء" in msg_body:
+                            requests.post(f"{base_url}sendMessage", json={
+                                "chat_id": chat_id, "text": report, "parse_mode": "HTML", "reply_markup": stats_markup
+                            })
+                            requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم فتح لوحة الأرباح!"})
+                        else:
+                            requests.post(f"{base_url}editMessageText", json={
+                                "chat_id": chat_id, "message_id": msg_id,
+                                "text": report, "parse_mode": "HTML", "reply_markup": stats_markup
+                            })
+                            requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم تحديث الإحصائيات!"})
 
                 # Handle Text Messages & Forwarded Price Lists
                 if "message" in update:
@@ -2126,7 +2201,27 @@ def process_stream_items(
     if group_sniper_cfg is None:
         group_sniper_cfg = {}
 
-    for item in items:
+    # 🚀 Priority Sorting Engine: Sort items so high-profit / aged groups are sniped FIRST!
+    def _calc_item_priority(it):
+        try:
+            if group_sniper_cfg.get("enabled", True) and it.get("telegram_admin_groups"):
+                return 999.0
+            c_raw = it.get("telegram_country", "")
+            t_raw = it.get("title", "")
+            cc = resolve_country_code(c_raw, t_raw)
+            s_info = sell_prices.get(cc, {})
+            s_usd = s_info.get("best_usd", 0.0) if isinstance(s_info, dict) else float(s_info or 0.0)
+            if not s_usd or s_usd <= 0:
+                fb = DEFAULT_SELL_PRICES.get(cc, {})
+                s_usd = fb.get("best_usd", 0.0) if isinstance(fb, dict) else float(fb or 0.0)
+            b_rub, b_usd = extract_item_prices(it, rub_per_usd)
+            return float(s_usd - b_usd)
+        except Exception:
+            return 0.0
+
+    sorted_items = sorted(items, key=_calc_item_priority, reverse=True)
+
+    for item in sorted_items:
         item_id = str(item.get("item_id"))
         if not item_id:
             continue
@@ -2516,7 +2611,7 @@ def monitor_lzt():
     lzt_token = config.get("lzt_api_token")
     tg_token = config.get("telegram_bot_token")
     tg_chat_id = config.get("telegram_chat_id")
-    interval = config.get("check_interval_seconds", 3)
+    interval = config.get("check_interval_seconds", 1.5)
     filters = config.get("filters", {})
     group_sniper_cfg = config.get("group_sniper", {
         "enabled": True, "max_year": 2019, "max_price_rub": 200,
