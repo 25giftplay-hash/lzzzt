@@ -81,7 +81,7 @@
     "pmin": 2,
     "pmax": 180,
     "currency": "rub",
-    "min_profit_usd": 0.35,
+    "min_profit_usd": 0.3,
     "require_session_age_24h": true,
     "2fa": "no",
     "allow_geo_spamblock": false,
@@ -89,13 +89,7 @@
     "nsb_by_me": true
   },
   "group_sniper": {
-    "enabled": true,
-    "max_year": 2019,
-    "max_price_rub": 200,
-    "min_session_age_hours": 24,
-    "require_no_2fa": true,
-    "require_owner": true,
-    "require_only_groups": true
+    "enabled": false
   },
   "global_profit_sniper": {
     "enabled": true,
