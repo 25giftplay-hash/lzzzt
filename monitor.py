@@ -2788,121 +2788,116 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 10-Stage Multi-Vector Multi-Page Radar Matrix:
-            # Mode 0: Global Iranian Turbo - Newest (ALL countries, Page 1)
-            # Mode 1: Target Countries (KR, IQ, AE, etc.) - Newest (Page 1)
-            # Mode 2: Target Countries (KR, IQ, AE, etc.) - Deep Scan (Page 2)
-            # Mode 3: Target Countries (KR, IQ, AE, etc.) - Ultra-Deep Scan (Page 3)
-            # Mode 4: Target Countries (KR, IQ, AE, etc.) - Cheapest Bargains (price_to_up, Page 1)
-            # Mode 5: Target Countries (KR, IQ, AE, etc.) - Aged Stream (session_age >= 1 day, Page 1)
-            # Mode 6: Target Countries (KR, IQ, AE, etc.) - Aged Stream (session_age >= 1 day, Page 2)
-            # Mode 7: Global Iranian Turbo - Deep Scan (ALL countries, Page 2)
-            # Mode 8: Global Iranian Bargains - Cheapest (ALL countries, price_to_up, Page 1)
-            # Mode 9: Global Group Sniper (<= 2019 groups, ALL countries)
+            # 11-Stage VIP Dedicated Snipers + Global Stream Matrix:
+            # Mode 0: 🇮🇶 DEDICATED IRAQ SNIPER - Page 1 (country[]=IQ)
+            # Mode 1: 🇮🇶 DEDICATED IRAQ SNIPER - Page 2 (country[]=IQ)
+            # Mode 2: 🇰🇷 DEDICATED SOUTH KOREA SNIPER - Page 1 (country[]=KR)
+            # Mode 3: 🇰🇷 DEDICATED SOUTH KOREA SNIPER - Page 2 (country[]=KR)
+            # Mode 4: 💎 DEDICATED HIGH-PROFIT VIPs (AE, TW, SG, QA, KW, BH, Page 1)
+            # Mode 5: 💎 DEDICATED HIGH-PROFIT VIPs (AE, TW, SG, QA, KW, BH, Page 2)
+            # Mode 6: 🌟 Global Iranian Turbo - Newest Listed (ALL countries, Page 1)
+            # Mode 7: 🌟 Global Iranian Turbo - Deep Scan (ALL countries, Page 2)
+            # Mode 8: 🎯 Target Countries General Radar (All 80 countries, Page 1)
+            # Mode 9: 💰 Global Iranian Bargains - Cheapest (price_to_up, ALL countries)
+            # Mode 10: 👑 Global Group Sniper (<= 2019 groups, ALL countries)
             global_sniper_cfg = config.get("global_profit_sniper", {
                 "enabled": True, "min_profit_usd": 0.50, "require_session_age_24h": True, "pmax": 200
             })
             
-            scan_mode = cycle_count % 10
+            vip_group_countries = ["AE", "TW", "SG", "QA", "KW", "BH", "NO", "CH"]
+            
+            scan_mode = cycle_count % 11
             cycle_count += 1
 
-            current_target_set = target_countries_set
+            current_target_set = None  # Allow matching countries
             current_min_profit = min_profit_usd
             current_req_age = require_session_age_24h
             current_pmax = pmax
 
             if scan_mode == 0:
-                # 🌟 Mode 0: Global Iranian Turbo - Newest (Page 1)
+                # 🇮🇶 Dedicated Iraq Sniper - Page 1
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-Iraq-P1"
+                current_min_profit = 0.30
+                query_params = {
+                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": ["IQ"]
+                }
+
+            elif scan_mode == 1:
+                # 🇮🇶 Dedicated Iraq Sniper - Page 2 (Catches older listings)
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-Iraq-P2"
+                current_min_profit = 0.30
+                query_params = {
+                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": ["IQ"]
+                }
+
+            elif scan_mode == 2:
+                # 🇰🇷 Dedicated South Korea Sniper - Page 1
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-Korea-P1"
+                current_min_profit = 0.50
+                query_params = {
+                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": ["KR"]
+                }
+
+            elif scan_mode == 3:
+                # 🇰🇷 Dedicated South Korea Sniper - Page 2 (Catches older listings)
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-Korea-P2"
+                current_min_profit = 0.50
+                query_params = {
+                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": ["KR"]
+                }
+
+            elif scan_mode == 4:
+                # 💎 Dedicated VIP Group (UAE, Taiwan, Singapore, Qatar, Kuwait, Bahrain) - Page 1
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-GulfAsia-P1"
+                current_min_profit = 0.50
+                query_params = {
+                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": vip_group_countries
+                }
+
+            elif scan_mode == 5:
+                # 💎 Dedicated VIP Group (UAE, Taiwan, Singapore, Qatar, Kuwait, Bahrain) - Page 2
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-GulfAsia-P2"
+                current_min_profit = 0.50
+                query_params = {
+                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": vip_group_countries
+                }
+
+            elif scan_mode == 6:
+                # 🌟 Global Iranian Turbo - Newest Listed (ALL countries, Page 1)
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-IranianTurbo-Newest"
-                current_target_set = None  # ALL COUNTRIES
                 current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
                 current_req_age = True
-                current_pmax = global_sniper_cfg.get("pmax", 200)
                 query_params = {
                     "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
                 }
 
-            elif scan_mode == 1:
-                # 🎯 Mode 1: Target Countries (KR, IQ, etc.) - Newest (Page 1)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-Newest-P1"
-                query_params = {
-                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 2:
-                # 🎯 Mode 2: Target Countries (KR, IQ, etc.) - Deep Scan (Page 2)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-Newest-P2"
-                query_params = {
-                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 3:
-                # 🎯 Mode 3: Target Countries (KR, IQ, etc.) - Ultra-Deep Scan (Page 3)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-Newest-P3"
-                query_params = {
-                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 3, "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 4:
-                # 🎯 Mode 4: Target Countries - Cheapest Bargains (price_to_up, Page 1)
-                sort_order = "price_to_up"
-                scan_tag = "Target-Bargains"
-                query_params = {
-                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 5:
-                # 🎯 Mode 5: Target Countries - Aged Stream (session_age >= 1 day, Page 1)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-AgedStream-P1"
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
-            elif scan_mode == 6:
-                # 🎯 Mode 6: Target Countries - Aged Stream (session_age >= 1 day, Page 2)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-AgedStream-P2"
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order
-                }
-                if api_countries:
-                    query_params["country[]"] = api_countries
-
             elif scan_mode == 7:
-                # 🌟 Mode 7: Global Iranian Turbo - Deep Scan (Page 2, ALL countries)
+                # 🌟 Global Iranian Turbo - Deep Scan (ALL countries, Page 2)
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-IranianTurbo-DeepScan"
-                current_target_set = None
                 current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
                 current_req_age = True
-                current_pmax = global_sniper_cfg.get("pmax", 200)
                 query_params = {
                     "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
@@ -2910,13 +2905,23 @@ def monitor_lzt():
                 }
 
             elif scan_mode == 8:
-                # 🌟 Mode 8: Global Iranian Bargains - Cheapest (ALL countries, price_to_up)
+                # 🎯 Target Countries General Radar (All 80 target countries, Page 1)
+                sort_order = "pdate_to_down"
+                scan_tag = "Target-General-P1"
+                current_min_profit = min_profit_usd
+                query_params = {
+                    "pmin": pmin, "pmax": pmax, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
+                }
+                if api_countries:
+                    query_params["country[]"] = api_countries
+
+            elif scan_mode == 9:
+                # 💰 Global Iranian Bargains - Cheapest (ALL countries, price_to_up)
                 sort_order = "price_to_up"
                 scan_tag = "Global-BargainAged-50c"
-                current_target_set = None
                 current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.50)
                 current_req_age = True
-                current_pmax = global_sniper_cfg.get("pmax", 200)
                 query_params = {
                     "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
@@ -2924,10 +2929,9 @@ def monitor_lzt():
                 }
 
             else:
-                # 👑 Mode 9: Global Group Sniper (<= 2019 groups, ALL countries)
+                # 👑 Mode 10: Global Group Sniper (<= 2019 groups, ALL countries)
                 sort_order = "pdate_to_down"
                 scan_tag = "Global-GroupScan"
-                current_target_set = None
                 current_pmax = group_sniper_cfg.get("max_price_rub", 200)
                 query_params = {
                     "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
