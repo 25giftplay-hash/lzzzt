@@ -76,12 +76,13 @@
       "GR",
       "SJ",
       "ES",
-      "MV"
+      "MV",
+      "JP"
     ],
     "pmin": 2,
     "pmax": 180,
     "currency": "rub",
-    "min_profit_usd": 0.3,
+    "min_profit_usd": 0.4,
     "require_session_age_24h": true,
     "2fa": "no",
     "allow_geo_spamblock": false,
@@ -93,8 +94,8 @@
   },
   "global_profit_sniper": {
     "enabled": true,
-    "min_profit_usd": 0.5,
+    "min_profit_usd": 0.4,
     "require_session_age_24h": true,
-    "pmax": 200
+    "pmax": 180
   }
 }
