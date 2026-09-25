@@ -1603,6 +1603,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
         f"💰 <b>أعلى سعر بيع:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
         f"  ├ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', sell_usd if 'إيراني' in best_bot else 0.0):.2f}\n"
+        f"  ├ 🤖 <b>بوت TG Get:</b> ${sell_info.get('bot3_usd', 0.0):.2f}\n"
         f"  └ 🦁 <b>بوت TGLion:</b> ${sell_info.get('bot2_usd', 0.0):.2f}\n" 
         f"💎 <b>صافي ربحك:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"⏳ <b>عمر الجلسة:</b> {session_age_str}\n"
