@@ -1457,6 +1457,8 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
     country = item.get("telegram_country", "غير معروف")
     ccode = resolve_country_code(country, title)
     country_display = f"{country} ({ccode})" if ccode and ccode != country else country
+    if sell_info is None:
+        sell_info = load_sell_prices().get(ccode, {})
     
     group_lines = []
     for g, est_year in aged_groups:
@@ -1533,7 +1535,7 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
     threading.Thread(target=_do_send_group, daemon=True).start()
     return True
 
-def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing'):
+def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing', sell_info=None):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
     item_id = item.get("item_id")
@@ -1543,6 +1545,8 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     
     ccode = resolve_country_code(country, title)
     country_display = f"{country} ({ccode})" if ccode and ccode != country else country
+    if sell_info is None:
+        sell_info = load_sell_prices().get(ccode, {})
     
     rub_per_usd = 90.0
     sell_rub = round(sell_usd * rub_per_usd, 0)
@@ -1597,7 +1601,9 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"📝 <b>العنوان:</b> {title}\n"
         f"🌍 <b>الدولة:</b> {country_display}\n"
         f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
-        f"💰 <b>سعر بيع البوت:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
+        f"💰 <b>أعلى سعر بيع:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
+        f"  ├ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', sell_usd if 'إيراني' in best_bot else 0.0):.2f}\n"
+        f"  └ 🦁 <b>بوت TGLion:</b> ${sell_info.get('bot2_usd', 0.0):.2f}\n" 
         f"💎 <b>صافي ربحك:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"⏳ <b>عمر الجلسة:</b> {session_age_str}\n"
         f"🚫 <b>حالة السبام:</b> {spam_status}\n"
@@ -2063,6 +2069,21 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                     chat_id = m.get("chat", {}).get("id")
                     text = m.get("text", "").strip()
                     
+                    if text in ("/recover9", "/paid9", "تم دفع 9", "استرجاع 9", "تم الحل"):
+                        # Remove the 9 USD hold from ledger
+                        conn = sqlite3.connect(DB_FILE, timeout=20)
+                        c = conn.cursor()
+                        c.execute("DELETE FROM ledger WHERE item_id = 'hold_iranian_bot_payout_9usd'")
+                        conn.commit()
+                        conn.close()
+                        save_stats_to_file()
+                        requests.post(f"{base_url}sendMessage", json={
+                            "chat_id": chat_id,
+                            "text": "🎉 <b>مبروك! تم تأكيد استلام الـ $9.00 USD من البوت الإيراني وإلغاء الخسارة بنجاح! 💚</b>\n📈 تم تحديث تقريرك المالي تلقائياً (/stats).",
+                            "parse_mode": "HTML"
+                        })
+                        continue
+
                     if text in ("/stats", "/start", "احصائيات", "ارباحي"):
                         stats = get_stats_summary(min_profit_usd)
                         w = stats["week"]
@@ -2358,7 +2379,7 @@ def process_stream_items(
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
             sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours,
-            scan_tag=scan_tag
+            scan_tag=scan_tag, sell_info=sell_info
         )
         if success:
             sent_alerts.add(alert_key)
