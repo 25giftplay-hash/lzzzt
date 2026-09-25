@@ -1535,7 +1535,7 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
     threading.Thread(target=_do_send_group, daemon=True).start()
     return True
 
-def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing', sell_info=None):
+def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing', sell_info=None, is_early_bird=False):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
     item_id = item.get("item_id")
@@ -1574,24 +1574,31 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     
     extras_str = " | ".join(extras) if extras else "لا يوجد"
 
-    if profit_usd >= 1.00:
+    if is_early_bird:
+        rem_h = max(0.0, 24.0 - session_age_hours)
         header = (
-            f"🚨 <b>[صيد VIP عاجل - صيدة أرباح ضخمة 💎]</b> 🚨\n"
+            f"⏳ <b>[صيدة مبكرة واعدة - جلسة +18H (رخيصة جداً) 🎯]</b>\n"
+            f"⚠️ <i>متبقي {rem_h:.1f} ساعة فقط لتصبح 24H قبل التسليم لبوت TG Lion!</i>\n"
+            f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+        )
+    elif profit_usd >= 1.00:
+        header = (
+            f"🚨 <b>[صيد VIP عاجل - صيدة أرباح ضخمة عبر TG Lion 🦁]</b> 🚨\n"
             f"💰 <b>صافي ربح خيالي: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
     elif profit_usd >= 0.50:
         header = (
-            f"⚡ <b>[صيد البوت الإيراني - ربح ممتاز 🇮🇷]</b>\n"
+            f"🦁 <b>[صيد بوت TG Lion - ربح ممتاز ⚡]</b>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
-    elif "Target-Bargains" in scan_tag:
+    elif "Bargain" in scan_tag or "Cheap" in scan_tag:
         header = (
-            f"🔥 <b>[صيدة لقطة بسعر مخفض 🎯]</b>\n"
+            f"🔥 <b>[صيدة لقطة بسعر مخفض جداً 🎯]</b>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
     else:
         header = (
-            f"🔔 <b>[حساب مطابق لشروط الفلتر]</b>\n"
+            f"🔔 <b>[حساب مطابق لشروط TG Lion 🦁]</b>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
 
@@ -1601,10 +1608,10 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"📝 <b>العنوان:</b> {title}\n"
         f"🌍 <b>الدولة:</b> {country_display}\n"
         f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
-        f"💰 <b>أعلى سعر بيع:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
-        f"  ├ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', sell_usd if 'إيراني' in best_bot else 0.0):.2f}\n"
+        f"💰 <b>سعر البيع لدى TG Lion:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽)\n"
+        f"  ├ 🦁 <b>بوت TGLion (المعتمد):</b> ${sell_info.get('bot2_usd', sell_usd if 'Lion' in best_bot else 0.0):.2f}\n"
         f"  ├ 🤖 <b>بوت TG Get:</b> ${sell_info.get('bot3_usd', 0.0):.2f}\n"
-        f"  └ 🦁 <b>بوت TGLion:</b> ${sell_info.get('bot2_usd', 0.0):.2f}\n" 
+        f"  └ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', 0.0):.2f}\n" 
         f"💎 <b>صافي ربحك:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"⏳ <b>عمر الجلسة:</b> {session_age_str}\n"
         f"🚫 <b>حالة السبام:</b> {spam_status}\n"
@@ -2223,19 +2230,22 @@ def process_stream_items(
     if group_sniper_cfg is None:
         group_sniper_cfg = {}
 
-    # 🚀 Priority Sorting Engine: Sort items so high-profit / aged groups are sniped FIRST!
+    # 🚀 Priority Sorting Engine: Sort items so high TG Lion profit items are sniped FIRST!
     def _calc_item_priority(it):
         try:
-            if group_sniper_cfg.get("enabled", True) and it.get("telegram_admin_groups"):
-                return 999.0
             c_raw = it.get("telegram_country", "")
             t_raw = it.get("title", "")
             cc = resolve_country_code(c_raw, t_raw)
             s_info = sell_prices.get(cc, {})
-            s_usd = s_info.get("best_usd", 0.0) if isinstance(s_info, dict) else float(s_info or 0.0)
+            if isinstance(s_info, dict):
+                s_usd = float(s_info.get("bot2_usd", 0.0) or 0.0)
+                if s_usd <= 0:
+                    s_usd = float(s_info.get("best_usd", 0.0) or 0.0)
+            else:
+                s_usd = float(s_info or 0.0)
             if not s_usd or s_usd <= 0:
                 fb = DEFAULT_SELL_PRICES.get(cc, {})
-                s_usd = fb.get("best_usd", 0.0) if isinstance(fb, dict) else float(fb or 0.0)
+                s_usd = float(fb.get("bot2_usd", fb.get("best_usd", 0.0)) or 0.0)
             b_rub, b_usd = extract_item_prices(it, rub_per_usd)
             return float(s_usd - b_usd)
         except Exception:
@@ -2247,57 +2257,6 @@ def process_stream_items(
         item_id = str(item.get("item_id"))
         if not item_id:
             continue
-
-        # -------------------------------------------------------------
-        # 0. AGED GROUP SNIPER FILTER (2019 or older):
-        # -------------------------------------------------------------
-        if False and group_sniper_cfg.get("enabled", True):
-            session_created_at = item.get("telegram_session_created_at") or 0
-            now_ts = time.time()
-            session_age_hours = (now_ts - session_created_at) / 3600 if session_created_at > 0 else 0
-            min_grp_age = group_sniper_cfg.get("min_session_age_hours", 24.0)
-
-            # Condition 1: Session Age >= 24 Hours
-            if session_age_hours >= min_grp_age:
-                # Condition 2: No 2FA password
-                has_2fa = item.get("telegram_password")
-                is_no_2fa = (not has_2fa) or (str(has_2fa).strip().lower() in ("", "no", "false", "none", "0"))
-                if is_no_2fa:
-                    admin_groups = item.get("telegram_admin_groups") or []
-                    aged_groups = []
-                    max_year = group_sniper_cfg.get("max_year", 2019)
-                    require_owner = group_sniper_cfg.get("require_owner", True)
-                    
-                    for g in admin_groups:
-                        # Strictly verify it is a GROUP and NOT a Channel
-                        is_grp, reason = is_telegram_group(g, item)
-                        if not is_grp:
-                            continue
-                            
-                        gid = g.get("id")
-                        est_year = estimate_group_year(gid)
-                        if est_year and est_year <= max_year:
-                            if (not require_owner) or g.get("owner", False):
-                                aged_groups.append((g, est_year))
-                                
-                    if aged_groups:
-                        buy_rub, buy_usd = extract_item_prices(item, rub_per_usd)
-                        max_grp_price = group_sniper_cfg.get("max_price_rub", 200)
-                        if (not max_grp_price) or buy_rub <= max_grp_price:
-                            alert_key = f"group:{item_id}"
-                            if alert_key not in sent_alerts and str(item_id) not in sent_alerts:
-                                spam_val = item.get("telegram_spam_block")
-                                spam_status = f"سبام ({spam_val})" if spam_val not in (-1, 0, None) else "✅ سليم"
-                                print(f"[AGED GROUP MATCH] Item {item_id} has {len(aged_groups)} group(s) <= {max_year}!")
-                                success = send_telegram_group_alert(
-                                    tg_token, tg_chat_id, item, aged_groups,
-                                    buy_rub, buy_usd, session_age_hours, spam_status
-                                )
-                                if success:
-                                    sent_alerts.add(alert_key)
-                                    sent_alerts.add(str(item_id))
-                                    save_sent_alerts(sent_alerts)
-                                    continue
 
         # 1. STRICT COUNTRY FILTER:
         country_raw = item.get("telegram_country", "")
@@ -2330,57 +2289,63 @@ def process_stream_items(
         if not is_accepted:
             continue
 
-        # 5. Session Age Calculation:
-        session_created_at = item.get("telegram_session_created_at") or item.get("session_created_at") or 0
-        now_ts = time.time()
-        if session_created_at > 0:
-            session_age_hours = (now_ts - session_created_at) / 3600
-        elif item.get("daybreak") or (scan_tag and ("daybreak" in scan_tag.lower() or "aged" in scan_tag.lower() or "iranianturbo" in scan_tag.lower())):
-            # Guaranteed 24H+ by LZT daybreak filter
-            session_age_hours = 24.5
-        else:
-            session_age_hours = 0.0
-
-        if require_session_age_24h and session_age_hours < 24.0:
-            # User requires session age >= 24h.
-            # Skip alerting now without marking as alerted,
-            # so as soon as it crosses 24h it will be alerted!
-            continue
-
-        # 6. Check if already alerted:
-        alert_key = f"{item_id}:aged" if session_age_hours >= 24.0 else f"{item_id}:fresh"
-        if alert_key in sent_alerts or str(item_id) in sent_alerts:
-            continue
-
-        # 7. Real Bot Sell Price for this Country (No Fake Premium Markup!):
+        # 5. Real TG Lion Bot Sell Price for this Country:
         sell_info = sell_prices.get(ccode, {})
+        lion_usd = 0.0
         if isinstance(sell_info, dict):
-            sell_usd = sell_info.get("best_usd", 0.0)
-            best_bot = sell_info.get("best_bot", "Bot")
+            lion_usd = float(sell_info.get("bot2_usd", 0.0) or 0.0)
+            if lion_usd > 0:
+                sell_usd = lion_usd
+                best_bot = "TG Lion 🦁"
+            else:
+                sell_usd = float(sell_info.get("best_usd", 0.0) or 0.0)
+                best_bot = sell_info.get("best_bot", "Bot")
         else:
             sell_usd = float(sell_info) if sell_info else 0.0
             best_bot = "Bot"
-            
+
         if not sell_usd or sell_usd <= 0:
             fallback_info = DEFAULT_SELL_PRICES.get(ccode, {})
-            sell_usd = fallback_info.get("best_usd", 0.0)
-            best_bot = fallback_info.get("best_bot", "Bot")
+            sell_usd = float(fallback_info.get("bot2_usd", fallback_info.get("best_usd", 0.0)) or 0.0)
+            best_bot = "TG Lion 🦁" if fallback_info.get("bot2_usd") else fallback_info.get("best_bot", "Bot")
 
         # Skip if no selling price defined for this country
         if not sell_usd or sell_usd <= 0:
             continue
 
-        # 8. Profit Calculation:
+        # 6. Profit Calculation (Strictly evaluated on TG Lion):
         expected_profit_usd = round(sell_usd - buy_usd, 2)
         if expected_profit_usd < min_profit_usd:
             continue
 
+        # 7. Session Age Calculation:
+        session_created_at = item.get("telegram_session_created_at") or item.get("session_created_at") or 0
+        now_ts = time.time()
+        if session_created_at > 0:
+            session_age_hours = (now_ts - session_created_at) / 3600
+        elif item.get("daybreak") or (scan_tag and ("daybreak" in scan_tag.lower() or "aged" in scan_tag.lower() or "turbo" in scan_tag.lower())):
+            session_age_hours = 24.5
+        else:
+            session_age_hours = 0.0
+
+        # 18H+ Early-Bird Rule for cheap bargain deals (e.g. Japan JP, Korea KR, bargains <= 75 RUB):
+        is_early_bird = (18.0 <= session_age_hours < 24.0 and buy_rub <= 75 and expected_profit_usd >= 0.40)
+
+        if require_session_age_24h and session_age_hours < 24.0:
+            if not is_early_bird:
+                continue
+
+        # 8. Check if already alerted:
+        alert_key = f"{item_id}:early18" if is_early_bird else (f"{item_id}:aged" if session_age_hours >= 24.0 else f"{item_id}:fresh")
+        if alert_key in sent_alerts or str(item_id) in sent_alerts:
+            continue
+
         # 9. Send Standard Telegram Alert:
-        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD")
+        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | TG Lion Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {'[18H Early-Bird]' if is_early_bird else ''}")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
             sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours,
-            scan_tag=scan_tag, sell_info=sell_info
+            scan_tag=scan_tag, sell_info=sell_info, is_early_bird=is_early_bird
         )
         if success:
             sent_alerts.add(alert_key)
@@ -2810,23 +2775,9 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 11-Stage Dedicated High-Profit VIP Snipers (Ukraine, Iraq, Korea, Gulf, Global):
-            # Mode 0: 🇺🇦 DEDICATED UKRAINE SNIPER - Page 1 (country[]=UA)
-            # Mode 1: 🇺🇦 DEDICATED UKRAINE SNIPER - Page 2 (country[]=UA)
-            # Mode 2: 🇮🇶 DEDICATED IRAQ SNIPER - Page 1 (country[]=IQ)
-            # Mode 3: 🇮🇶 DEDICATED IRAQ SNIPER - Page 2 (country[]=IQ)
-            # Mode 4: 🇰🇷 DEDICATED SOUTH KOREA SNIPER - Page 1 (country[]=KR)
-            # Mode 5: 🇰🇷 DEDICATED SOUTH KOREA SNIPER - Page 2 (country[]=KR)
-            # Mode 6: 💎 DEDICATED VIP TIER 1 (AE, TW, SG, QA, KW, BH) - Page 1
-            # Mode 7: 💎 DEDICATED VIP TIER 1 (AE, TW, SG, QA, KW, BH) - Page 2
-            # Mode 8: 🌟 Global Iranian Turbo - Newest (ALL countries, Page 1)
-            # Mode 9: 🌟 Global Iranian Turbo - Deep Scan (ALL countries, Page 2)
-            # Mode 10: 💰 Global Iranian Bargains - Cheapest (ALL countries, price_to_up)
-            global_sniper_cfg = config.get("global_profit_sniper", {
-                "enabled": True, "min_profit_usd": 0.40, "require_session_age_24h": True, "pmax": 200
-            })
-            
-            vip_group_countries = ["AE", "TW", "SG", "QA", "KW", "BH", "NO", "CH"]
+            # 11-Stage Dedicated High-Profit TG Lion & Bargain Snipers:
+            vip_group_countries = ["AE", "SG", "QA", "KW", "BH", "TW", "CH", "NO"]
+            europe_countries = ["DE", "FR", "NL", "ES", "BE", "GB", "IT", "DK"]
             
             scan_mode = cycle_count % 11
             cycle_count += 1
@@ -2837,127 +2788,127 @@ def monitor_lzt():
             current_pmax = pmax
 
             if scan_mode == 0:
-                # 🇺🇦 Dedicated Ukraine Sniper - Page 1
+                # 🇺🇦 Dedicated Ukraine Sniper - Page 1 (TG Lion: $1.30)
                 sort_order = "pdate_to_down"
                 scan_tag = "VIP-Ukraine-P1"
-                current_min_profit = 0.30
+                current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": ["UA"]
                 }
 
             elif scan_mode == 1:
-                # 🇺🇦 Dedicated Ukraine Sniper - Page 2
+                # 🇰🇷 🇯🇵 South Korea & Japan Sniper - Page 1 (TG Lion: KR $2.20, JP $0.70)
                 sort_order = "pdate_to_down"
-                scan_tag = "VIP-Ukraine-P2"
-                current_min_profit = 0.30
+                scan_tag = "VIP-KoreaJapan-P1"
+                current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": ["UA"]
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": ["KR", "JP"]
                 }
 
             elif scan_mode == 2:
-                # 🇮🇶 Dedicated Iraq Sniper - Page 1
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Iraq-P1"
-                current_min_profit = 0.30
+                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 70 RUB - ALL Countries)
+                sort_order = "price_to_up"
+                scan_tag = "Global-BargainUnder70"
+                current_min_profit = 0.40
+                current_req_age = False  # Let early-bird 18h+ and 24h filter decide
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": ["IQ"]
+                    "pmin": pmin, "pmax": 70, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
                 }
 
             elif scan_mode == 3:
-                # 🇮🇶 Dedicated Iraq Sniper - Page 2
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Iraq-P2"
-                current_min_profit = 0.30
-                query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": ["IQ"]
-                }
-
-            elif scan_mode == 4:
-                # 🇰🇷 Dedicated South Korea Sniper - Page 1
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Korea-P1"
-                current_min_profit = 0.50
-                query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": ["KR"]
-                }
-
-            elif scan_mode == 5:
-                # 🇰🇷 Dedicated South Korea Sniper - Page 2
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Korea-P2"
-                current_min_profit = 0.50
-                query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": ["KR"]
-                }
-
-            elif scan_mode == 6:
-                # 💎 Dedicated VIP Group (UAE, Taiwan, Singapore, Qatar, Kuwait, Bahrain) - Page 1
+                # 💎 Dedicated VIP Group (UAE, Singapore, Qatar, Kuwait, Bahrain, Taiwan, Switzerland) - Page 1
                 sort_order = "pdate_to_down"
                 scan_tag = "VIP-GulfAsia-P1"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": vip_group_countries
                 }
 
-            elif scan_mode == 7:
-                # 💎 Dedicated VIP Group (UAE, Taiwan, Singapore, Qatar, Kuwait, Bahrain) - Page 2
+            elif scan_mode == 4:
+                # 🇪🇺 European Tier 1 (Germany, France, Netherlands, Spain, Belgium, UK) - Page 1 (TG Lion: $1.00+)
                 sort_order = "pdate_to_down"
-                scan_tag = "VIP-GulfAsia-P2"
+                scan_tag = "VIP-Europe-P1"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": vip_group_countries
+                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": europe_countries
                 }
 
-            elif scan_mode == 8:
-                # 🌟 Global Iranian Turbo - Newest (ALL countries, Page 1)
-                sort_order = "pdate_to_down"
-                scan_tag = "Global-IranianTurbo-Newest"
-                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.40)
+            elif scan_mode == 5:
+                # 🇮🇶 Cheap Iraq Sniper (Only <= 35 RUB for profit on TG Lion $0.70)
+                sort_order = "price_to_up"
+                scan_tag = "VIP-IraqCheap"
+                current_min_profit = 0.35
+                query_params = {
+                    "pmin": pmin, "pmax": 35, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": ["IQ"]
+                }
+
+            elif scan_mode == 6:
+                # 💰 Global Bargains (Aged 24h+, price_to_up, Page 1)
+                sort_order = "price_to_up"
+                scan_tag = "Global-BargainsAged-P1"
+                current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 150, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
                 }
 
-            elif scan_mode == 9:
-                # 🌟 Global Iranian Turbo - Deep Scan (ALL countries, Page 2)
+            elif scan_mode == 7:
+                # 🌟 Global Turbo - Newest (ALL countries, Page 1)
                 sort_order = "pdate_to_down"
-                scan_tag = "Global-IranianTurbo-DeepScan"
-                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.40)
+                scan_tag = "Global-TGLionTurbo-Newest"
+                current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
+                }
+
+            elif scan_mode == 8:
+                # 🌟 Global Turbo - Deep Scan (ALL countries, Page 2)
+                sort_order = "pdate_to_down"
+                scan_tag = "Global-TGLionTurbo-DeepScan"
+                current_min_profit = 0.40
+                current_req_age = True
+                query_params = {
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order
                 }
 
-            else:
-                # 💰 Global Iranian Bargains - Cheapest (ALL countries, price_to_up)
-                sort_order = "price_to_up"
-                scan_tag = "Global-BargainAged-40c"
-                current_min_profit = global_sniper_cfg.get("min_profit_usd", 0.40)
-                current_req_age = True
+            elif scan_mode == 9:
+                # 🇺🇦 Dedicated Ukraine Sniper - Page 2
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-Ukraine-P2"
+                current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": current_pmax, "currency": "rub", "2fa": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
+                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": ["UA"]
+                }
+
+            else:
+                # 🇰🇷 🇯🇵 South Korea & Japan Sniper - Page 2
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-KoreaJapan-P2"
+                current_min_profit = 0.40
+                query_params = {
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": ["KR", "JP"]
                 }
 
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
