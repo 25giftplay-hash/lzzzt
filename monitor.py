@@ -2328,20 +2328,24 @@ def process_stream_items(
         else:
             session_age_hours = 0.0
 
-        # 18H+ Early-Bird Rule for cheap bargain deals (e.g. Japan JP, Korea KR, bargains <= 75 RUB):
-        is_early_bird = (18.0 <= session_age_hours < 24.0 and buy_rub <= 75 and expected_profit_usd >= 0.40)
+        # STRICT AGE RULES:
+        # - ABSOLUTELY NO FRESH ACCOUNTS (0 hours or < 18 hours are REJECTED!)
+        # - ONLY South Korea (KR) is allowed at >= 18.0 hours (Early-Bird rule for high-value KR accounts)
+        # - ALL OTHER countries MUST be >= 24.0 hours!
+        min_required_age = 18.0 if ccode == "KR" else 24.0
 
-        if require_session_age_24h and session_age_hours < 24.0:
-            if not is_early_bird:
-                continue
+        if session_age_hours < min_required_age:
+            continue
+
+        is_early_bird = (ccode == "KR" and 18.0 <= session_age_hours < 24.0)
 
         # 8. Check if already alerted:
-        alert_key = f"{item_id}:early18" if is_early_bird else (f"{item_id}:aged" if session_age_hours >= 24.0 else f"{item_id}:fresh")
+        alert_key = f"{item_id}:early18" if is_early_bird else f"{item_id}:aged"
         if alert_key in sent_alerts or str(item_id) in sent_alerts:
             continue
 
         # 9. Send Standard Telegram Alert:
-        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | TG Lion Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {'[18H Early-Bird]' if is_early_bird else ''}")
+        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | TG Lion Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {'[KR 18H Early-Bird]' if is_early_bird else ''}")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
             sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours,
@@ -2810,13 +2814,14 @@ def monitor_lzt():
                 }
 
             elif scan_mode == 2:
-                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 70 RUB - ALL Countries)
+                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 70 RUB - ALL Countries, Aged 24H+)
                 sort_order = "price_to_up"
                 scan_tag = "Global-BargainUnder70"
                 current_min_profit = 0.40
-                current_req_age = False  # Let early-bird 18h+ and 24h filter decide
+                current_req_age = True
                 query_params = {
                     "pmin": pmin, "pmax": 70, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
                 }
 
