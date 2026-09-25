@@ -1574,21 +1574,21 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     
     extras_str = " | ".join(extras) if extras else "لا يوجد"
 
-    if is_early_bird:
+    if is_early_bird and ccode == "KR":
         rem_h = max(0.0, 24.0 - session_age_hours)
         header = (
-            f"⏳ <b>[صيدة مبكرة واعدة - جلسة +18H (رخيصة جداً) 🎯]</b>\n"
-            f"⚠️ <i>متبقي {rem_h:.1f} ساعة فقط لتصبح 24H قبل التسليم لبوت TG Lion!</i>\n"
+            f"⏳ <b>[صيدة كورية مبكرة - جلسة +18H (مرتفعة الربح) 🇰🇷]</b>\n"
+            f"⚠️ <i>متبقي {rem_h:.1f} ساعة فقط لتصبح 24H قبل التسليم للبوت!</i>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
     elif profit_usd >= 1.00:
         header = (
-            f"🚨 <b>[صيد VIP عاجل - صيدة أرباح ضخمة عبر TG Lion 🦁]</b> 🚨\n"
-            f"💰 <b>صافي ربح خيالي: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
+            f"🚨 <b>[صيد VIP عاجل - صيدة أرباح ضخمة 💎]</b> 🚨\n"
+            f"💰 <b>صافي ربح خيالي: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽) <i>[{best_bot}]</i></b>"
         )
     elif profit_usd >= 0.50:
         header = (
-            f"🦁 <b>[صيد بوت TG Lion - ربح ممتاز ⚡]</b>\n"
+            f"⚡ <b>[صيد ربح ممتاز 🎯 - {best_bot}]</b>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
     elif "Bargain" in scan_tag or "Cheap" in scan_tag:
@@ -1598,7 +1598,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         )
     else:
         header = (
-            f"🔔 <b>[حساب مطابق لشروط TG Lion 🦁]</b>\n"
+            f"🔔 <b>[حساب مطابق لشروط الفلتر]</b>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
 
@@ -1608,10 +1608,10 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"📝 <b>العنوان:</b> {title}\n"
         f"🌍 <b>الدولة:</b> {country_display}\n"
         f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
-        f"💰 <b>سعر البيع لدى TG Lion:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽)\n"
-        f"  ├ 🦁 <b>بوت TGLion (المعتمد):</b> ${sell_info.get('bot2_usd', sell_usd if 'Lion' in best_bot else 0.0):.2f}\n"
-        f"  ├ 🤖 <b>بوت TG Get:</b> ${sell_info.get('bot3_usd', 0.0):.2f}\n"
-        f"  └ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', 0.0):.2f}\n" 
+        f"💰 <b>أعلى سعر بيع:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
+        f"  ├ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', 0.0):.2f}\n" 
+        f"  ├ 🦁 <b>بوت TGLion:</b> ${sell_info.get('bot2_usd', 0.0):.2f}\n"
+        f"  └ 🤖 <b>بوت TG Get:</b> ${sell_info.get('bot3_usd', 0.0):.2f}\n"
         f"💎 <b>صافي ربحك:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"⏳ <b>عمر الجلسة:</b> {session_age_str}\n"
         f"🚫 <b>حالة السبام:</b> {spam_status}\n"
@@ -2230,7 +2230,7 @@ def process_stream_items(
     if group_sniper_cfg is None:
         group_sniper_cfg = {}
 
-    # 🚀 Priority Sorting Engine: Sort items so high TG Lion profit items are sniped FIRST!
+    # 🚀 Priority Sorting Engine: Sort items so highest profit items across all bots are sniped FIRST!
     def _calc_item_priority(it):
         try:
             c_raw = it.get("telegram_country", "")
@@ -2238,14 +2238,12 @@ def process_stream_items(
             cc = resolve_country_code(c_raw, t_raw)
             s_info = sell_prices.get(cc, {})
             if isinstance(s_info, dict):
-                s_usd = float(s_info.get("bot2_usd", 0.0) or 0.0)
-                if s_usd <= 0:
-                    s_usd = float(s_info.get("best_usd", 0.0) or 0.0)
+                s_usd = float(s_info.get("best_usd", 0.0) or 0.0)
             else:
                 s_usd = float(s_info or 0.0)
             if not s_usd or s_usd <= 0:
                 fb = DEFAULT_SELL_PRICES.get(cc, {})
-                s_usd = float(fb.get("bot2_usd", fb.get("best_usd", 0.0)) or 0.0)
+                s_usd = float(fb.get("best_usd", 0.0) or 0.0)
             b_rub, b_usd = extract_item_prices(it, rub_per_usd)
             return float(s_usd - b_usd)
         except Exception:
@@ -2289,31 +2287,25 @@ def process_stream_items(
         if not is_accepted:
             continue
 
-        # 5. Real TG Lion Bot Sell Price for this Country:
+        # 5. Real Best Sell Price across all active bots (Iranian, TG Lion, TG Get):
         sell_info = sell_prices.get(ccode, {})
-        lion_usd = 0.0
         if isinstance(sell_info, dict):
-            lion_usd = float(sell_info.get("bot2_usd", 0.0) or 0.0)
-            if lion_usd > 0:
-                sell_usd = lion_usd
-                best_bot = "TG Lion 🦁"
-            else:
-                sell_usd = float(sell_info.get("best_usd", 0.0) or 0.0)
-                best_bot = sell_info.get("best_bot", "Bot")
+            sell_usd = float(sell_info.get("best_usd", 0.0) or 0.0)
+            best_bot = sell_info.get("best_bot", "Bot")
         else:
             sell_usd = float(sell_info) if sell_info else 0.0
             best_bot = "Bot"
 
         if not sell_usd or sell_usd <= 0:
             fallback_info = DEFAULT_SELL_PRICES.get(ccode, {})
-            sell_usd = float(fallback_info.get("bot2_usd", fallback_info.get("best_usd", 0.0)) or 0.0)
-            best_bot = "TG Lion 🦁" if fallback_info.get("bot2_usd") else fallback_info.get("best_bot", "Bot")
+            sell_usd = float(fallback_info.get("best_usd", 0.0) or 0.0)
+            best_bot = fallback_info.get("best_bot", "Bot")
 
         # Skip if no selling price defined for this country
         if not sell_usd or sell_usd <= 0:
             continue
 
-        # 6. Profit Calculation (Strictly evaluated on TG Lion):
+        # 6. Profit Calculation (Calculated against best paying bot):
         expected_profit_usd = round(sell_usd - buy_usd, 2)
         if expected_profit_usd < min_profit_usd:
             continue
@@ -2848,12 +2840,14 @@ def monitor_lzt():
                 }
 
             elif scan_mode == 5:
-                # 🇮🇶 Cheap Iraq Sniper (Only <= 35 RUB for profit on TG Lion $0.70)
+                # 🇮🇶 Dedicated Iraq Sniper (Iranian pays $1.50)
                 sort_order = "price_to_up"
-                scan_tag = "VIP-IraqCheap"
-                current_min_profit = 0.35
+                scan_tag = "VIP-Iraq"
+                current_min_profit = 0.40
+                current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 35, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": ["IQ"]
                 }
