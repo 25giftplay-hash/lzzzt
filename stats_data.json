@@ -466,14 +466,5 @@
     "best_bot": "خسائر الحظر/تسجيل الخروج",
     "country": "LOSS",
     "timestamp": 1790174179.7933884
-  },
-  {
-    "item_id": "hold_iranian_bot_payout_9usd",
-    "status": "banned",
-    "cost_usd": 9.0,
-    "profit_usd": 0.0,
-    "best_bot": "البوت الإيراني (مستحقات معلقة $9 قيد التواصل مع الدعم)",
-    "country": "HOLD",
-    "timestamp": 1790334957.6876254
   }
 ]
