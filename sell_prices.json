@@ -57,7 +57,9 @@
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
     "bot2_usd": 0.75,
-    "bot3_usd": 0.75
+    "bot3_usd": 0.75,
+    "bot4_usd": 0.6,
+    "receive_bot_usd": 0.6
   },
   "FO": {
     "best_usd": 2,
@@ -116,7 +118,9 @@
     "bot1_usd": 0.95,
     "bot2_usd": 0.7,
     "bot2_full": false,
-    "bot3_usd": 0.7
+    "bot3_usd": 0.7,
+    "bot4_usd": 0.6,
+    "receive_bot_usd": 0.6
   },
   "QA": {
     "best_usd": 1.6,
@@ -227,7 +231,9 @@
     "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 1.4,
     "bot2_usd": 2.5,
-    "bot3_usd": 2.5
+    "bot3_usd": 2.5,
+    "bot4_usd": 2.0,
+    "receive_bot_usd": 2.0
   },
   "GM": {
     "best_usd": 0.35,
@@ -256,7 +262,9 @@
     "bot1_usd": 0.65,
     "bot2_usd": 0.5,
     "bot2_full": false,
-    "bot3_usd": 0.65
+    "bot3_usd": 0.65,
+    "bot4_usd": 0.4,
+    "receive_bot_usd": 0.4
   },
   "KP": {
     "best_usd": 3,
@@ -321,7 +329,9 @@
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 2,
     "bot2_usd": 2,
-    "bot3_usd": 2.0
+    "bot3_usd": 2.0,
+    "bot4_usd": 0.5,
+    "receive_bot_usd": 0.5
   },
   "VI": {
     "best_usd": 0.3,
@@ -367,7 +377,9 @@
     "bot1_usd": 1,
     "bot2_usd": 1.0,
     "bot2_full": false,
-    "bot3_usd": 1.2
+    "bot3_usd": 1.2,
+    "bot4_usd": 0.7,
+    "receive_bot_usd": 0.7
   },
   "MT": {
     "best_usd": 1.2,
@@ -383,7 +395,9 @@
     "bot1_usd": 1.0,
     "bot2_usd": 0.6,
     "bot2_full": false,
-    "bot3_usd": 0.5
+    "bot3_usd": 0.5,
+    "bot4_usd": 0.85,
+    "receive_bot_usd": 0.85
   },
   "BB": {
     "best_usd": 0.55,
@@ -454,7 +468,9 @@
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1,
     "bot2_usd": 1,
-    "bot3_usd": 1.0
+    "bot3_usd": 1.0,
+    "bot4_usd": 0.5,
+    "receive_bot_usd": 0.5
   },
   "PE": {
     "best_usd": 0.55,
@@ -494,7 +510,9 @@
     "bot1_usd": 1.4,
     "bot2_usd": 1.0,
     "bot2_full": false,
-    "bot3_usd": 1.0
+    "bot3_usd": 1.0,
+    "bot4_usd": 0.75,
+    "receive_bot_usd": 0.75
   },
   "CR": {
     "best_usd": 0.55,
@@ -561,7 +579,9 @@
     "bot1_usd": 1.1,
     "bot2_usd": 1.0,
     "bot2_full": false,
-    "bot3_usd": 0.8
+    "bot3_usd": 0.8,
+    "bot4_usd": 0.7,
+    "receive_bot_usd": 0.7
   },
   "CZ": {
     "best_usd": 0.9,
@@ -939,7 +959,9 @@
     "bot1_usd": 0.8,
     "bot2_usd": 0.8,
     "bot2_full": false,
-    "bot3_usd": 1.0
+    "bot3_usd": 1.0,
+    "bot4_usd": 0.6,
+    "receive_bot_usd": 0.6
   },
   "AE": {
     "best_usd": 1.4,
@@ -1006,7 +1028,9 @@
     "bot1_usd": 0.9,
     "bot2_usd": 1.0,
     "bot2_full": true,
-    "bot3_usd": 0.9
+    "bot3_usd": 0.9,
+    "bot4_usd": 0.75,
+    "receive_bot_usd": 0.75
   },
   "GA": {
     "best_usd": 0.75,
@@ -1126,7 +1150,9 @@
     "bot1_usd": 1.4,
     "bot2_usd": 1.4,
     "bot2_full": false,
-    "bot3_usd": 1.3
+    "bot3_usd": 1.3,
+    "bot4_usd": 1.0,
+    "receive_bot_usd": 1.0
   },
   "MQ": {
     "best_usd": 0.55,
@@ -1155,7 +1181,9 @@
     "bot1_usd": 0.45,
     "bot2_usd": 0.3,
     "bot2_full": false,
-    "bot3_usd": 0.35
+    "bot3_usd": 0.35,
+    "bot4_usd": 0.37,
+    "receive_bot_usd": 0.37
   },
   "TC": {
     "best_usd": 0.35,
@@ -1313,7 +1341,9 @@
     "bot1_usd": 0.6,
     "bot2_usd": 0.5,
     "bot2_full": true,
-    "bot3_usd": 0.4
+    "bot3_usd": 0.4,
+    "bot4_usd": 0.55,
+    "receive_bot_usd": 0.55
   },
   "AT": {
     "best_usd": 0.8,
@@ -1353,7 +1383,9 @@
     "bot1_usd": 0.6,
     "bot2_usd": 0.5,
     "bot2_full": false,
-    "bot3_usd": 0.65
+    "bot3_usd": 0.65,
+    "bot4_usd": 0.5,
+    "receive_bot_usd": 0.5
   },
   "GB": {
     "best_usd": 0.4,
@@ -1631,11 +1663,13 @@
     "bot3_usd": 0.55
   },
   "SA": {
-    "best_usd": 0.6,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 0.8,
+    "best_bot": "بوت ReceiveAccounts 🤖",
     "bot1_usd": 0.6,
     "bot2_usd": 0.6,
-    "bot2_full": true
+    "bot2_full": true,
+    "bot4_usd": 0.8,
+    "receive_bot_usd": 0.8
   },
   "GW": {
     "best_usd": 0.5,
@@ -1701,7 +1735,9 @@
     "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.4,
     "bot2_usd": 0.5,
-    "bot2_full": false
+    "bot2_full": false,
+    "bot4_usd": 0.5,
+    "receive_bot_usd": 0.5
   },
   "SL": {
     "best_usd": 0.32,
