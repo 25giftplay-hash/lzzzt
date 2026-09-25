@@ -1,9 +1,10 @@
 {
   "FK": {
     "best_usd": 8,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 8,
-    "bot2_usd": 8
+    "bot2_usd": 8.0,
+    "bot2_full": false
   },
   "XK": {
     "best_usd": 1.2,
@@ -13,9 +14,10 @@
   },
   "SN": {
     "best_usd": 0.45,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.45
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "BN": {
     "best_usd": 1.8,
@@ -30,16 +32,18 @@
     "bot2_usd": 1.2
   },
   "BE": {
-    "best_usd": 1.15,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 1.1,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 1.15
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "IS": {
     "best_usd": 0.8,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.8
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "FM": {
     "best_usd": 0.75,
@@ -54,10 +58,11 @@
     "bot2_usd": 2
   },
   "GD": {
-    "best_usd": 0.5,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_usd": 0.6,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "AD": {
     "best_usd": 0.6,
@@ -81,7 +86,8 @@
     "best_usd": 0.7,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "CW": {
     "best_usd": 0.65,
@@ -93,25 +99,29 @@
     "best_usd": 0.95,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.95,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "QA": {
     "best_usd": 1.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.5,
-    "bot2_usd": 1
+    "bot2_usd": 1.5,
+    "bot2_full": false
   },
   "LT": {
     "best_usd": 1.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.5,
-    "bot2_usd": 0.7
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "KM": {
     "best_usd": 0.65,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.65,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "KN": {
     "best_usd": 0.65,
@@ -123,7 +133,8 @@
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.55
+    "bot2_usd": 0.7,
+    "bot2_full": true
   },
   "AC": {
     "best_usd": 3,
@@ -133,9 +144,10 @@
   },
   "AW": {
     "best_usd": 1,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1,
-    "bot2_usd": 1
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "MH": {
     "best_usd": 1,
@@ -145,9 +157,10 @@
   },
   "KY": {
     "best_usd": 0.8,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.8
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "CC": {
     "best_usd": 0.8,
@@ -174,10 +187,11 @@
     "bot2_usd": 0.75
   },
   "GE": {
-    "best_usd": 1.1,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 1.0,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 1.1
+    "bot2_usd": 1.0,
+    "bot2_full": true
   },
   "GI": {
     "best_usd": 2.5,
@@ -205,9 +219,10 @@
   },
   "LC": {
     "best_usd": 0.65,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.65,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "KP": {
     "best_usd": 3,
@@ -223,9 +238,10 @@
   },
   "MW": {
     "best_usd": 0.5,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.5,
+    "bot2_full": true
   },
   "PN": {
     "best_usd": 0.7,
@@ -243,7 +259,8 @@
     "best_usd": 1.1,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.75,
+    "bot2_full": false
   },
   "SH": {
     "best_usd": 4,
@@ -270,94 +287,109 @@
     "bot2_usd": 0.3
   },
   "BT": {
-    "best_usd": 1.1,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 1.0,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 1.1
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "KE": {
     "best_usd": 0.37,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.37,
-    "bot2_usd": 0
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "CK": {
     "best_usd": 5.0,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 5.0,
-    "bot2_usd": 5
+    "bot2_usd": 3.0,
+    "bot2_full": false
   },
   "PS": {
     "best_usd": 1.1,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 1
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "MC": {
     "best_usd": 1,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1,
-    "bot2_usd": 1
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "MT": {
     "best_usd": 1.2,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.2,
-    "bot2_usd": 1
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "BA": {
     "best_usd": 1.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "BB": {
     "best_usd": 0.5,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "PA": {
     "best_usd": 0.7,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "AM": {
     "best_usd": 0.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.45
+    "bot2_usd": 0.6,
+    "bot2_full": true
   },
   "VE": {
     "best_usd": 1.7,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.7,
-    "bot2_usd": 0.85
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "BH": {
-    "best_usd": 1.8,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 2.0,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 1.8,
-    "bot2_usd": 0
+    "bot2_usd": 2.0,
+    "bot2_full": false
   },
   "BZ": {
     "best_usd": 1.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 0.75
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "AZ": {
     "best_usd": 1.2,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.2,
-    "bot2_usd": 1.2
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "SV": {
     "best_usd": 0.7,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "WF": {
     "best_usd": 1,
@@ -369,37 +401,43 @@
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "LA": {
     "best_usd": 0.9,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.9,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "DO": {
     "best_usd": 0.65,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.65,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "MO": {
     "best_usd": 1.7,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.7,
-    "bot2_usd": 1.5
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "LV": {
     "best_usd": 1.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.4,
-    "bot2_usd": 1
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "CR": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "CY": {
     "best_usd": 1,
@@ -411,19 +449,22 @@
     "best_usd": 0.9,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.9,
-    "bot2_usd": 0.8
+    "bot2_usd": 0.85,
+    "bot2_full": false
   },
   "MM": {
     "best_usd": 0.23,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.23,
-    "bot2_usd": 0
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "NO": {
     "best_usd": 1.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.5,
-    "bot2_usd": 1.3
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "SK": {
     "best_usd": 1.1,
@@ -432,10 +473,11 @@
     "bot2_usd": 1
   },
   "SG": {
-    "best_usd": 1.6,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_usd": 1.8,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 1.6,
-    "bot2_usd": 1.6
+    "bot2_usd": 1.8,
+    "bot2_full": false
   },
   "RW": {
     "best_usd": 0.3,
@@ -447,31 +489,36 @@
     "best_usd": 1.1,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 0.8
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "CZ": {
-    "best_usd": 0.75,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.8,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.75
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "SI": {
     "best_usd": 1.3,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.3,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.85,
+    "bot2_full": false
   },
   "LK": {
     "best_usd": 0.53,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.53,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "NZ": {
     "best_usd": 1.2,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.2,
-    "bot2_usd": 0.85
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "GF": {
     "best_usd": 0.8,
@@ -483,115 +530,134 @@
     "best_usd": 0.35,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.25
+    "bot2_usd": 0.1,
+    "bot2_full": false
   },
   "CM": {
     "best_usd": 0.1,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.1,
-    "bot2_usd": 0.1
+    "bot2_usd": 0.2,
+    "bot2_full": true
   },
   "TG": {
     "best_usd": 0.35,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "UY": {
     "best_usd": 0.72,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.72,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "MU": {
     "best_usd": 0.3,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.3,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "CF": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "FI": {
     "best_usd": 0.85,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.85,
-    "bot2_usd": 0.55
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "KR": {
     "best_usd": 3.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 3.0,
-    "bot2_usd": 2.5
+    "bot2_usd": 2.2,
+    "bot2_full": false
   },
   "BO": {
     "best_usd": 1.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.5,
-    "bot2_usd": 1.2
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "BJ": {
     "best_usd": 0.33,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.33,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "BG": {
     "best_usd": 1.1,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "BI": {
-    "best_usd": 0.35,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 0.4,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "BY": {
     "best_usd": 1.8,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.8,
-    "bot2_usd": 0.7
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "GN": {
     "best_usd": 0.4,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.3,
+    "bot2_full": true
   },
   "ML": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.1,
+    "bot2_full": false
   },
   "NU": {
-    "best_usd": 1.5,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 3.0,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 1,
-    "bot2_usd": 1.5
+    "bot2_usd": 3.0,
+    "bot2_full": false
   },
   "MZ": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.15,
+    "bot2_full": false
   },
   "RO": {
     "best_usd": 0.8,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "ZM": {
     "best_usd": 0.35,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "NC": {
     "best_usd": 1,
@@ -603,25 +669,29 @@
     "best_usd": 0.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.55
+    "bot2_usd": 0.35,
+    "bot2_full": false
   },
   "NP": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "PL": {
     "best_usd": 0.65,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.65,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "GY": {
     "best_usd": 0.55,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.55
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "NF": {
     "best_usd": 1,
@@ -633,19 +703,22 @@
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.15,
+    "bot2_full": false
   },
   "TM": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "BM": {
     "best_usd": 0.4,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "AX": {
     "best_usd": 1,
@@ -667,9 +740,10 @@
   },
   "GH": {
     "best_usd": 0.35,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.1,
+    "bot2_full": false
   },
   "GS": {
     "best_usd": 1,
@@ -717,37 +791,43 @@
     "best_usd": 0.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "TZ": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "OM": {
     "best_usd": 1.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 0.8
+    "bot2_usd": 1.0,
+    "bot2_full": true
   },
   "UA": {
     "best_usd": 1.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.75,
-    "bot2_usd": 1.5
+    "bot2_usd": 1.3,
+    "bot2_full": false
   },
   "RS": {
     "best_usd": 0.8,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.8
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "AE": {
-    "best_usd": 1.5,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 1.4,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 1.3,
-    "bot2_usd": 1.5
+    "bot2_usd": 1.4,
+    "bot2_full": false
   },
   "VG": {
     "best_usd": 0.6,
@@ -759,13 +839,15 @@
     "best_usd": 0.2,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.2,
-    "bot2_usd": 0
+    "bot2_usd": 0.25,
+    "bot2_full": true
   },
   "NI": {
     "best_usd": 0.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.2,
+    "bot2_full": true
   },
   "AQ": {
     "best_usd": 1,
@@ -781,39 +863,45 @@
   },
   "GR": {
     "best_usd": 1,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1,
-    "bot2_usd": 1
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "KZ": {
     "best_usd": 0.95,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.95,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "RU": {
     "best_usd": 0.9,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.9,
-    "bot2_usd": 0
+    "bot2_usd": 1.0,
+    "bot2_full": true
   },
   "GA": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.55
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "HU": {
     "best_usd": 1.1,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "MG": {
     "best_usd": 0.25,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.25,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.05,
+    "bot2_full": false
   },
   "EH": {
     "best_usd": 0.4,
@@ -828,10 +916,11 @@
     "bot2_usd": 0.7
   },
   "PW": {
-    "best_usd": 0.7,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_usd": 1.2,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.7
+    "bot2_usd": 1.2,
+    "bot2_full": false
   },
   "VA": {
     "best_usd": 0.5,
@@ -861,7 +950,8 @@
     "best_usd": 0.3,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.3,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "TF": {
     "best_usd": 0.75,
@@ -876,22 +966,25 @@
     "bot2_usd": 0.2
   },
   "ZA": {
-    "best_usd": 0.1,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_usd": 0.35,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.1,
-    "bot2_usd": 0.1
+    "bot2_usd": 0.35,
+    "bot2_full": false
   },
   "CH": {
     "best_usd": 2.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 2.0,
-    "bot2_usd": 1.8
+    "bot2_usd": 1.7,
+    "bot2_full": false
   },
   "KW": {
-    "best_usd": 1.5,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 1.4,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.4,
-    "bot2_usd": 1.5
+    "bot2_usd": 1.4,
+    "bot2_full": false
   },
   "MQ": {
     "best_usd": 0.55,
@@ -915,7 +1008,8 @@
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.25
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "TC": {
     "best_usd": 0.35,
@@ -927,349 +1021,407 @@
     "best_usd": 1.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.5,
-    "bot2_usd": 1.8
+    "bot2_usd": 0.7,
+    "bot2_full": false
   },
   "CO": {
     "best_usd": 0.2,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.2,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.18,
+    "bot2_full": false
   },
   "PR": {
-    "best_usd": 0.4,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_usd": 0.45,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "AU": {
     "best_usd": 1.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.5,
-    "bot2_usd": 1.3
+    "bot2_usd": 1.2,
+    "bot2_full": false
   },
   "TW": {
     "best_usd": 1.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.6,
-    "bot2_usd": 1.55
+    "bot2_usd": 1.2,
+    "bot2_full": false
   },
   "HK": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "UG": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "CV": {
     "best_usd": 0.6,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "TJ": {
-    "best_usd": 0.5,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.4,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "PK": {
     "best_usd": 0.35,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "MR": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "SZ": {
     "best_usd": 0.45,
-    "best_bot": "البوت الثاني 🥈",
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.45
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "FR": {
-    "best_usd": 0.95,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 1.0,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.95,
-    "bot2_usd": 0.8
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "CI": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.5,
+    "bot2_full": true
   },
   "IE": {
     "best_usd": 0.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.5,
+    "bot2_full": true
   },
   "JO": {
     "best_usd": 0.85,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.85,
-    "bot2_usd": 0
+    "bot2_usd": 1.0,
+    "bot2_full": true
   },
   "DE": {
-    "best_usd": 1.2,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 1.1,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 1.2
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "IR": {
-    "best_usd": 0.35,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 0.4,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.35,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "KH": {
-    "best_usd": 0.7,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.6,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.5,
+    "bot2_full": true
   },
   "AT": {
     "best_usd": 0.8,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "EE": {
     "best_usd": 0.7,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "UZ": {
     "best_usd": 0.5,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "AR": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "SB": {
-    "best_usd": 0.65,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.6,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "GB": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "JM": {
     "best_usd": 0.4,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "YE": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "ES": {
     "best_usd": 1.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 0.75
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "GP": {
     "best_usd": 0.85,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.85,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "TO": {
     "best_usd": 0.6,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "PT": {
     "best_usd": 0.65,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.65,
-    "bot2_usd": 0
+    "bot2_usd": 0.6,
+    "bot2_full": true
   },
   "SY": {
     "best_usd": 0.8,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "ZW": {
     "best_usd": 0.3,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.3,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "EG": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "MX": {
     "best_usd": 0.47,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.47,
-    "bot2_usd": 0.4
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "MN": {
     "best_usd": 1.1,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.1,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.8,
+    "bot2_full": false
   },
   "AO": {
-    "best_usd": 0.3,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_usd": 0.45,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.3,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "NL": {
     "best_usd": 1.2,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.2,
-    "bot2_usd": 0.85
+    "bot2_usd": 1.0,
+    "bot2_full": false
   },
   "IL": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.3
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "BR": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "MV": {
     "best_usd": 1.0,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 1.0,
-    "bot2_usd": 0.75
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "CU": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "PY": {
     "best_usd": 0.7,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.7,
+    "bot2_full": true
   },
   "SD": {
     "best_usd": 0.3,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.3,
-    "bot2_usd": 0.25
+    "bot2_usd": 0.15,
+    "bot2_full": true
   },
   "GL": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "CL": {
     "best_usd": 0.25,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.25,
-    "bot2_usd": 0
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "FJ": {
-    "best_usd": 0.65,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.6,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "HN": {
     "best_usd": 0.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "MY": {
     "best_usd": 0.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.45
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "CA": {
     "best_usd": 0.25,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.25,
-    "bot2_usd": 0.25
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "KG": {
     "best_usd": 0.9,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.9,
-    "bot2_usd": 0.8
+    "bot2_usd": 0.7,
+    "bot2_full": true
   },
   "JP": {
     "best_usd": 0.85,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.85,
-    "bot2_usd": 0.7
+    "bot2_usd": 0.7,
+    "bot2_full": true
   },
   "DJ": {
     "best_usd": 0.65,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.65,
-    "bot2_usd": 0.65
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "BD": {
     "best_usd": 0.22,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.22,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.18,
+    "bot2_full": true
   },
   "TR": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.7,
+    "bot2_full": true
   },
   "US": {
     "best_usd": 0.24,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.24,
-    "bot2_usd": 0.22
+    "bot2_usd": 0.2,
+    "bot2_full": true
   },
   "TD": {
-    "best_usd": 0.45,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.4,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.45
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "LB": {
     "best_usd": 0.7,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.7,
-    "bot2_usd": 0.55
+    "bot2_usd": 0.4,
+    "bot2_full": false
   },
   "ME": {
     "best_usd": 0.55,
@@ -1281,7 +1433,8 @@
     "best_usd": 0.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.5
+    "bot2_usd": 0.6,
+    "bot2_full": true
   },
   "GW": {
     "best_usd": 0.5,
@@ -1299,13 +1452,15 @@
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "IN": {
     "best_usd": 0.25,
-    "best_bot": "البوت الأول أو الثاني (متطابق)",
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.25,
-    "bot2_usd": 0.25
+    "bot2_usd": 0.22,
+    "bot2_full": false
   },
   "BF": {
     "best_usd": 0.4,
@@ -1317,37 +1472,43 @@
     "best_usd": 0.8,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.8,
-    "bot2_usd": 0.6
+    "bot2_usd": 1.0,
+    "bot2_full": true
   },
   "KI": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0
+    "bot2_usd": 0.85,
+    "bot2_full": true
   },
   "WS": {
-    "best_usd": 0.35,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 0.6,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.35,
-    "bot2_usd": 0
+    "bot2_usd": 0.6,
+    "bot2_full": false
   },
   "ST": {
-    "best_usd": 0.4,
-    "best_bot": "البوت الأول 🥇 (الإيراني)",
+    "best_usd": 0.5,
+    "best_bot": "بوت TGLion 🦁",
     "bot1_usd": 0.4,
-    "bot2_usd": 0
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "SL": {
     "best_usd": 0.32,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.32,
-    "bot2_usd": 0.15
+    "bot2_usd": 0.2,
+    "bot2_full": true
   },
   "TT": {
     "best_usd": 0.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "VU": {
     "best_usd": 0.4,
@@ -1359,96 +1520,161 @@
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "MA": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0
+    "bot2_usd": 0.35,
+    "bot2_full": false
   },
   "SO": {
     "best_usd": 0.45,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "DZ": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "HT": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0
+    "bot2_usd": 0.25,
+    "bot2_full": false
   },
   "AL": {
     "best_usd": 0.5,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.5,
-    "bot2_usd": 0
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "TN": {
     "best_usd": 0.55,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.55,
-    "bot2_usd": 0
+    "bot2_usd": 0.3,
+    "bot2_full": false
   },
   "TL": {
     "best_usd": 0.75,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.75,
-    "bot2_usd": 0
+    "bot2_usd": 0.5,
+    "bot2_full": false
   },
   "PH": {
     "best_usd": 0.35,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.35,
-    "bot2_usd": 0
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "LY": {
-    "best_usd": 0.6,
-    "best_bot": "البوت الثاني 🥈",
+    "best_usd": 0.45,
+    "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.45,
-    "bot2_usd": 0.6
+    "bot2_usd": 0.45,
+    "bot2_full": false
   },
   "BW": {
     "best_usd": 0.35,
     "best_bot": "البوت الثاني 🥈",
     "bot1_usd": 0,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.4,
+    "bot2_full": true
   },
   "BS": {
     "best_usd": 0.35,
     "best_bot": "البوت الثاني 🥈",
     "bot1_usd": 0,
-    "bot2_usd": 0.35
+    "bot2_usd": 0.6,
+    "bot2_full": true
   },
   "CN": {
     "best_usd": 0.3,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.3,
-    "bot2_usd": 0.2
+    "bot2_usd": 0.3,
+    "bot2_full": true
   },
   "GT": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.0
+    "bot2_usd": 0.2,
+    "bot2_full": true
   },
   "TH": {
     "best_usd": 0.4,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.4,
-    "bot2_usd": 0.0
+    "bot2_usd": 0.2,
+    "bot2_full": false
   },
   "SS": {
     "best_usd": 0.6,
     "best_bot": "البوت الأول 🥇 (الإيراني)",
     "bot1_usd": 0.6,
-    "bot2_usd": 0.0
+    "bot2_usd": 0.2,
+    "bot2_full": false
+  },
+  "ET": {
+    "best_usd": 0.25,
+    "best_bot": "بوت TGLion 🦁",
+    "bot1_usd": 0.0,
+    "bot2_usd": 0.25,
+    "bot2_full": false
+  },
+  "DK": {
+    "best_usd": 1.0,
+    "best_bot": "بوت TGLion 🦁",
+    "bot1_usd": 0.0,
+    "bot2_usd": 1.0,
+    "bot2_full": false
+  },
+  "VC": {
+    "best_usd": 0.3,
+    "best_bot": "بوت TGLion 🦁",
+    "bot1_usd": 0.0,
+    "bot2_usd": 0.3,
+    "bot2_full": false
+  },
+  "DM": {
+    "best_usd": 0.3,
+    "best_bot": "بوت TGLion 🦁",
+    "bot1_usd": 0.0,
+    "bot2_usd": 0.3,
+    "bot2_full": false
+  },
+  "GU": {
+    "best_usd": 0.4,
+    "best_bot": "بوت TGLion 🦁",
+    "bot1_usd": 0.0,
+    "bot2_usd": 0.4,
+    "bot2_full": false
+  },
+  "SC": {
+    "best_usd": 0.0,
+    "best_bot": "TGLion (ممتلئ)",
+    "bot1_usd": 0.0,
+    "bot2_usd": 0.5,
+    "bot2_full": true
+  },
+  "CG": {
+    "best_usd": 0.0,
+    "best_bot": "TGLion (ممتلئ)",
+    "bot1_usd": 0.0,
+    "bot2_usd": 0.5,
+    "bot2_full": true
   }
 }
