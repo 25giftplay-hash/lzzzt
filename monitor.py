@@ -2490,6 +2490,14 @@ class HealthHandler(BaseHTTPRequestHandler):
                     "Accept": "application/json",
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
                 }
+                if "proxy_path=" in self.path:
+                    pp = self.path.split("proxy_path=")[1]
+                    ritem = requests.get(f"https://api.lzt.market/{pp}", headers=hdrs, timeout=12)
+                    self.send_response(200)
+                    self.send_header("Content-type", "application/json; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(ritem.text.encode("utf-8"))
+                    return
                 if "country=" in self.path:
                     c = self.path.split("country=")[1].split("&")[0].upper()
                     ritem = requests.get(f"https://api.lzt.market/telegram?country[]={c}&pmax=200", headers=hdrs, timeout=10)
