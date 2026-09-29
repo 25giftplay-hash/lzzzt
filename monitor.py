@@ -1282,24 +1282,25 @@ def load_sell_prices():
 
 def parse_spamblock(spam_block_val, max_wait_hours=0):
     if spam_block_val is None or spam_block_val == "" or spam_block_val is False:
-        return True, "✅ سليم (0% سبام)"
+        return False, "غير مفحوص سبام بوت (مرفوض لضمان النظافة 100%)"
     low = str(spam_block_val).strip().lower()
-    if low in ('no', 'false', '0', '-1', '-3', 'none', 'null'):
-        return True, "✅ سليم (0% سبام)"
+    if low in ('none', 'null', 'unknown', 'unchecked', 'false', 'nan'):
+        return False, "غير مفحوص سبام بوت (مرفوض لضمان النظافة 100%)"
+    if any(bad in low for bad in ("perm", "ban", "block", "restrict", "expired", "yes", "true", "вечн", "спам")):
+        return False, f"محظور سبام ({spam_block_val})"
+    if low == "no":
+        return True, "✅ سليم ومفحوص (0% سبام)"
     try:
         val_int = int(low)
         # On LZT Market: -1 and -3 indicate "No spamblock" (clean account verified by checker)
-        if val_int in (-1, -3, 0):
+        if val_int in (-1, -3):
+            return True, "✅ سليم ومفحوص (0% سبام)"
+        elif val_int == 0:
             return True, "✅ سليم (0% سبام)"
         elif val_int == -2:
-            return False, "محظور سبام دائم (كود -2)"
+            return False, "محظور سبام دائم (Permanent)"
         elif val_int > 0:
-            now_ts = time.time()
-            if val_int < now_ts:
-                return False, "سبام منتهي الصلاحية (مرفوض للأمان)"
-            else:
-                expire_dt = datetime.fromtimestamp(val_int).strftime('%Y-%m-%d %H:%M')
-                return False, f"محظور سبام حتى {expire_dt}"
+            return False, "محظور سبام مؤقت"
         else:
             return False, f"محظور سبام (كود {val_int})"
     except (ValueError, TypeError):
@@ -2285,7 +2286,11 @@ def process_stream_items(
         if max_price_rub and buy_rub > max_price_rub:
             continue
 
-        # 4. Check Spam Block (Strict 0% Spam Clean, accepts -1, -3, 0):
+        # 4. Check Spam Block (Strict 0% Spam Clean, accepts only verified clean accounts):
+        title_lower = (item.get("title") or "").lower()
+        if any(bad in title_lower for bad in ("спам", "spam", "spamblock", "perm", "вечн", "مبند", "سبام")):
+            continue
+
         spam_block_val = item.get("telegram_spam_block")
         is_accepted, spam_status = parse_spamblock(spam_block_val)
         if not is_accepted:
@@ -2802,7 +2807,7 @@ def monitor_lzt():
                 scan_tag = "VIP-Ukraine-P1"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": ["UA"]
@@ -2814,7 +2819,7 @@ def monitor_lzt():
                 scan_tag = "VIP-KoreaJapan-P1"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": ["KR", "JP"]
                 }
@@ -2826,7 +2831,7 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 75, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 75, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": top_target_countries
@@ -2838,7 +2843,7 @@ def monitor_lzt():
                 scan_tag = "VIP-GulfAsia-P1"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": vip_group_countries
@@ -2850,7 +2855,7 @@ def monitor_lzt():
                 scan_tag = "VIP-EuropeBaltic"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": europe_countries
@@ -2863,7 +2868,7 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": ["IQ"]
@@ -2876,7 +2881,7 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
                     "country[]": top_target_countries
@@ -2889,7 +2894,7 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": top_target_countries
@@ -2902,7 +2907,7 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
                     "country[]": top_target_countries
@@ -2914,7 +2919,7 @@ def monitor_lzt():
                 scan_tag = "VIP-Ukraine-P2"
                 current_min_profit = 0.40
                 query_params = {
-                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
                     "country[]": ["UA"]
@@ -2927,12 +2932,13 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no", "spam": "no",
                     "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
                     "country[]": ["IQ"]
                 }
 
+            query_params["spam"] = "no"
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
             if resp.status_code == 200:
                 consecutive_errors = 0
