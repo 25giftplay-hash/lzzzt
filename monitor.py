@@ -9,7 +9,7 @@ import threading
 import requests
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from ezx_service import run_ezx_cloud_monitor, stop_ezx_reminder
+from ezx_service import run_ezx_cloud_monitor, stop_ezx_reminder, get_ezx_status, get_ezx_status_report
 
 CONFIG_FILE = "config.json"
 SENT_ALERTS_FILE = "sent_alerts.json"
@@ -1927,6 +1927,21 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                                 ]
                             }
                         })
+                    elif action == "refresh_ezx_status":
+                        status_text = get_ezx_status_report()
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id,
+                            "message_id": msg_id,
+                            "text": status_text,
+                            "parse_mode": "HTML",
+                            "reply_markup": {
+                                "inline_keyboard": [
+                                    [{"text": "🛒 فتح بوت EZX", "url": "https://t.me/ezxtg_bot"}],
+                                    [{"text": "🔄 فحص وتحديث الحالة الآن", "callback_data": "refresh_ezx_status"}]
+                                ]
+                            }
+                        })
+                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم تحديث تقرير حالة EZX!"})
 
                     elif action == "quick_profit":
                         val = float(parts[1])
@@ -2108,6 +2123,21 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                             "chat_id": chat_id,
                             "text": "🎉 <b>مبروك! تم تأكيد استلام الـ $9.00 USD من البوت الإيراني وإلغاء الخسارة بنجاح! 💚</b>\n📈 تم تحديث تقريرك المالي تلقائياً (/stats).",
                             "parse_mode": "HTML"
+                        })
+                        continue
+
+                    if text in ("/ezx", "/stock", "فحص", "مخزون", "بوت ezx"):
+                        status_text = get_ezx_status_report()
+                        requests.post(f"{base_url}sendMessage", json={
+                            "chat_id": chat_id,
+                            "text": status_text,
+                            "parse_mode": "HTML",
+                            "reply_markup": {
+                                "inline_keyboard": [
+                                    [{"text": "🛒 فتح بوت EZX", "url": "https://t.me/ezxtg_bot"}],
+                                    [{"text": "🔄 تحديث الحالة الآن", "callback_data": "refresh_ezx_status"}]
+                                ]
+                            }
                         })
                         continue
 
@@ -2504,6 +2534,18 @@ def fetch_user_purchases_analysis(days=10):
     }
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path.startswith("/api/ezx_status"):
+            try:
+                self.send_response(200)
+                self.send_header("Content-type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps(get_ezx_status(), ensure_ascii=False).encode("utf-8"))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode("utf-8"))
+                return
         if self.path.startswith("/api/diagnose_market"):
             try:
                 cfg = load_config()
