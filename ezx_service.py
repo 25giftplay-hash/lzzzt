@@ -20,6 +20,45 @@ EZX_ACTIVE_REMINDERS = {}  # alert_key: {"reminders_left": 9, "text": ..., "mark
 EZX_ACKNOWLEDGED = set()
 _LOCK = threading.Lock()
 
+EZX_STATUS = {
+    "is_running": False,
+    "last_check_time": None,
+    "categories_checked": 0,
+    "items_scanned": 0,
+    "sample_items": [],
+    "syria_found": False,
+    "cheap_spam_found": False,
+    "active_reminders_count": 0
+}
+
+def get_ezx_status():
+    with _LOCK:
+        s = dict(EZX_STATUS)
+        s["active_reminders_count"] = len(EZX_ACTIVE_REMINDERS)
+        return s
+
+def get_ezx_status_report():
+    s = get_ezx_status()
+    t = s.get("last_check_time") or "جاري الفحص الآن..."
+    sample_items = s.get("sample_items", [])
+    sample_text = "\n".join([f"  • {x}" for x in sample_items[:10]])
+    if not sample_text:
+        sample_text = "  (لم تتوفر عناصر في آخر فحص أو جاري التحديث)"
+    return (
+        f"🤖 <b>[تقرير حالة مراقب بوت @ezxtg_bot السحابي]</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"🟢 <b>الحالة:</b> يعمل 24/7 على سيرفر Render\n"
+        f"⏱️ <b>آخر فحص:</b> {t}\n"
+        f"🔍 <b>الحسابات المفحوصة:</b> {s.get('items_scanned', 0)} دولة في القسم الجديد\n"
+        f"🇸🇾 <b>هل وجدت سوريا:</b> {'نعم! تم إرسال تنبيه ✅' if s.get('syria_found') else 'لا (غير متوفرة حالياً)'}\n"
+        f"⚠️ <b>هل وجد سبام &lt; 0.11$:</b> {'نعم! تم إرسال تنبيه ✅' if s.get('cheap_spam_found') else 'لا (غير متوفر حالياً)'}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"📦 <b>عينة من المخزون المتوفر بالبوت حالياً:</b>\n"
+        f"{sample_text}\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
+        f"🔔 <i>الفحص يتكرر آلياً كل 10 دقائق ويرسل لك التنبيه فوراً إذا توفرت الشروط.</i>"
+    )
+
 def stop_ezx_reminder(alert_key):
     with _LOCK:
         if alert_key in EZX_ACTIVE_REMINDERS:
@@ -113,6 +152,8 @@ def run_ezx_cloud_monitor(tg_token, tg_chat_id, session_str=None):
             {"path": ["buy", "buy_category_new"], "name": "شراء الأرقام (حسابات جديدة 🆕)", "is_fake": False}
         ]
 
+        startup_notified = False
+
         while True:
             client = None
             try:
@@ -127,6 +168,10 @@ def run_ezx_cloud_monitor(tg_token, tg_chat_id, session_str=None):
 
                 bot = await client.get_input_entity(BOT_USERNAME)
                 base_url = f"https://api.telegram.org/bot{tg_token}/"
+                scanned_items_count = 0
+                sample_items_list = []
+                syria_found_flag = False
+                cheap_spam_found_flag = False
 
                 for cat in categories:
                     try:
@@ -201,8 +246,15 @@ def run_ezx_cloud_monitor(tg_token, tg_chat_id, session_str=None):
                                 if count <= 0:
                                     continue
 
+                                scanned_items_count += 1
+                                sample_items_list.append(f"{cname}: {count} حساب ({price})")
+
                                 is_syria = is_syria_match(cname, prefix, btext)
                                 is_cheap = is_cheap_spam(cname, prefix, btext, is_fake_cat=cat["is_fake"])
+                                if is_syria:
+                                    syria_found_flag = True
+                                if is_cheap:
+                                    cheap_spam_found_flag = True
 
                                 if is_syria or is_cheap:
                                     alert_key = f"ezx_{prefix}_{cname}_{count}_{price}".replace(" ", "_")
@@ -264,6 +316,40 @@ def run_ezx_cloud_monitor(tg_token, tg_chat_id, session_str=None):
                         print(f"[EZX Category Check Error]: {cat_err}")
 
                 await client.disconnect()
+
+                with _LOCK:
+                    EZX_STATUS["is_running"] = True
+                    EZX_STATUS["last_check_time"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    EZX_STATUS["categories_checked"] = len(categories)
+                    EZX_STATUS["items_scanned"] = scanned_items_count
+                    EZX_STATUS["sample_items"] = sample_items_list
+                    EZX_STATUS["syria_found"] = syria_found_flag
+                    EZX_STATUS["cheap_spam_found"] = cheap_spam_found_flag
+
+                if not startup_notified:
+                    startup_msg = (
+                        "🟢 <b>[نظام مراقبة بوت @ezxtg_bot يعمل الآن على سيرفر Render 24/7! 🚀]</b>\n"
+                        "━━━━━━━━━━━━━━━━━━━━\n"
+                        "📌 <b>الأقسام المراقبة:</b> شراء الجلسات والأرقام (حسابات جديدة 🆕 فقط)\n"
+                        "🎯 <b>الفلاتر المبرمجة:</b>\n"
+                        "  • 🇸🇾 <b>سوريا:</b> قنص فوري بأي سعر كان (مع فحص الأخطاء الإملائية)\n"
+                        "  • ⚠️ <b>حسابات السبام:</b> قنص فوري إذا كان السعر أقل من 0.11$\n"
+                        f"📊 <b>نتيجة الفحص الأول:</b> تم فحص {scanned_items_count} دولة بنجاح!\n"
+                        "⏱️ <b>الفحص الآلي:</b> يتم الفحص تلقائياً كل 10 دقائق على السيرفر\n"
+                        "🔔 <b>نظام التذكير:</b> تكرار التنبيه كل 5 دقائق حتى 10 مرات\n"
+                        "━━━━━━━━━━━━━━━━━━━━\n"
+                        "💡 <i>أرسل أمر <code>/ezx</code> في أي وقت لمعاينة فحص المخزون الفوري!</i>"
+                    )
+                    try:
+                        requests.post(f"{base_url}sendMessage", json={
+                            "chat_id": tg_chat_id,
+                            "text": startup_msg,
+                            "parse_mode": "HTML"
+                        }, timeout=10)
+                        startup_notified = True
+                        print("[EZX Service] Sent startup notification to Telegram!")
+                    except Exception as e_start:
+                        print(f"[EZX Startup Notification Error]: {e_start}")
 
             except Exception as loop_err:
                 print(f"[EZX Async Loop Error]: {loop_err}")
