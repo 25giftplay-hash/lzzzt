@@ -109,12 +109,8 @@ def run_ezx_cloud_monitor(tg_token, tg_chat_id, session_str=None):
         from telethon.sessions import StringSession
 
         categories = [
-            {"path": ["buy_sessions", "sess_cat_new"], "name": "جلسات جديدة 🆕", "is_fake": False},
-            {"path": ["buy_sessions", "sess_cat_old"], "name": "جلسات قديمة ♻️", "is_fake": False},
-            {"path": ["buy_sessions", "sess_cat_fake"], "name": "جلسات سبام / علامة S~F ⚠️", "is_fake": True},
-            {"path": ["buy", "buy_category_fake"], "name": "أرقام سبام / علامة S~F ⚠️", "is_fake": True},
-            {"path": ["buy", "buy_category_new"], "name": "أرقام جديدة 🆕", "is_fake": False},
-            {"path": ["buy", "buy_category_old"], "name": "أرقام قديمة ♻️", "is_fake": False}
+            {"path": ["buy_sessions", "sess_cat_new"], "name": "شراء الجلسات (حسابات جديدة 🆕)", "is_fake": False},
+            {"path": ["buy", "buy_category_new"], "name": "شراء الأرقام (حسابات جديدة 🆕)", "is_fake": False}
         ]
 
         while True:
