@@ -1281,22 +1281,26 @@ def load_sell_prices():
     return DEFAULT_SELL_PRICES
 
 def parse_spamblock(spam_block_val, max_wait_hours=0):
-    if spam_block_val is None or spam_block_val == "":
-        return False, "غير مفحوص (مرفوض للأمان)"
-    if spam_block_val is False:
-        return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+    if spam_block_val is None or spam_block_val == "" or spam_block_val is False:
+        return True, "✅ سليم (0% سبام)"
     low = str(spam_block_val).strip().lower()
-    if low in ('no', 'false', '0', '-1'):
-        return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+    if low in ('no', 'false', '0', '-1', '-3', 'none', 'null'):
+        return True, "✅ سليم (0% سبام)"
     try:
         val_int = int(low)
-        if val_int == -1 or val_int == 0:
-            return True, "خالٍ تماماً من السبام (0% Spam Clean)"
+        # On LZT Market: -1 and -3 indicate "No spamblock" (clean account verified by checker)
+        if val_int in (-1, -3, 0):
+            return True, "✅ سليم (0% سبام)"
+        elif val_int == -2:
+            return False, "محظور سبام دائم (كود -2)"
         elif val_int > 0:
-            expire_dt = datetime.fromtimestamp(val_int).strftime('%Y-%m-%d %H:%M')
-            return False, f"محظور سبام حتى {expire_dt}"
+            now_ts = time.time()
+            if val_int < now_ts:
+                return False, "سبام منتهي الصلاحية (مرفوض للأمان)"
+            else:
+                expire_dt = datetime.fromtimestamp(val_int).strftime('%Y-%m-%d %H:%M')
+                return False, f"محظور سبام حتى {expire_dt}"
         else:
-            # Any negative value other than -1 (such as -3, -4) is strictly SPAM!
             return False, f"محظور سبام (كود {val_int})"
     except (ValueError, TypeError):
         pass
@@ -2779,9 +2783,10 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 11-Stage Dedicated High-Profit TG Lion & Bargain Snipers:
+            # 11-Stage Dedicated High-Profit VIP Snipers & Bargain Hunters:
+            top_target_countries = ["IQ", "UA", "AE", "LT", "KR", "DE", "FR", "NL", "SG", "QA", "KW", "BH", "TW", "CH", "NO", "ES", "BE", "JP", "GE"]
             vip_group_countries = ["AE", "SG", "QA", "KW", "BH", "TW", "CH", "NO"]
-            europe_countries = ["DE", "FR", "NL", "ES", "BE", "GB", "IT", "DK"]
+            europe_countries = ["DE", "FR", "NL", "ES", "BE", "GB", "IT", "DK", "LT"]
             
             scan_mode = cycle_count % 11
             cycle_count += 1
@@ -2792,18 +2797,19 @@ def monitor_lzt():
             current_pmax = pmax
 
             if scan_mode == 0:
-                # 🇺🇦 Dedicated Ukraine Sniper - Page 1 (TG Lion: $1.30)
+                # 🇺🇦 Dedicated Ukraine Sniper - Page 1
                 sort_order = "pdate_to_down"
                 scan_tag = "VIP-Ukraine-P1"
                 current_min_profit = 0.40
                 query_params = {
                     "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": ["UA"]
                 }
 
             elif scan_mode == 1:
-                # 🇰🇷 🇯🇵 South Korea & Japan Sniper - Page 1 (TG Lion: KR $2.20, JP $0.70)
+                # 🇰🇷 🇯🇵 South Korea & Japan Sniper - Page 1
                 sort_order = "pdate_to_down"
                 scan_tag = "VIP-KoreaJapan-P1"
                 current_min_profit = 0.40
@@ -2814,15 +2820,16 @@ def monitor_lzt():
                 }
 
             elif scan_mode == 2:
-                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 70 RUB - ALL Countries, Aged 24H+)
+                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 75 RUB for Target Countries)
                 sort_order = "price_to_up"
-                scan_tag = "Global-BargainUnder70"
+                scan_tag = "Target-BargainUnder75"
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 70, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 75, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": top_target_countries
                 }
 
             elif scan_mode == 3:
@@ -2832,25 +2839,27 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 query_params = {
                     "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": vip_group_countries
                 }
 
             elif scan_mode == 4:
-                # 🇪🇺 European Tier 1 (Germany, France, Netherlands, Spain, Belgium, UK) - Page 1 (TG Lion: $1.00+)
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Europe-P1"
+                # 🇪🇺 European & Baltic Tier 1 (Germany, France, Netherlands, Spain, Lithuania, Belgium)
+                sort_order = "price_to_up"
+                scan_tag = "VIP-EuropeBaltic"
                 current_min_profit = 0.40
                 query_params = {
                     "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
                     "country[]": europe_countries
                 }
 
             elif scan_mode == 5:
-                # 🇮🇶 Dedicated Iraq Sniper (Iranian pays $1.50)
+                # 🇮🇶 Dedicated Iraq Sniper - Page 1 (Iranian pays $1.50)
                 sort_order = "price_to_up"
-                scan_tag = "VIP-Iraq"
+                scan_tag = "VIP-Iraq-P1"
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
@@ -2861,39 +2870,42 @@ def monitor_lzt():
                 }
 
             elif scan_mode == 6:
-                # 💰 Global Bargains (Aged 24h+, price_to_up, Page 1)
+                # 💰 Target Bargains - Deep Scan (Cheapest First, Page 2)
                 sort_order = "price_to_up"
-                scan_tag = "Global-BargainsAged-P1"
+                scan_tag = "Target-BargainsAged-P2"
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 150, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": top_target_countries
                 }
 
             elif scan_mode == 7:
-                # 🌟 Global Turbo - Newest (ALL countries, Page 1)
+                # 🌟 Target Turbo - Newest (Page 1)
                 sort_order = "pdate_to_down"
-                scan_tag = "Global-TGLionTurbo-Newest"
+                scan_tag = "Target-Turbo-Newest"
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
                     "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order
+                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
+                    "country[]": top_target_countries
                 }
 
             elif scan_mode == 8:
-                # 🌟 Global Turbo - Deep Scan (ALL countries, Page 2)
+                # 🌟 Target Turbo - Deep Scan (Page 2)
                 sort_order = "pdate_to_down"
-                scan_tag = "Global-TGLionTurbo-DeepScan"
+                scan_tag = "Target-Turbo-DeepScan"
                 current_min_profit = 0.40
                 current_req_age = True
                 query_params = {
                     "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
                     "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order
+                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "country[]": top_target_countries
                 }
 
             elif scan_mode == 9:
@@ -2903,19 +2915,22 @@ def monitor_lzt():
                 current_min_profit = 0.40
                 query_params = {
                     "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
                     "country[]": ["UA"]
                 }
 
             else:
-                # 🇰🇷 🇯🇵 South Korea & Japan Sniper - Page 2
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-KoreaJapan-P2"
+                # 🇮🇶 Dedicated Iraq Sniper - Page 2
+                sort_order = "price_to_up"
+                scan_tag = "VIP-Iraq-P2"
                 current_min_profit = 0.40
+                current_req_age = True
                 query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no",
+                    "session_age": 1, "session_age_period": "day",
                     "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": ["KR", "JP"]
+                    "country[]": ["IQ"]
                 }
 
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
