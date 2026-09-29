@@ -1589,11 +1589,11 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     elif profit_usd >= 1.00:
         header = (
             f"🚨 <b>[صيد VIP عاجل - صيدة أرباح ضخمة 💎]</b> 🚨\n"
-            f"💰 <b>صافي ربح خيالي: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽) <i>[{best_bot}]</i></b>"
+            f"💰 <b>صافي ربح خيالي: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽) <i>[البوت الإيراني 🇮🇷]</i></b>"
         )
     elif profit_usd >= 0.50:
         header = (
-            f"⚡ <b>[صيد ربح ممتاز 🎯 - {best_bot}]</b>\n"
+            f"⚡ <b>[صيد ربح ممتاز 🎯 - البوت الإيراني 🇮🇷]</b>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
     elif "Bargain" in scan_tag or "Cheap" in scan_tag:
@@ -1613,10 +1613,7 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
         f"📝 <b>العنوان:</b> {title}\n"
         f"🌍 <b>الدولة:</b> {country_display}\n"
         f"💵 <b>سعر الشراء:</b> <b>{buy_rub:.0f} ₽</b> (≈ ${buy_usd:.2f} USD)\n"
-        f"💰 <b>أعلى سعر بيع:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽) <i>[{best_bot}]</i>\n"
-        f"  ├ 🇮🇷 <b>البوت الإيراني:</b> ${sell_info.get('bot1_usd', 0.0):.2f}\n" 
-        f"  ├ 🦁 <b>بوت TGLion:</b> ${sell_info.get('bot2_usd', 0.0):.2f}\n"
-        f"  └ 🤖 <b>بوت TG Get:</b> ${sell_info.get('bot3_usd', 0.0):.2f}\n"
+        f"💰 <b>سعر بيع البوت الإيراني 🇮🇷:</b> <b>${sell_usd:.2f} USD</b> (≈ {sell_rub:.0f} ₽)\n"
         f"💎 <b>صافي ربحك:</b> <b>+${profit_usd:.2f} USD</b> (≈ +{profit_rub:.0f} ₽)\n"
         f"⏳ <b>عمر الجلسة:</b> {session_age_str}\n"
         f"🚫 <b>حالة السبام:</b> {spam_status}\n"
@@ -2235,7 +2232,7 @@ def process_stream_items(
     if group_sniper_cfg is None:
         group_sniper_cfg = {}
 
-    # 🚀 Priority Sorting Engine: Sort items so highest profit items across all bots are sniped FIRST!
+    # 🚀 Priority Sorting Engine: Sort items so highest profit items for Iranian Bot are sniped FIRST!
     def _calc_item_priority(it):
         try:
             c_raw = it.get("telegram_country", "")
@@ -2243,12 +2240,12 @@ def process_stream_items(
             cc = resolve_country_code(c_raw, t_raw)
             s_info = sell_prices.get(cc, {})
             if isinstance(s_info, dict):
-                s_usd = float(s_info.get("best_usd", 0.0) or 0.0)
+                s_usd = float(s_info.get("bot1_usd", 0.0) or s_info.get("best_usd", 0.0) or 0.0)
             else:
                 s_usd = float(s_info or 0.0)
             if not s_usd or s_usd <= 0:
                 fb = DEFAULT_SELL_PRICES.get(cc, {})
-                s_usd = float(fb.get("best_usd", 0.0) or 0.0)
+                s_usd = float(fb.get("bot1_usd", 0.0) or fb.get("best_usd", 0.0) or 0.0)
             b_rub, b_usd = extract_item_prices(it, rub_per_usd)
             return float(s_usd - b_usd)
         except Exception:
@@ -2296,19 +2293,19 @@ def process_stream_items(
         if not is_accepted:
             continue
 
-        # 5. Real Best Sell Price across all active bots (Iranian, TG Lion, TG Get):
+        # 5. Real Sell Price (STRICTLY Iranian Bot):
         sell_info = sell_prices.get(ccode, {})
         if isinstance(sell_info, dict):
-            sell_usd = float(sell_info.get("best_usd", 0.0) or 0.0)
-            best_bot = sell_info.get("best_bot", "Bot")
+            sell_usd = float(sell_info.get("bot1_usd", 0.0) or 0.0)
+            if not sell_usd or sell_usd <= 0:
+                sell_usd = float(sell_info.get("best_usd", 0.0) or 0.0)
         else:
             sell_usd = float(sell_info) if sell_info else 0.0
-            best_bot = "Bot"
+        best_bot = "البوت الإيراني 🇮🇷"
 
         if not sell_usd or sell_usd <= 0:
             fallback_info = DEFAULT_SELL_PRICES.get(ccode, {})
-            sell_usd = float(fallback_info.get("best_usd", 0.0) or 0.0)
-            best_bot = fallback_info.get("best_bot", "Bot")
+            sell_usd = float(fallback_info.get("bot1_usd", 0.0) or fallback_info.get("best_usd", 0.0) or 0.0)
 
         # Skip if no selling price defined for this country
         if not sell_usd or sell_usd <= 0:
@@ -2346,7 +2343,7 @@ def process_stream_items(
             continue
 
         # 9. Send Standard Telegram Alert:
-        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | TG Lion Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {'[KR 18H Early-Bird]' if is_early_bird else ''}")
+        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Iranian Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {'[KR 18H Early-Bird]' if is_early_bird else ''}")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
             sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours,
