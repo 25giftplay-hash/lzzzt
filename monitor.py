@@ -9,6 +9,7 @@ import threading
 import requests
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from ezx_service import run_ezx_cloud_monitor, stop_ezx_reminder
 
 CONFIG_FILE = "config.json"
 SENT_ALERTS_FILE = "sent_alerts.json"
@@ -1911,6 +1912,22 @@ def telegram_bot_listener(bot_token, lzt_token, min_profit_usd=0.30):
                         })
                         requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "تم التجاهل."})
 
+                    elif action == "ack_ezx":
+                        alert_key = parts[1] if len(parts) > 1 else ""
+                        stop_ezx_reminder(alert_key)
+                        requests.post(f"{base_url}answerCallbackQuery", json={"callback_query_id": cb_id, "text": "✅ تم تأكيد التحقق وإيقاف التذكير بنجاح!"})
+                        requests.post(f"{base_url}editMessageText", json={
+                            "chat_id": chat_id,
+                            "message_id": msg_id,
+                            "text": msg.get("text", "") + "\n\n<b>✅ تم التحقق من هذه الصفقة وتأكيدها، وتم إيقاف تكرار التنبيهات.</b>",
+                            "parse_mode": "HTML",
+                            "reply_markup": {
+                                "inline_keyboard": [
+                                    [{"text": "🛒 فتح بوت EZX", "url": "https://t.me/ezxtg_bot"}]
+                                ]
+                            }
+                        })
+
                     elif action == "quick_profit":
                         val = float(parts[1])
                         log_manual_profit(val, note="Quick Button")
@@ -2755,6 +2772,7 @@ def monitor_lzt():
     threading.Thread(target=run_health_server, daemon=True).start()
     threading.Thread(target=telegram_bot_listener, args=(tg_token, lzt_token, min_profit_usd), daemon=True).start()
     threading.Thread(target=sync_channel_prices_loop, daemon=True).start()
+    threading.Thread(target=run_ezx_cloud_monitor, args=(tg_token, tg_chat_id), daemon=True).start()
 
     sent_alerts = load_sent_alerts()
     
