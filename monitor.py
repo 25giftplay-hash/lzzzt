@@ -1541,7 +1541,7 @@ def send_telegram_group_alert(bot_token, chat_id, item, aged_groups, buy_rub, bu
     threading.Thread(target=_do_send_group, daemon=True).start()
     return True
 
-def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing', sell_info=None, is_early_bird=False):
+def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bot, buy_rub, buy_usd, profit_usd, session_age_hours, scan_tag='Listing', sell_info=None, is_early_bird=False, is_kr_fresh=False):
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     
     item_id = item.get("item_id")
@@ -1580,7 +1580,14 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     
     extras_str = " | ".join(extras) if extras else "لا يوجد"
 
-    if is_early_bird and ccode == "KR":
+    if is_kr_fresh:
+        header = (
+            f"🇰🇷 <b>[تنبيه خاص: حساب كوريا الجنوبية سليم ورخيص! ⚡]</b>\n"
+            f"💵 <b>السعر: {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD) | أقل من $0.50!</b>\n"
+            f"🟢 <b>حالة الحساب: سليم 100% (بدون سبام / بدون 2FA) ✅</b>\n"
+            f"⏳ <b>عمر الجلسة: {session_age_hours:.1f} ساعة (جلسة جديدة 🆕)</b>"
+        )
+    elif is_early_bird and ccode == "KR":
         rem_h = max(0.0, 24.0 - session_age_hours)
         header = (
             f"⏳ <b>[صيدة كورية مبكرة - جلسة +18H (مرتفعة الربح) 🇰🇷]</b>\n"
@@ -2373,28 +2380,42 @@ def process_stream_items(
         else:
             session_age_hours = 0.0
 
+        # SPECIAL NOTIFICATION RULE FOR SOUTH KOREA (KR):
+        # If South Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
+        is_kr_fresh_special = (ccode == "KR" and buy_usd <= 0.50)
+
         # STRICT AGE RULES:
-        # - ABSOLUTELY NO FRESH ACCOUNTS (0 hours or < 18 hours are REJECTED!)
+        # - ABSOLUTELY NO FRESH ACCOUNTS (0 hours or < 18 hours are REJECTED for standard alerts!)
         # - ONLY South Korea (KR) is allowed at >= 18.0 hours (Early-Bird rule for high-value KR accounts)
+        # - SPECIAL: South Korea (KR) clean and under $0.50 alerts immediately at ANY session age!
         # - ALL OTHER countries MUST be >= 24.0 hours!
         min_required_age = 18.0 if ccode == "KR" else 24.0
 
         if session_age_hours < min_required_age:
-            continue
+            if not is_kr_fresh_special:
+                continue
 
         is_early_bird = (ccode == "KR" and 18.0 <= session_age_hours < 24.0)
+        is_kr_fresh = (ccode == "KR" and session_age_hours < 18.0 and is_kr_fresh_special)
 
         # 8. Check if already alerted:
-        alert_key = f"{item_id}:early18" if is_early_bird else f"{item_id}:aged"
+        if is_kr_fresh:
+            alert_key = f"{item_id}:kr_fresh"
+        elif is_early_bird:
+            alert_key = f"{item_id}:early18"
+        else:
+            alert_key = f"{item_id}:aged"
+
         if alert_key in sent_alerts or str(item_id) in sent_alerts:
             continue
 
-        # 9. Send Standard Telegram Alert:
-        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Iranian Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {'[KR 18H Early-Bird]' if is_early_bird else ''}")
+        # 9. Send Standard / Special Telegram Alert:
+        tag_extra = '[KR Fresh <$0.50]' if is_kr_fresh else ('[KR 18H Early-Bird]' if is_early_bird else '')
+        print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Iranian Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {tag_extra}")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
             sell_usd, best_bot, buy_rub, buy_usd, expected_profit_usd, session_age_hours,
-            scan_tag=scan_tag, sell_info=sell_info, is_early_bird=is_early_bird
+            scan_tag=scan_tag, sell_info=sell_info, is_early_bird=is_early_bird, is_kr_fresh=is_kr_fresh
         )
         if success:
             sent_alerts.add(alert_key)
