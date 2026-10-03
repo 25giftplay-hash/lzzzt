@@ -38,6 +38,8 @@ def get_ezx_status():
         return s
 
 def get_ezx_status_report():
+    if not ENABLE_EZX_MONITOR:
+        return "🛑 <b>مراقب بوت EZX متوقف حالياً بناءً على طلبك.</b>"
     s = get_ezx_status()
     t = s.get("last_check_time") or "جاري الفحص الآن..."
     sample_items = s.get("sample_items", [])
@@ -78,7 +80,13 @@ def is_cheap_spam(cname, prefix, btn_text, is_fake_cat=False):
     prices = [float(x) for x in re.findall(r'(\d+(?:\.\d+)?)', btn_text)]
     return bool(prices and min(prices) < 0.11)
 
+ENABLE_EZX_MONITOR = False
+
 def run_ezx_cloud_monitor(tg_token, tg_chat_id, session_str=None):
+    if not ENABLE_EZX_MONITOR:
+        print("[EZX Cloud Monitor] EZX Stock Monitor is disabled by user.")
+        return
+
     if not session_str:
         if os.path.exists(SESSION_STRING_FILE):
             try:
