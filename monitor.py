@@ -2365,9 +2365,13 @@ def process_stream_items(
         if not sell_usd or sell_usd <= 0:
             continue
 
+        # SPECIAL NOTIFICATION RULE FOR SOUTH KOREA (KR):
+        # If South Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
+        is_kr_fresh_special = (ccode == "KR" and buy_usd <= 0.50)
+
         # 6. Profit Calculation (Calculated against best paying bot):
         expected_profit_usd = round(sell_usd - buy_usd, 2)
-        if expected_profit_usd < min_profit_usd:
+        if expected_profit_usd < min_profit_usd and not is_kr_fresh_special:
             continue
 
         # 7. Session Age Calculation:
@@ -2871,7 +2875,7 @@ def monitor_lzt():
             vip_group_countries = ["AE", "SG", "QA", "KW", "BH", "TW", "CH", "NO"]
             europe_countries = ["DE", "FR", "NL", "ES", "BE", "GB", "IT", "DK", "LT"]
             
-            scan_mode = cycle_count % 11
+            scan_mode = cycle_count % 8
             cycle_count += 1
 
             current_target_set = None  # Allow matching
@@ -2880,140 +2884,83 @@ def monitor_lzt():
             current_pmax = pmax
 
             if scan_mode == 0:
-                # 🇺🇦 Dedicated Ukraine Sniper - Page 1
+                # 🇰🇷 Dedicated South Korea Rapid Sniper - Newest First (All sellers, all ages!)
                 sort_order = "pdate_to_down"
-                scan_tag = "VIP-Ukraine-P1"
-                current_min_profit = 0.40
+                scan_tag = "VIP-Korea-Newest"
                 query_params = {
-                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": ["UA"]
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": ["KR"]
                 }
 
             elif scan_mode == 1:
-                # 🇰🇷 🇯🇵 South Korea & Japan Sniper - Page 1
+                # 🇺🇦 Dedicated Ukraine Sniper - Page 1
                 sort_order = "pdate_to_down"
-                scan_tag = "VIP-KoreaJapan-P1"
-                current_min_profit = 0.40
+                scan_tag = "VIP-Ukraine-P1"
                 query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": ["KR", "JP"]
-                }
-
-            elif scan_mode == 2:
-                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 75 RUB for Target Countries)
-                sort_order = "price_to_up"
-                scan_tag = "Target-BargainUnder75"
-                current_min_profit = 0.40
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": 75, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": top_target_countries
-                }
-
-            elif scan_mode == 3:
-                # 💎 Dedicated VIP Group (UAE, Singapore, Qatar, Kuwait, Bahrain, Taiwan, Switzerland) - Page 1
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-GulfAsia-P1"
-                current_min_profit = 0.40
-                query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": vip_group_countries
-                }
-
-            elif scan_mode == 4:
-                # 🇪🇺 European & Baltic Tier 1 (Germany, France, Netherlands, Spain, Lithuania, Belgium)
-                sort_order = "price_to_up"
-                scan_tag = "VIP-EuropeBaltic"
-                current_min_profit = 0.40
-                query_params = {
-                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": europe_countries
-                }
-
-            elif scan_mode == 5:
-                # 🇮🇶 Dedicated Iraq Sniper - Page 1 (Iranian pays $1.50)
-                sort_order = "price_to_up"
-                scan_tag = "VIP-Iraq-P1"
-                current_min_profit = 0.40
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": ["IQ"]
-                }
-
-            elif scan_mode == 6:
-                # 💰 Target Bargains - Deep Scan (Cheapest First, Page 2)
-                sort_order = "price_to_up"
-                scan_tag = "Target-BargainsAged-P2"
-                current_min_profit = 0.40
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": top_target_countries
-                }
-
-            elif scan_mode == 7:
-                # 🌟 Target Turbo - Newest (Page 1)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-Turbo-Newest"
-                current_min_profit = 0.40
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 1, "order_by": sort_order,
-                    "country[]": top_target_countries
-                }
-
-            elif scan_mode == 8:
-                # 🌟 Target Turbo - Deep Scan (Page 2)
-                sort_order = "pdate_to_down"
-                scan_tag = "Target-Turbo-DeepScan"
-                current_min_profit = 0.40
-                current_req_age = True
-                query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
-                    "country[]": top_target_countries
-                }
-
-            elif scan_mode == 9:
-                # 🇺🇦 Dedicated Ukraine Sniper - Page 2
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Ukraine-P2"
-                current_min_profit = 0.40
-                query_params = {
-                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
                     "country[]": ["UA"]
                 }
 
-            else:
-                # 🇮🇶 Dedicated Iraq Sniper - Page 2
+            elif scan_mode == 2:
+                # 🇰🇷 Dedicated South Korea Sniper - Cheapest First (Bargain Hunter)
                 sort_order = "price_to_up"
-                scan_tag = "VIP-Iraq-P2"
-                current_min_profit = 0.40
-                current_req_age = True
+                scan_tag = "VIP-Korea-Bargain"
                 query_params = {
-                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no", "spam": "no",
-                    "session_age": 1, "session_age_period": "day",
-                    "nsb": 1, "nsb_by_me": 1, "page": 2, "order_by": sort_order,
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": ["KR"]
+                }
+
+            elif scan_mode == 3:
+                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 75 RUB for Target Countries)
+                sort_order = "price_to_up"
+                scan_tag = "Target-BargainUnder75"
+                query_params = {
+                    "pmin": pmin, "pmax": 75, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": top_target_countries
+                }
+
+            elif scan_mode == 4:
+                # 💎 Dedicated VIP Group (UAE, Singapore, Qatar, Kuwait, Bahrain, Taiwan, Switzerland)
+                sort_order = "pdate_to_down"
+                scan_tag = "VIP-GulfAsia-P1"
+                query_params = {
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": vip_group_countries
+                }
+
+            elif scan_mode == 5:
+                # 🇪🇺 European & Baltic Tier 1 (Germany, France, Netherlands, Spain, Lithuania, Belgium)
+                sort_order = "price_to_up"
+                scan_tag = "VIP-EuropeBaltic"
+                query_params = {
+                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": europe_countries
+                }
+
+            elif scan_mode == 6:
+                # 🇮🇶 Dedicated Iraq Sniper - Page 1
+                sort_order = "price_to_up"
+                scan_tag = "VIP-Iraq-P1"
+                query_params = {
+                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
                     "country[]": ["IQ"]
+                }
+
+            else:
+                # 🌟 Target Turbo - Newest (Top Target Countries)
+                sort_order = "pdate_to_down"
+                scan_tag = "Target-Turbo-Newest"
+                query_params = {
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": top_target_countries
                 }
 
             query_params["spam"] = "no"
