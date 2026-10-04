@@ -2963,7 +2963,6 @@ def monitor_lzt():
                     "country[]": top_target_countries
                 }
 
-            query_params["spam"] = "no"
             resp = session.get(current_url, headers=headers, params=query_params, timeout=10)
             if resp.status_code == 200:
                 consecutive_errors = 0
