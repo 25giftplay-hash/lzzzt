@@ -2571,6 +2571,31 @@ class HealthHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(str(e).encode("utf-8"))
                 return
+        if self.path.startswith("/api/test_telegram"):
+            try:
+                cfg = load_config()
+                tg_token = cfg.get("telegram_bot_token")
+                tg_chat_id = cfg.get("telegram_chat_id")
+                r_me = requests.get(f"https://api.telegram.org/bot{tg_token}/getMe", timeout=10).json()
+                r_send = requests.post(f"https://api.telegram.org/bot{tg_token}/sendMessage", json={
+                    "chat_id": tg_chat_id,
+                    "text": "🔔 <b>[فحص اتصال البوت - تجربة حية من السيرفر]</b>\nالبوت شغال والتنبيهات متصلة بحسابك بنجاح! ✅",
+                    "parse_mode": "HTML"
+                }, timeout=10).json()
+                self.send_response(200)
+                self.send_header("Content-type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "get_me": r_me,
+                    "send_test_message": r_send,
+                    "chat_id": tg_chat_id
+                }, ensure_ascii=False).encode("utf-8"))
+                return
+            except Exception as e:
+                self.send_response(500)
+                self.end_headers()
+                self.wfile.write(str(e).encode("utf-8"))
+                return
         if self.path.startswith("/api/diagnose_market"):
             try:
                 cfg = load_config()
