@@ -1581,14 +1581,22 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     extras_str = " | ".join(extras) if extras else "لا يوجد"
 
     if is_kr_fresh:
-        c_flag = "🇰🇵" if ccode == "KP" else "🇰🇷"
-        c_name = "كوريا الشمالية" if ccode == "KP" else "كوريا الجنوبية"
-        header = (
-            f"{c_flag} <b>[تنبيه خاص: حساب {c_name} سليم ورخيص! ⚡]</b>\n"
-            f"💵 <b>السعر: {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD) | أقل من $0.50!</b>\n"
-            f"🟢 <b>حالة الحساب: سليم 100% (بدون سبام / بدون 2FA) ✅</b>\n"
-            f"⏳ <b>عمر الجلسة: {session_age_hours:.1f} ساعة (جلسة جديدة 🆕)</b>"
-        )
+        if ccode in ("KR", "KP"):
+            c_flag = "🇰🇵" if ccode == "KP" else "🇰🇷"
+            c_name = "كوريا الشمالية" if ccode == "KP" else "كوريا الجنوبية"
+            header = (
+                f"{c_flag} <b>[تنبيه خاص: حساب {c_name} سليم ورخيص! ⚡]</b>\n"
+                f"💵 <b>السعر: {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD) | أقل من $0.50!</b>\n"
+                f"🟢 <b>حالة الحساب: سليم 100% (بدون سبام / بدون 2FA) ✅</b>\n"
+                f"⏳ <b>عمر الجلسة: {session_age_hours:.1f} ساعة (جلسة جديدة 🆕)</b>"
+            )
+        else:
+            header = (
+                f"🔥 <b>[صيدة لقطة سريعة: حساب {country_display} بربح +${profit_usd:.2f}! ⚡]</b>\n"
+                f"💵 <b>سعر الشراء: {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD) | ربح ممتاز!</b>\n"
+                f"🟢 <b>حالة الحساب: سليم 100% (بدون سبام / بدون 2FA) ✅</b>\n"
+                f"⏳ <b>عمر الجلسة: {session_age_hours:.1f} ساعة (جلسة لوحة/فريش 🆕)</b>"
+            )
     elif is_early_bird and ccode in ("KR", "KP"):
         c_flag = "🇰🇵" if ccode == "KP" else "🇰🇷"
         rem_h = max(0.0, 24.0 - session_age_hours)
@@ -2387,27 +2395,29 @@ def process_stream_items(
         else:
             session_age_hours = 0.0
 
-        # SPECIAL NOTIFICATION RULE FOR KOREA (KR / KP):
-        # If Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
+        # SPECIAL NOTIFICATION RULE FOR HIGH-PROFIT BARGAINS & KOREA:
+        # 1. Any Korea (KR/KP) account <= $0.50
+        # 2. Any VIP country (IQ, TW, UA, AE, SG, QA, KW, BH, etc.) with buy <= $0.55 and profit >= $0.50
+        VIP_COUNTRIES = {"KR", "KP", "IQ", "TW", "UA", "AE", "SG", "QA", "KW", "BH", "NO", "CH", "LT", "DE", "FR", "NL", "BE", "GE", "MO", "AZ", "BY"}
         is_kr_fresh_special = (ccode in ("KR", "KP") and buy_usd <= 0.50)
+        is_vip_fresh_bargain = (ccode in VIP_COUNTRIES and buy_usd <= 0.55 and expected_profit_usd >= 0.50)
+        is_fresh_accepted = (is_kr_fresh_special or is_vip_fresh_bargain)
 
         # STRICT AGE RULES:
-        # - ABSOLUTELY NO FRESH ACCOUNTS (0 hours or < 18 hours are REJECTED for standard alerts!)
-        # - ONLY Korea (KR/KP) is allowed at >= 18.0 hours (Early-Bird rule for high-value Korean accounts)
-        # - SPECIAL: Korea (KR/KP) clean and under $0.50 alerts immediately at ANY session age!
-        # - ALL OTHER countries MUST be >= 24.0 hours!
+        # - Aged accounts (>= 24h) or Early-bird (>= 18h for KR/KP)
+        # - SPECIAL: Fresh accounts accepted if is_fresh_accepted (Korea <$0.50 or VIP Bargain profit >= $0.50)
         min_required_age = 18.0 if ccode in ("KR", "KP") else 24.0
 
         if session_age_hours < min_required_age:
-            if not is_kr_fresh_special:
+            if not is_fresh_accepted:
                 continue
 
         is_early_bird = (ccode in ("KR", "KP") and 18.0 <= session_age_hours < 24.0)
-        is_kr_fresh = (ccode in ("KR", "KP") and session_age_hours < 18.0 and is_kr_fresh_special)
+        is_kr_fresh = (session_age_hours < 18.0 and is_fresh_accepted)
 
         # 8. Check if already alerted:
         if is_kr_fresh:
-            alert_key = f"{item_id}:kr_fresh"
+            alert_key = f"{item_id}:fresh_deal"
         elif is_early_bird:
             alert_key = f"{item_id}:early18"
         else:
@@ -2417,7 +2427,7 @@ def process_stream_items(
             continue
 
         # 9. Send Standard / Special Telegram Alert:
-        tag_extra = '[KR Fresh <$0.50]' if is_kr_fresh else ('[KR 18H Early-Bird]' if is_early_bird else '')
+        tag_extra = f'[{ccode} Fresh Bargain <$0.55 Profit +${expected_profit_usd:.2f}]' if is_kr_fresh else ('[KR 18H Early-Bird]' if is_early_bird else '')
         print(f"[{scan_tag} Match] Item {item_id} | Country: {ccode} | Buy: {buy_rub:.0f} RUB (${buy_usd:.2f}) | Iranian Sell: ${sell_usd:.2f} | Profit: +${expected_profit_usd:.2f} USD {tag_extra}")
         success = send_telegram_alert(
             tg_token, tg_chat_id, item, spam_status, 
