@@ -993,7 +993,7 @@ MULTI_LANG_COUNTRY_MAP = {
     "great britain": "GB", "uk": "GB", "spain": "ES", "india": "IN", "vietnam": "VN",
     "germany": "DE", "france": "FR", "united states": "US", "usa": "US", "canada": "CA",
     "switzerland": "CH", "qatar": "QA", "bahrain": "BH", "kuwait": "KW", "oman": "OM",
-    "south korea": "KR", "korea": "KR", "taiwan": "TW", "japan": "JP", "australia": "AU",
+    "south korea": "KR", "korea": "KR", "north korea": "KP", "dprk": "KP", "taiwan": "TW", "japan": "JP", "australia": "AU",
     "singapore": "SG", "indonesia": "ID", "thailand": "TH", "philippines": "PH", "brazil": "BR",
     "chile": "CL", "peru": "PE", "morocco": "MA", "algeria": "DZ", "tunisia": "TN",
     "lebanon": "LB", "jordan": "JO", "belarus": "BY", "denmark": "DK", "slovenia": "SI",
@@ -1020,7 +1020,7 @@ PHONE_PREFIX_TO_CODE = {
     "994": "AZ", "965": "KW", "673": "BN", "371": "LV", "61": "AU", "974": "QA", "370": "LT",
     "373": "MD", "674": "NR", "675": "PG", "386": "SI", "47": "NO", "971": "AE", "65": "SG", "375": "BY",
     "853": "MO", "886": "TW", "356": "MT", "383": "XK", "591": "BO", "58": "VE", "380": "UA",
-    "41": "CH", "973": "BH", "82": "KR", "350": "GI", "682": "CK", "7": "RU", "966": "SA",
+    "41": "CH", "973": "BH", "850": "KP", "82": "KR", "350": "GI", "682": "CK", "7": "RU", "966": "SA",
     "964": "IQ", "45": "DK", "381": "RS", "372": "EE", "351": "PT", "98": "IR", "880": "BD",
     "1": "US", "57": "CO", "56": "CL", "996": "KG", "81": "JP", "64": "NZ", "27": "ZA"
 }
@@ -1581,16 +1581,19 @@ def send_telegram_alert(bot_token, chat_id, item, spam_status, sell_usd, best_bo
     extras_str = " | ".join(extras) if extras else "لا يوجد"
 
     if is_kr_fresh:
+        c_flag = "🇰🇵" if ccode == "KP" else "🇰🇷"
+        c_name = "كوريا الشمالية" if ccode == "KP" else "كوريا الجنوبية"
         header = (
-            f"🇰🇷 <b>[تنبيه خاص: حساب كوريا الجنوبية سليم ورخيص! ⚡]</b>\n"
+            f"{c_flag} <b>[تنبيه خاص: حساب {c_name} سليم ورخيص! ⚡]</b>\n"
             f"💵 <b>السعر: {buy_rub:.0f} ₽ (≈ ${buy_usd:.2f} USD) | أقل من $0.50!</b>\n"
             f"🟢 <b>حالة الحساب: سليم 100% (بدون سبام / بدون 2FA) ✅</b>\n"
             f"⏳ <b>عمر الجلسة: {session_age_hours:.1f} ساعة (جلسة جديدة 🆕)</b>"
         )
-    elif is_early_bird and ccode == "KR":
+    elif is_early_bird and ccode in ("KR", "KP"):
+        c_flag = "🇰🇵" if ccode == "KP" else "🇰🇷"
         rem_h = max(0.0, 24.0 - session_age_hours)
         header = (
-            f"⏳ <b>[صيدة كورية مبكرة - جلسة +18H (مرتفعة الربح) 🇰🇷]</b>\n"
+            f"⏳ <b>[صيدة كورية مبكرة - جلسة +18H (مرتفعة الربح) {c_flag}]</b>\n"
             f"⚠️ <i>متبقي {rem_h:.1f} ساعة فقط لتصبح 24H قبل التسليم للبوت!</i>\n"
             f"💚 <b>الربح المتوقع: +${profit_usd:.2f} USD (+{profit_rub:.0f} ₽)</b>"
         )
@@ -2365,9 +2368,9 @@ def process_stream_items(
         if not sell_usd or sell_usd <= 0:
             continue
 
-        # SPECIAL NOTIFICATION RULE FOR SOUTH KOREA (KR):
-        # If South Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
-        is_kr_fresh_special = (ccode == "KR" and buy_usd <= 0.50)
+        # SPECIAL NOTIFICATION RULE FOR KOREA (KR / KP):
+        # If Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
+        is_kr_fresh_special = (ccode in ("KR", "KP") and buy_usd <= 0.50)
 
         # 6. Profit Calculation (Calculated against best paying bot):
         expected_profit_usd = round(sell_usd - buy_usd, 2)
@@ -2384,23 +2387,23 @@ def process_stream_items(
         else:
             session_age_hours = 0.0
 
-        # SPECIAL NOTIFICATION RULE FOR SOUTH KOREA (KR):
-        # If South Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
-        is_kr_fresh_special = (ccode == "KR" and buy_usd <= 0.50)
+        # SPECIAL NOTIFICATION RULE FOR KOREA (KR / KP):
+        # If Korea, clean (not spam, no 2FA), and price <= $0.50 (≈ 45 RUB), alert even if fresh session!
+        is_kr_fresh_special = (ccode in ("KR", "KP") and buy_usd <= 0.50)
 
         # STRICT AGE RULES:
         # - ABSOLUTELY NO FRESH ACCOUNTS (0 hours or < 18 hours are REJECTED for standard alerts!)
-        # - ONLY South Korea (KR) is allowed at >= 18.0 hours (Early-Bird rule for high-value KR accounts)
-        # - SPECIAL: South Korea (KR) clean and under $0.50 alerts immediately at ANY session age!
+        # - ONLY Korea (KR/KP) is allowed at >= 18.0 hours (Early-Bird rule for high-value Korean accounts)
+        # - SPECIAL: Korea (KR/KP) clean and under $0.50 alerts immediately at ANY session age!
         # - ALL OTHER countries MUST be >= 24.0 hours!
-        min_required_age = 18.0 if ccode == "KR" else 24.0
+        min_required_age = 18.0 if ccode in ("KR", "KP") else 24.0
 
         if session_age_hours < min_required_age:
             if not is_kr_fresh_special:
                 continue
 
-        is_early_bird = (ccode == "KR" and 18.0 <= session_age_hours < 24.0)
-        is_kr_fresh = (ccode == "KR" and session_age_hours < 18.0 and is_kr_fresh_special)
+        is_early_bird = (ccode in ("KR", "KP") and 18.0 <= session_age_hours < 24.0)
+        is_kr_fresh = (ccode in ("KR", "KP") and session_age_hours < 18.0 and is_kr_fresh_special)
 
         # 8. Check if already alerted:
         if is_kr_fresh:
@@ -2895,12 +2898,11 @@ def monitor_lzt():
             current_url = fallback_url if consecutive_errors >= 3 else url
             sell_prices = load_sell_prices()
             
-            # 11-Stage Dedicated High-Profit VIP Snipers & Bargain Hunters:
-            top_target_countries = ["IQ", "UA", "AE", "LT", "KR", "DE", "FR", "NL", "SG", "QA", "KW", "BH", "TW", "CH", "NO", "ES", "BE", "JP", "GE"]
-            vip_group_countries = ["AE", "SG", "QA", "KW", "BH", "TW", "CH", "NO"]
-            europe_countries = ["DE", "FR", "NL", "ES", "BE", "GB", "IT", "DK", "LT"]
+            # 4-Stage Rapid Sniper Engine (Checks Korea every 3 seconds!):
+            top_target_countries = ["IQ", "UA", "AE", "LT", "KR", "KP", "DE", "FR", "NL", "SG", "QA", "KW", "BH", "TW", "CH", "NO", "ES", "BE", "JP", "GE"]
+            korea_countries = ["KR", "KP"]
             
-            scan_mode = cycle_count % 8
+            scan_mode = cycle_count % 4
             cycle_count += 1
 
             current_target_set = None  # Allow matching
@@ -2909,81 +2911,41 @@ def monitor_lzt():
             current_pmax = pmax
 
             if scan_mode == 0:
-                # 🇰🇷 Dedicated South Korea Rapid Sniper - Newest First (All sellers, all ages!)
+                # 🇰🇷 🇰🇵 Rapid Korea Sniper - Newest First (All sellers, all ages!)
                 sort_order = "pdate_to_down"
                 scan_tag = "VIP-Korea-Newest"
                 query_params = {
                     "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
                     "page": 1, "order_by": sort_order,
-                    "country[]": ["KR"]
+                    "country[]": korea_countries
                 }
 
             elif scan_mode == 1:
-                # 🇺🇦 Dedicated Ukraine Sniper - Page 1
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-Ukraine-P1"
-                query_params = {
-                    "pmin": pmin, "pmax": 100, "currency": "rub", "2fa": "no",
-                    "page": 1, "order_by": sort_order,
-                    "country[]": ["UA"]
-                }
-
-            elif scan_mode == 2:
-                # 🇰🇷 Dedicated South Korea Sniper - Cheapest First (Bargain Hunter)
-                sort_order = "price_to_up"
-                scan_tag = "VIP-Korea-Bargain"
-                query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
-                    "page": 1, "order_by": sort_order,
-                    "country[]": ["KR"]
-                }
-
-            elif scan_mode == 3:
-                # 💰 Ultra-Cheap Bargains Hunter (Cheapest First up to 75 RUB for Target Countries)
-                sort_order = "price_to_up"
-                scan_tag = "Target-BargainUnder75"
-                query_params = {
-                    "pmin": pmin, "pmax": 75, "currency": "rub", "2fa": "no",
-                    "page": 1, "order_by": sort_order,
-                    "country[]": top_target_countries
-                }
-
-            elif scan_mode == 4:
-                # 💎 Dedicated VIP Group (UAE, Singapore, Qatar, Kuwait, Bahrain, Taiwan, Switzerland)
-                sort_order = "pdate_to_down"
-                scan_tag = "VIP-GulfAsia-P1"
-                query_params = {
-                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
-                    "page": 1, "order_by": sort_order,
-                    "country[]": vip_group_countries
-                }
-
-            elif scan_mode == 5:
-                # 🇪🇺 European & Baltic Tier 1 (Germany, France, Netherlands, Spain, Lithuania, Belgium)
-                sort_order = "price_to_up"
-                scan_tag = "VIP-EuropeBaltic"
-                query_params = {
-                    "pmin": pmin, "pmax": 120, "currency": "rub", "2fa": "no",
-                    "page": 1, "order_by": sort_order,
-                    "country[]": europe_countries
-                }
-
-            elif scan_mode == 6:
-                # 🇮🇶 Dedicated Iraq Sniper - Page 1
-                sort_order = "price_to_up"
-                scan_tag = "VIP-Iraq-P1"
-                query_params = {
-                    "pmin": pmin, "pmax": 85, "currency": "rub", "2fa": "no",
-                    "page": 1, "order_by": sort_order,
-                    "country[]": ["IQ"]
-                }
-
-            else:
-                # 🌟 Target Turbo - Newest (Top Target Countries)
+                # 🌟 Target Turbo - Newest (Top High-Profit Countries: IQ, UA, AE, LT, TW, SG, QA, etc.)
                 sort_order = "pdate_to_down"
                 scan_tag = "Target-Turbo-Newest"
                 query_params = {
                     "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": top_target_countries
+                }
+
+            elif scan_mode == 2:
+                # 🇰🇷 🇰🇵 Rapid Korea Bargain Hunter - Cheapest First
+                sort_order = "price_to_up"
+                scan_tag = "VIP-Korea-Cheapest"
+                query_params = {
+                    "pmin": pmin, "pmax": 180, "currency": "rub", "2fa": "no",
+                    "page": 1, "order_by": sort_order,
+                    "country[]": korea_countries
+                }
+
+            else:
+                # 💰 Target Bargain Hunter - Cheapest First (Up to 90 RUB)
+                sort_order = "price_to_up"
+                scan_tag = "Target-Bargain-Cheapest"
+                query_params = {
+                    "pmin": pmin, "pmax": 90, "currency": "rub", "2fa": "no",
                     "page": 1, "order_by": sort_order,
                     "country[]": top_target_countries
                 }
